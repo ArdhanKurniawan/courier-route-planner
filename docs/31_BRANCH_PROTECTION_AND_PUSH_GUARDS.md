@@ -22,10 +22,19 @@ Skenario yang harus dicegah:
 Target kita:
 
 ```text
-feature/* / fix/* / chore/* / hotfix/*
-        ↓ Pull Request
+feature/* / fix/* / chore/*
+        ↓
+     Pull Request
+        ↓
       testing
-        ↓ QA + Pull Request
+ (no approval required)
+        ↓
+ integration / QA / UAT
+        ↓
+     Pull Request
+        ↓
+ minimum 1 human approval
+        ↓
        main
 ```
 
@@ -39,39 +48,12 @@ Kita memakai minimum lima lapisan.
 
 ### Layer A — GitHub server-side branch protection (authoritative)
 
-Target branch:
+Protected branch:
 
 ```text
 main
 testing
 ```
-
-Required settings:
-
-- Require a pull request before merging: **ON**
-- Required approvals: **1** (jika tersedia pada plan)
-- Require status checks before merging: **ON**
-- Require conversation resolution: **ON**
-- Block force pushes / do not allow force pushes: **ON**
-- Block deletion / do not allow deletions: **ON**
-- Do not allow bypassing / bypass list: **none**, sejauh plan mengizinkan
-
-Recommended required checks:
-
-```text
-lint
-typecheck
-test
-build
-```
-
-Dengan protection aktif, jika seseorang melakukan:
-
-```bash
-git push origin main
-```
-
-GitHub harus menolak perubahan yang tidak melewati PR sesuai rule.
 
 ### Important GitHub plan note
 

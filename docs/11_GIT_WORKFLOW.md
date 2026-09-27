@@ -34,13 +34,13 @@ atau merge sesuai kemampuan tim. Tim harus memilih satu gaya dan konsisten. Untu
 
 ```text
 feature/x
-→ push
+→ push feature branch
 → Vercel Preview
-→ PR ke testing
-→ CI
-→ review
+→ Pull Request ke testing
+→ automated CI checks
+→ author self-review
 → merge
-→ testing branch preview smoke test
+→ testing integration/QA
 ```
 
 ## 5. Release flow
@@ -49,12 +49,13 @@ feature/x
 testing
 → freeze release candidate
 → full QA/UAT
-→ PR testing → main
-→ CI
-→ approval
+→ Pull Request testing → main
+→ automated CI checks
+→ minimum 1 human approval
+→ resolve all review conversations
 → merge
 → Vercel Production
-→ smoke test
+→ production smoke test
 ```
 
 ## 6. Hotfix
@@ -103,6 +104,20 @@ Panduan implementasi, recovery, dan acceptance test lengkap:
 docs/31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md
 ```
 
+## 8.1 Branch review policy
+
+| Target branch | Pull Request | Human approval | Direct push | CI |
+|---|---|---:|---|---|
+| `testing` | Required | Not required | Prohibited | Required setelah CI tersedia |
+| `main` | Required | Minimum 1 | Prohibited | Required setelah CI tersedia |
+
+Tujuan kebijakan ini:
+
+- `testing` tetap cepat sebagai integration branch;
+- setiap perubahan tetap memiliki jejak Pull Request;
+- `main` memiliki human gate sebelum perubahan menjadi production release;
+- automated checks tidak menggantikan human review pada `main`.
+
 ## 9. Commit policy
 
 Commit harus menjawab satu ide perubahan.
@@ -127,10 +142,16 @@ fix: prevent production DB usage in preview
 
 Tidak merge bila:
 
-- CI merah;
-- migration tidak direview;
-- preview tidak bisa dibuka;
-- AC belum lulus;
-- ada secret;
-- algorithm tests gagal;
-- reviewer belum paham perubahan.
+- CI merah setelah CI workflow tersedia;
+- migration yang berisiko belum diperiksa;
+- preview tidak bisa dibuka untuk perubahan yang membutuhkan preview;
+- acceptance criteria belum lulus;
+- terdapat secret atau credential;
+- algorithm tests gagal pada perubahan routing;
+- scope PR bercampur dengan pekerjaan lain yang tidak relevan.
+
+Tambahan khusus PR menuju `main`:
+
+- belum memperoleh minimal **1 human approval**;
+- terdapat unresolved review conversation;
+- latest reviewable push belum memperoleh review yang dipersyaratkan.

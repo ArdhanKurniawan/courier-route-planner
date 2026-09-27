@@ -1,0 +1,21 @@
+#!/bin/sh
+
+while read local_ref local_sha remote_ref remote_sha
+do
+  case "$remote_ref" in
+    (refs/heads/main|refs/heads/testing)
+      branch="${remote_ref#refs/heads/}"
+
+      echo ""
+      echo "BLOCKED: direct push ke branch '$branch' tidak diizinkan."
+      echo ""
+      echo "Gunakan workflow:"
+      echo "  feature/* -> Pull Request -> testing"
+      echo "  testing   -> Pull Request + Human Approval -> main"
+      echo ""
+      exit 1
+      ;;
+  esac
+done
+
+exit 0
