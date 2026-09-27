@@ -113,15 +113,31 @@ Ketentuan:
 
 ## Merge strategy
 
-Untuk tim kecil, gunakan **Squash and Merge** agar history `testing`/`main` bersih, kecuali ada alasan teknis menyimpan commit terpisah.
+Gunakan strategi berdasarkan jenis Pull Request:
 
-## Hotfix
+### Feature / fix / chore → `testing`
 
-```text
-main → hotfix/... → PR main → deploy → sinkronkan kembali ke testing
-```
+Gunakan **Squash and Merge** sebagai default.
 
-Jangan memperbaiki production hanya di `main` lalu lupa membawa perubahan ke `testing`.
+Tujuan:
+
+- menjaga history `testing` tetap ringkas;
+- beberapa commit kecil dari satu pekerjaan menjadi satu logical change;
+- mempermudah rollback per fitur.
+
+### `testing` → `main`
+
+Gunakan **Merge Commit**, bukan Squash and Merge.
+
+Tujuan:
+
+- mempertahankan hubungan ancestry antara long-lived branch `testing` dan `main`;
+- mencegah perubahan release lama muncul kembali sebagai diff pada release berikutnya;
+- menjaga riwayat release mudah ditelusuri.
+
+### Hotfix
+
+Hotfix masuk ke `main` melalui Pull Request, kemudian perubahan wajib disinkronkan kembali ke `testing`.
 
 
 ## Protected branch safety

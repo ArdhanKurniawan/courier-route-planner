@@ -138,6 +138,20 @@ test: cover closed-tour route invariants
 fix: prevent production DB usage in preview
 ```
 
+## 9.1 Merge strategy
+
+Gunakan strategi berikut:
+
+| Source | Target | Strategy |
+|---|---|---|
+| `feature/*` | `testing` | Squash and Merge |
+| `fix/*` | `testing` | Squash and Merge |
+| `chore/*` | `testing` | Squash and Merge |
+| `testing` | `main` | Merge Commit |
+| `hotfix/*` | `main` | Merge Commit atau strategi yang menjaga sinkronisasi dengan `testing` |
+
+Untuk long-lived branch `testing` dan `main`, hindari Squash and Merge pada release PR `testing → main`, karena ancestry branch perlu dipertahankan agar release berikutnya tetap bersih.
+
 ## 10. Pull request rule
 
 Tidak merge bila:
