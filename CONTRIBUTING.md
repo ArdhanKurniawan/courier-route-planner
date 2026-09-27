@@ -12,7 +12,21 @@
 ## Normal flow
 
 ```text
-testing → feature/... → PR ke testing → QA → PR testing ke main
+testing
+  ↓
+feature/* / fix/* / chore/*
+  ↓
+Pull Request
+  ↓
+testing
+  ↓
+integration test / QA
+  ↓
+Pull Request
+  ↓
+1 human approval
+  ↓
+main
 ```
 
 ## Aturan commit
@@ -67,6 +81,35 @@ Reviewer mengecek:
 6. UX regression;
 7. algorithm invariants jika menyentuh routing;
 8. tidak ada secret.
+
+## Approval policy
+
+### Pull Request ke `testing`
+
+Tujuan `testing` adalah integration/testing branch.
+
+Ketentuan:
+
+- Pull Request wajib;
+- human approval tidak diwajibkan;
+- author tetap wajib melakukan self-review pada tab **Files changed** sebelum merge;
+- seluruh automated CI checks wajib lulus setelah workflow CI tersedia;
+- PR tidak boleh mengandung secret, credential, `.env`, atau perubahan di luar scope.
+
+### Pull Request ke `main`
+
+`main` adalah production/release branch.
+
+Ketentuan:
+
+- Pull Request wajib;
+- minimal **1 human approval** wajib;
+- author Pull Request tidak boleh menggantikan approval reviewer lain;
+- approval lama harus dianggap tidak berlaku ketika terdapat commit baru yang mengubah PR;
+- push terbaru harus sudah termasuk dalam review;
+- seluruh unresolved review conversations harus diselesaikan sebelum merge;
+- automated CI checks wajib lulus setelah workflow CI tersedia;
+- merge hanya dilakukan setelah QA/release verification selesai.
 
 ## Merge strategy
 
