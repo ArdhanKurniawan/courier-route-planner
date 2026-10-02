@@ -96,6 +96,19 @@ Formal timer **mengecualikan** OSRM request, DB, HTTP/network, serialization, ex
 
 Tetapkan dan simpan urutan eksekusi sebelum measured runs; catat gangguan machine. Jangan memilih sampel tercepat saja.
 
+### Predetermined balanced execution order
+
+Untuk **MAIN evaluation datasets**, bekukan urutan dataset dan pemetaan ordinal 1..30 ke benchmark_case_id sebelum measured runs. Simpan pemetaan ini beserta urutan algorithm blocks dalam experiment manifest / execution schedule agar dapat direproduksi.
+
+| Ordinal dataset | Urutan measured blocks |
+|---|---|
+| Ganjil | NN+2-Opt → ACO |
+| Genap | ACO → NN+2-Opt |
+
+Contoh: D01 menjalankan NN+2-Opt → ACO, D02 ACO → NN+2-Opt, D03 NN+2-Opt → ACO, dan seterusnya; D01/D02/D03 adalah label ordinal pada daftar yang dibekukan. Jalankan **5 warm-ups untuk algorithm block terkait tepat sebelum measured block-nya**, sesuai bagian 7. Selesaikan measured block (30 repetitions/runs) sebelum beralih ke algoritma berikutnya. Jangan interleave individual runs atau randomize execution order saat runtime.
+
+Balancing ini mengurangi systematic execution-order / thermal/runtime bias pada RQ2, tanpa menjamin seluruh environmental noise hilang. Aturan machine/environment, state reset dan pencatatan gangguan tetap berlaku.
+
 ## 7. Warm-up and repetitions
 
 Lakukan **5 warm-up executions** untuk setiap algoritma pada setiap dataset sebelum measured block. Simpan warm-up policy dan role/seed bila stochastic. Hasil/timing warm-up tidak masuk statistical research results.

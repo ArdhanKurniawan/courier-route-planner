@@ -10,6 +10,15 @@ Input geografi optimizer hanya **DistanceMatrix** yang sudah divalidasi, ditamba
 ```ts
 type DistanceMatrix = ReadonlyArray<ReadonlyArray<number>>;
 type Route = ReadonlyArray<number>;
+type NNTwoOptDiagnostics = Readonly<{
+  nnInitialDistanceM?: number;
+  twoOptPasses?: number;
+  acceptedImprovements?: number;
+}>;
+type AntSystemDiagnostics = Readonly<{
+  iterationsCompleted?: number;
+  bestIteration?: number;
+}>;
 type AntSystemParameters = Readonly<{
   alpha: number;
   beta: number;
@@ -23,7 +32,7 @@ type OptimizerResult = Readonly<{
   route: Route;
   totalDistanceM: number;
   algorithm: 'NN_2OPT' | 'ACO';
-  iterationsCompleted: number;
+  diagnostics?: NNTwoOptDiagnostics | AntSystemDiagnostics;
 }>;
 ```
 
@@ -117,11 +126,21 @@ Track best observed valid route pada seluruh ant/iterasi; pada equal cost pertah
 
 Same matrix + parameters + seed + PRNG/algorithm version + compatible runtime → route, cost, dan iteration count yang reproducible; execution time tidak diwajibkan identik. Jangan gunakan Math.random/timestamp seed untuk formal run. Seed list predetermined dicatat runner.
 
-n=0 adalah trivial result [0,0], distance 0, iterationsCompleted=0 tanpa division/deposit. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
+n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
 
 ## 6. Output and RouteValidator
 
-Solver mengembalikan route indices, totalDistanceM, algorithm dan iterationsCompleted. NN/2-Opt diagnostic result dapat menyertakan initial NN distance serta accepted pass count. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
+Common result mengembalikan route indices, totalDistanceM dan algorithm. `diagnostics` opsional dan mengikuti algorithm; field berikut hanya dikembalikan bila diperlukan, bukan shared mandatory fields atau main research metrics baru.
+
+| Algorithm | Optional diagnostic | Arti bila disertakan |
+|---|---|---|
+| NN_2OPT | nnInitialDistanceM | Full directed distance hasil NN sebelum 2-Opt, dalam meter |
+| NN_2OPT | twoOptPasses | Jumlah pass evaluasi candidate yang selesai, termasuk pass terakhir tanpa improvement; 0 bila tidak ada candidate (n=0/1) |
+| NN_2OPT | acceptedImprovements | Jumlah penggantian route dengan best strict improvement yang diterima; tidak menghitung pass terakhir tanpa improvement |
+| ACO | iterationsCompleted | Jumlah iterasi Ant System yang selesai; maxIterations pada successful nontrivial run, 0 pada n=0 |
+| ACO | bestIteration | Nomor iterasi mulai dari 1 saat final best route pertama ditemukan; tidak ada pada n=0 |
+
+`iterationsCompleted` tidak dipakai untuk NN/2-Opt dan tidak disamakan dengan twoOptPasses atau acceptedImprovements. Diagnostic tidak mengubah stopping criterion atau failure policy; run parsial tetap failure. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
 
 RouteValidator independen memeriksa:
 

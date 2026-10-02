@@ -72,6 +72,7 @@ Tambahkan:
 - [ ] seeds saved;
 - [ ] algorithm parameters saved;
 - [ ] machine info saved;
+- [ ] dataset ordinal mapping dan balanced execution schedule disimpan sesuai [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] commit SHA saved;
 - [ ] invalid routes rejected;
 - [ ] raw results exported;

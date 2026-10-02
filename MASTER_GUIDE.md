@@ -2088,6 +2088,8 @@ started_at
 completed_at NULL
 ```
 
+`iteration_count` adalah optional diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](docs/33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
+
 Unique:
 
 ```text
@@ -3050,6 +3052,19 @@ Formal timer **mengecualikan** OSRM request, DB, HTTP/network, serialization, ex
 
 Tetapkan dan simpan urutan eksekusi sebelum measured runs; catat gangguan machine. Jangan memilih sampel tercepat saja.
 
+### Predetermined balanced execution order
+
+Untuk **MAIN evaluation datasets**, bekukan urutan dataset dan pemetaan ordinal 1..30 ke benchmark_case_id sebelum measured runs. Simpan pemetaan ini beserta urutan algorithm blocks dalam experiment manifest / execution schedule agar dapat direproduksi.
+
+| Ordinal dataset | Urutan measured blocks |
+|---|---|
+| Ganjil | NN+2-Opt → ACO |
+| Genap | ACO → NN+2-Opt |
+
+Contoh: D01 menjalankan NN+2-Opt → ACO, D02 ACO → NN+2-Opt, D03 NN+2-Opt → ACO, dan seterusnya; D01/D02/D03 adalah label ordinal pada daftar yang dibekukan. Jalankan **5 warm-ups untuk algorithm block terkait tepat sebelum measured block-nya**, sesuai bagian 7. Selesaikan measured block (30 repetitions/runs) sebelum beralih ke algoritma berikutnya. Jangan interleave individual runs atau randomize execution order saat runtime.
+
+Balancing ini mengurangi systematic execution-order / thermal/runtime bias pada RQ2, tanpa menjamin seluruh environmental noise hilang. Aturan machine/environment, state reset dan pencatatan gangguan tetap berlaku.
+
 ## 7. Warm-up and repetitions
 
 Lakukan **5 warm-up executions** untuk setiap algoritma pada setiap dataset sebelum measured block. Simpan warm-up policy dan role/seed bila stochastic. Hasil/timing warm-up tidak masuk statistical research results.
@@ -3752,6 +3767,7 @@ Tambahkan:
 - [ ] seeds saved;
 - [ ] algorithm parameters saved;
 - [ ] machine info saved;
+- [ ] dataset ordinal mapping dan balanced execution schedule disimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] commit SHA saved;
 - [ ] invalid routes rejected;
 - [ ] raw results exported;
@@ -4028,6 +4044,8 @@ Prompt di bawah dirancang untuk coding agent seperti Codex/Claude/Gemini/agent I
 
 Semua prompt penelitian tunduk pada [docs/32](docs/32_RESEARCH_DECISIONS.md), [docs/33](docs/33_ALGORITHM_SPECIFICATION.md), [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md) dan [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Approved target berbeda dari current implementation di README. Prompt adalah template untuk task berikutnya, bukan otorisasi menjalankan seluruh fitur pada task documentation sync.
 
+Semua prompt yang meminta validation commands mengikuti Foundation guard pada master prompts A/B: inspect script aktual sebelum menjalankan command. Phase 0 tetap wajib menyediakan lint/typecheck/test/build; missing scripts sesudah Foundation bukan pengecualian terhadap contract.
+
 ---
 
 # A. MASTER IMPLEMENTATION PROMPT
@@ -4065,7 +4083,15 @@ ENGINEERING RULES:
 - Jangan commit/push.
 - Jangan mengubah scope penelitian.
 
-AFTER IMPLEMENTATION, WAJIB RUN:
+VALIDATION FOUNDATION GUARD:
+- Sebelum validation, inspect scripts actual di package.json dan status Phase 0 Foundation.
+- Jangan mengarang command/script yang belum tersedia.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP.
+- Jangan membuat script/dependency baru kecuali task memang Phase 0 Foundation atau secara eksplisit meminta setup testing/typecheck.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- SETELAH Foundation, jika contract mengharuskan scripts tersebut tetapi script hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+AFTER IMPLEMENTATION, WAJIB RUN SESUAI FOUNDATION GUARD:
 - npm run lint
 - npm run typecheck
 - npm run test
@@ -4079,7 +4105,7 @@ OUTPUT AKHIR:
 2. Plan yang benar-benar dikerjakan.
 3. Changed files.
 4. Design decisions.
-5. Test/command evidence dengan PASS/FAIL.
+5. Test/command evidence dengan PASS/FAIL untuk command yang dijalankan; missing script dilaporkan FOUNDATION PREREQUISITE / GAP.
 6. Manual checks yang masih diperlukan.
 7. Known limitations/risks.
 8. Out-of-scope yang sengaja tidak dikerjakan.
@@ -4102,7 +4128,14 @@ MANDATORY:
 4. Review hanya perubahan terkait task dan side effect-nya.
 5. Cari bug, regression, security issue, architecture violation, schema risk, missing tests, dan scope creep.
 
-WAJIB VALIDATE:
+VALIDATION FOUNDATION GUARD:
+- Inspect scripts actual di package.json dan status Phase 0 Foundation sebelum menjalankan validation commands; jangan mengarang command/script.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP, bukan PASS/FAIL command.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- Jangan membuat script/dependency baru dalam verification. Setup hanya boleh pada task implementasi Phase 0 atau task setup testing/typecheck yang eksplisit.
+- SETELAH Foundation, jika contract mewajibkan scripts yang hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+WAJIB VALIDATE SESUAI FOUNDATION GUARD:
 - acceptance criteria satu per satu;
 - lint/typecheck/test/build;
 - no secret;
@@ -4173,9 +4206,10 @@ DO NOT:
 - commit/push.
 
 MANDATORY VERIFICATION:
+- inspect package.json scripts actual dan terapkan Foundation guard pada master prompt A; sesudah Foundation, missing required script berarti STOP/report regression atau unmet prerequisite
 - npm run lint
-- npm run typecheck (add baseline script if project requires it)
-- npm run test (if baseline exists; otherwise document foundation gap)
+- npm run typecheck (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
+- npm run test (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
 - npm run build
 - npm ls apexcharts react-apexcharts
 - manual responsive sidebar/header check
@@ -4698,6 +4732,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] raw runs stored;
 - [ ] summary reproducible;
 - [ ] CLI runner;
+- [ ] predetermined balanced execution order dan dataset ordinal mapping tersimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] metadata/commit SHA captured.
 - [ ] timer excludes OSRM/DB/network/serialization/geometry/rendering;
 - [ ] 5 warm-ups excluded, 30 ACO seeded runs, 30 NN+2-Opt timing samples;
@@ -5508,6 +5543,8 @@ Pastikan varian Classical Ant System: directed pheromone, semua valid ants depos
 Periksa [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 × 10 random datasets; N=100 conditional, other patterns optional; calibration terpisah dan satu global configuration frozen. Per dataset ada 30 independent seeded ACO runs, 30 NN+2-Opt timing samples, dan 5 warm-ups yang dikeluarkan. ACO mean/median pembanding utama, best tambahan. Dataset-level observations tidak diganti dengan jumlah runs. Raw poor-valid/failed runs tetap ada.
 
 Timer harus mengecualikan OSRM/DB/network/serialization/geometry/rendering dan dijalankan terkontrol di luar runtime Vercel. Untuk task dokumentasi, periksa keselarasan sumber dengan MASTER_GUIDE/MANIFEST; application lint/build tidak membuktikan metodologi penelitian.
+
+Periksa dataset ordinal mapping dan balanced execution schedule yang disimpan terhadap [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary), termasuk warm-up tepat sebelum masing-masing measured block.
 
 ## 8. AI review trap
 
@@ -6539,6 +6576,15 @@ Input geografi optimizer hanya **DistanceMatrix** yang sudah divalidasi, ditamba
 ```ts
 type DistanceMatrix = ReadonlyArray<ReadonlyArray<number>>;
 type Route = ReadonlyArray<number>;
+type NNTwoOptDiagnostics = Readonly<{
+  nnInitialDistanceM?: number;
+  twoOptPasses?: number;
+  acceptedImprovements?: number;
+}>;
+type AntSystemDiagnostics = Readonly<{
+  iterationsCompleted?: number;
+  bestIteration?: number;
+}>;
 type AntSystemParameters = Readonly<{
   alpha: number;
   beta: number;
@@ -6552,7 +6598,7 @@ type OptimizerResult = Readonly<{
   route: Route;
   totalDistanceM: number;
   algorithm: 'NN_2OPT' | 'ACO';
-  iterationsCompleted: number;
+  diagnostics?: NNTwoOptDiagnostics | AntSystemDiagnostics;
 }>;
 ```
 
@@ -6646,11 +6692,21 @@ Track best observed valid route pada seluruh ant/iterasi; pada equal cost pertah
 
 Same matrix + parameters + seed + PRNG/algorithm version + compatible runtime → route, cost, dan iteration count yang reproducible; execution time tidak diwajibkan identik. Jangan gunakan Math.random/timestamp seed untuk formal run. Seed list predetermined dicatat runner.
 
-n=0 adalah trivial result [0,0], distance 0, iterationsCompleted=0 tanpa division/deposit. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
+n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
 
 ## 6. Output and RouteValidator
 
-Solver mengembalikan route indices, totalDistanceM, algorithm dan iterationsCompleted. NN/2-Opt diagnostic result dapat menyertakan initial NN distance serta accepted pass count. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
+Common result mengembalikan route indices, totalDistanceM dan algorithm. `diagnostics` opsional dan mengikuti algorithm; field berikut hanya dikembalikan bila diperlukan, bukan shared mandatory fields atau main research metrics baru.
+
+| Algorithm | Optional diagnostic | Arti bila disertakan |
+|---|---|---|
+| NN_2OPT | nnInitialDistanceM | Full directed distance hasil NN sebelum 2-Opt, dalam meter |
+| NN_2OPT | twoOptPasses | Jumlah pass evaluasi candidate yang selesai, termasuk pass terakhir tanpa improvement; 0 bila tidak ada candidate (n=0/1) |
+| NN_2OPT | acceptedImprovements | Jumlah penggantian route dengan best strict improvement yang diterima; tidak menghitung pass terakhir tanpa improvement |
+| ACO | iterationsCompleted | Jumlah iterasi Ant System yang selesai; maxIterations pada successful nontrivial run, 0 pada n=0 |
+| ACO | bestIteration | Nomor iterasi mulai dari 1 saat final best route pertama ditemukan; tidak ada pada n=0 |
+
+`iterationsCompleted` tidak dipakai untuk NN/2-Opt dan tidak disamakan dengan twoOptPasses atau acceptedImprovements. Diagnostic tidak mengubah stopping criterion atau failure policy; run parsial tetap failure. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
 
 RouteValidator independen memeriksa:
 

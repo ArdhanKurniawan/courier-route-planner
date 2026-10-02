@@ -93,6 +93,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] raw runs stored;
 - [ ] summary reproducible;
 - [ ] CLI runner;
+- [ ] predetermined balanced execution order dan dataset ordinal mapping tersimpan sesuai [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] metadata/commit SHA captured.
 - [ ] timer excludes OSRM/DB/network/serialization/geometry/rendering;
 - [ ] 5 warm-ups excluded, 30 ACO seeded runs, 30 NN+2-Opt timing samples;

@@ -4,6 +4,8 @@ Prompt di bawah dirancang untuk coding agent seperti Codex/Claude/Gemini/agent I
 
 Semua prompt penelitian tunduk pada [docs/32](32_RESEARCH_DECISIONS.md), [docs/33](33_ALGORITHM_SPECIFICATION.md), [docs/34](34_OSRM_DISTANCE_CONTRACT.md) dan [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md). Approved target berbeda dari current implementation di README. Prompt adalah template untuk task berikutnya, bukan otorisasi menjalankan seluruh fitur pada task documentation sync.
 
+Semua prompt yang meminta validation commands mengikuti Foundation guard pada master prompts A/B: inspect script aktual sebelum menjalankan command. Phase 0 tetap wajib menyediakan lint/typecheck/test/build; missing scripts sesudah Foundation bukan pengecualian terhadap contract.
+
 ---
 
 # A. MASTER IMPLEMENTATION PROMPT
@@ -41,7 +43,15 @@ ENGINEERING RULES:
 - Jangan commit/push.
 - Jangan mengubah scope penelitian.
 
-AFTER IMPLEMENTATION, WAJIB RUN:
+VALIDATION FOUNDATION GUARD:
+- Sebelum validation, inspect scripts actual di package.json dan status Phase 0 Foundation.
+- Jangan mengarang command/script yang belum tersedia.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP.
+- Jangan membuat script/dependency baru kecuali task memang Phase 0 Foundation atau secara eksplisit meminta setup testing/typecheck.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- SETELAH Foundation, jika contract mengharuskan scripts tersebut tetapi script hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+AFTER IMPLEMENTATION, WAJIB RUN SESUAI FOUNDATION GUARD:
 - npm run lint
 - npm run typecheck
 - npm run test
@@ -55,7 +65,7 @@ OUTPUT AKHIR:
 2. Plan yang benar-benar dikerjakan.
 3. Changed files.
 4. Design decisions.
-5. Test/command evidence dengan PASS/FAIL.
+5. Test/command evidence dengan PASS/FAIL untuk command yang dijalankan; missing script dilaporkan FOUNDATION PREREQUISITE / GAP.
 6. Manual checks yang masih diperlukan.
 7. Known limitations/risks.
 8. Out-of-scope yang sengaja tidak dikerjakan.
@@ -78,7 +88,14 @@ MANDATORY:
 4. Review hanya perubahan terkait task dan side effect-nya.
 5. Cari bug, regression, security issue, architecture violation, schema risk, missing tests, dan scope creep.
 
-WAJIB VALIDATE:
+VALIDATION FOUNDATION GUARD:
+- Inspect scripts actual di package.json dan status Phase 0 Foundation sebelum menjalankan validation commands; jangan mengarang command/script.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP, bukan PASS/FAIL command.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- Jangan membuat script/dependency baru dalam verification. Setup hanya boleh pada task implementasi Phase 0 atau task setup testing/typecheck yang eksplisit.
+- SETELAH Foundation, jika contract mewajibkan scripts yang hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+WAJIB VALIDATE SESUAI FOUNDATION GUARD:
 - acceptance criteria satu per satu;
 - lint/typecheck/test/build;
 - no secret;
@@ -149,9 +166,10 @@ DO NOT:
 - commit/push.
 
 MANDATORY VERIFICATION:
+- inspect package.json scripts actual dan terapkan Foundation guard pada master prompt A; sesudah Foundation, missing required script berarti STOP/report regression atau unmet prerequisite
 - npm run lint
-- npm run typecheck (add baseline script if project requires it)
-- npm run test (if baseline exists; otherwise document foundation gap)
+- npm run typecheck (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
+- npm run test (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
 - npm run build
 - npm ls apexcharts react-apexcharts
 - manual responsive sidebar/header check

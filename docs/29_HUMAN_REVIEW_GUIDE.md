@@ -137,6 +137,8 @@ Periksa [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 × 10 random 
 
 Timer harus mengecualikan OSRM/DB/network/serialization/geometry/rendering dan dijalankan terkontrol di luar runtime Vercel. Untuk task dokumentasi, periksa keselarasan sumber dengan MASTER_GUIDE/MANIFEST; application lint/build tidak membuktikan metodologi penelitian.
 
+Periksa dataset ordinal mapping dan balanced execution schedule yang disimpan terhadap [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary), termasuk warm-up tepat sebelum masing-masing measured block.
+
 ## 8. AI review trap
 
 Jangan bertanya:

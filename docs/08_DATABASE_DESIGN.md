@@ -211,6 +211,8 @@ started_at
 completed_at NULL
 ```
 
+`iteration_count` adalah optional diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
+
 Unique:
 
 ```text
