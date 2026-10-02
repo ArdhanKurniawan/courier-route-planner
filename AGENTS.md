@@ -190,7 +190,9 @@ Setiap hasil closed tour harus memenuhi:
 
 ## 10. Required checks after implementation
 
-Minimal jalankan:
+Sebelum validation, inspect scripts aktual di `package.json` dan status Phase 0 Foundation. Jangan mengarang command/script yang belum tersedia.
+
+**SETELAH Phase 0 Foundation selesai**, normal contract mewajibkan:
 
 ```bash
 npm run lint
@@ -199,7 +201,14 @@ npm run test
 npm run build
 ```
 
-Jika script belum tersedia, agent boleh menambahkan script yang wajar dan menjelaskan perubahan.
+**SEBELUM Phase 0 Foundation selesai**, jika `typecheck` atau `test` belum tersedia:
+
+- jalankan hanya scripts aktual yang tersedia dan relevan;
+- laporkan missing scripts sebagai **FOUNDATION PREREQUISITE / GAP**, bukan PASS/FAIL command;
+- jangan membuat script/dependency baru kecuali task memang Phase 0 Foundation atau secara eksplisit meminta setup testing/typecheck;
+- jangan mengklaim typecheck/test PASS bila command belum tersedia.
+
+Phase 0 tetap bertanggung jawab menyediakan lint/typecheck/test/build. Jika Phase 0 Foundation sudah dinyatakan selesai tetapi required script hilang, **STOP** dan laporkan sebagai **regression** atau **unmet prerequisite**.
 
 Untuk perubahan algoritma, tambah:
 

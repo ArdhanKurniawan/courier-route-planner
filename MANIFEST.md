@@ -4,9 +4,9 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-02. Scope: existing doc
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
-| `AGENTS.md` | 9138 | `4287e7ec1e9cfbb7edb10934f99376a7880daff505817d212069e551970cae4b` |
+| `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 223356 | `4cbadce93b7fd9ee2938abf924967f0c2ea33dcd3ddd7ea5bd372ad8fbdafcba` |
+| `MASTER_GUIDE.md` | 224123 | `5adc567b707fc694edf3ff4223d13b84fb6801b5493373211f7fd81c2694db7d` |
 | `README.md` | 8543 | `a199238a4ae078011cece9b28152c34de55550549c658e843803ddfa14194085` |
 | `THIRD_PARTY_NOTICES.md` | 1705 | `27e2265f935e8a1c2e6da75fbc64910657357b373179d4e110580dd98adda305` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
