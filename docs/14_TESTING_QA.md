@@ -18,9 +18,11 @@ Test:
 
 - NxN shape;
 - diagonal zero;
-- symmetry bila metric simetris;
-- no NaN/Infinity;
-- known point distances.
+- finite nonnegative values; no NaN/Infinity/negative;
+- asymmetric matrix accepted; tidak mengasumsikan d(i,j)==d(j,i);
+- null/unreachable/missing pair rejected;
+- stable node order, canonical meter, input/matrix hashes;
+- ACO preflight zero off-diagonal rejection sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md), tanpa mengganti nilai matrix.
 
 ### Nearest Neighbor
 
@@ -28,7 +30,9 @@ Test:
 
 - start/end depot;
 - every customer exactly once;
-- deterministic tie policy documented;
+- deterministic route;
+- directed nearest cost;
+- lowest-node-index tie break;
 - known small instance.
 
 ### 2-Opt
@@ -38,7 +42,11 @@ Test:
 - route remains permutation;
 - depot fixed start/end;
 - distance not worse than input route;
-- crossing/simple known route improves where expected.
+- best improvement dipilih setelah seluruh candidates dievaluasi;
+- full route recomputation mencakup directed internal edges saat reversal;
+- asymmetric cheap-cycle dan shortcut trap fixtures di docs/33;
+- symmetric-only delta shortcut tidak boleh lolos tests;
+- equal/worse candidate tidak diterima, hasil <= NN input.
 
 ### ACO
 
@@ -48,7 +56,12 @@ Test:
 - fixed seed reproducibility;
 - parameter validation;
 - zero pheromone/division edge prevention;
-- known small instance sanity.
+- known small instance sanity;
+- Classical Ant System: semua valid ants deposit setelah evaporation, termasuk return edge;
+- directed pheromone: i→j tidak otomatis update j→i;
+- fixed iteration stopping, reset state per seed/run;
+- roulette-wheel probabilities finite, no NaN/Infinity;
+- tidak ada post-ACO 2-Opt, elitist-only update, atau numeric research defaults tersembunyi.
 
 ## 3. Property/invariant testing mindset
 
@@ -62,6 +75,8 @@ valid closed tour
 + recomputed distance matches
 ```
 
+Tambahkan 0/1/2 customer sesuai contract, known small instances, input immutability, fixed-seed reproducibility, dan generated directed matrices. ACO tidak diwajibkan selalu menang atas NN. Fixtures adalah test data, bukan final scientific defaults atau main datasets.
+
 ## 4. Integration tests
 
 Test service + TiDB Dev/Test database untuk:
@@ -70,6 +85,15 @@ Test service + TiDB Dev/Test database untuk:
 - freeze benchmark case;
 - save experiment;
 - route history reconstruction.
+- frozen matrix persistence, immutable setelah order edit;
+- same matrix hash/values/node order untuk kedua algorithms;
+- timer excludes OSRM/DB/HTTP/network/serialization/geometry/rendering;
+- raw run persistence sebelum summary; failed/poor runs tidak cherry-picked away;
+- 5 warm-ups dikecualikan, 30 seeded ACO runs dan 30 NN+2-Opt timing samples per dataset;
+- calibration/main identities terpisah, satu global config, dataset-level aggregation;
+- failed run tetap tersimpan dan incomplete dataset tidak dianggap complete.
+
+OSRM adapter tests memakai mocked responses untuk timeout/provider/null/shape/hash errors; live routability/provider verification terpisah sebelum freeze data formal. Unit algorithms tidak bergantung network.
 
 Jangan menjalankan integration tests destructive ke Production.
 
@@ -124,3 +148,5 @@ Bedakan:
 - scientific algorithm benchmark.
 
 Jangan campur keduanya.
+
+Target tests di atas belum tersedia pada baseline TailAdmin. Audit 2026-10-02 menemukan script lint/build saja; typecheck/test dan Vitest/Playwright adalah foundation gap, bukan PASS. Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency; jalankan lint/build jika environment tersedia tanpa menambah implementation di luar scope.

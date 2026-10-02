@@ -68,7 +68,7 @@ Tanggung jawab:
 - 2-Opt;
 - ACO.
 
-Input/output harus plain typed structures.
+Input/output harus plain typed structures. Algorithm domain menerima DistanceMatrix sebagai satu-satunya input geografis, ditambah params/seed; tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, atau OSRM HTTP client. Road validation, matrix construction/storage, dan hashing ditangani application/infrastructure.
 
 ## 3. Core flow — create scenario
 
@@ -88,12 +88,12 @@ Editable Scenario
       ↓ FREEZE
 Immutable Benchmark Case
       ↓
-Distance Provider
+Road-network validation + OSRM Table adapter (infrastructure)
       ↓
-Distance Matrix
+Validated frozen directed matrix (meter, input hash, matrix hash)
       ├───────────────┐
       ↓               ↓
-  NN → 2-Opt         ACO x N runs
+  NN → 2-Opt         Classical Ant System x 30 seeded runs
       ↓               ↓
  Route result       Run results
       └───────┬───────┘
@@ -118,7 +118,8 @@ Benchmark Case #37 (immutable)
       ├─ depot snapshot
       ├─ customer snapshots
       ├─ input_hash
-      └─ metric/version
+      ├─ provider/profile/version
+      └─ distance_matrices snapshot + matrix_hash + stable node order
 ```
 
 ## 6. Map architecture
@@ -137,24 +138,27 @@ Leaflet
 
 Jangan import Leaflet langsung dari Server Component karena bergantung pada browser DOM.
 
-## 7. Routing engine future adapter
+## 7. OSRM infrastructure and optimizer boundary
 
 Gunakan abstraction:
 
 ```text
-DistanceProvider
-├─ ResearchEuclideanProvider
-└─ RoadNetworkProvider (future OSRM)
+UI/API → Application → Algorithm Domain (matrix + params/seed → result)
+              │
+              └→ Matrix Builder / Storage → OSRM Table adapter
 ```
 
 dan terpisah:
 
 ```text
-RouteGeometryProvider
-└─ OSRM geometry (future)
+Optimizer sequence → RouteGeometryProvider → OSRM Route geometry → Leaflet
 ```
 
-Urutan customer dan geometri jalan adalah dua concern berbeda.
+DistanceProvider adalah port infrastructure untuk produksi matrix, bukan dependency algoritma. OSRM Table merupakan core formal input sesuai [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark). Geometry boleh menyusul sebagai pekerjaan visualisasi terpisah.
+
+Kedua algoritma memakai matrix hash/values/node order identik. NN deterministic (depot=0, lowest-index tie); 2-Opt best improvement full recomputation untuk directed costs; ACO Classical Ant System tanpa post-ACO 2-Opt. Detail [docs/33](33_ALGORITHM_SPECIFICATION.md) dan [docs/34](34_OSRM_DISTANCE_CONTRACT.md).
+
+Formal runner terkontrol mengukur hanya solver call, termasuk initialisasi state algoritma. OSRM/DB/HTTP/network/serialization/geometry/rendering, external validation, dan hash verification di luar timer. Main design dan repetitions mengikuti [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md). Diagram adalah target architecture; current implementation ada di [README](../README.md#current-implementation-status).
 
 ## 8. Failure boundaries
 

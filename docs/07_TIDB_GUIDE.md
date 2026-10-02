@@ -113,5 +113,5 @@ Gunakan explain hanya saat ada evidence query lambat.
 - no background polling agresif;
 - no unnecessary analytics query tiap render;
 - pagination result history;
-- jangan simpan distance matrix berkali-kali jika bisa direcompute dari immutable snapshot kecuali penelitian butuh;
+- simpan frozen OSRM distance matrix sekali sebagai immutable snapshot dan referensikan dari experiments; jangan request/recompute matrix untuk setiap run karena road network dapat berubah (lihat [docs/34](34_OSRM_DISTANCE_CONTRACT.md));
 - batasi export/run abuse dengan auth dan server validation.

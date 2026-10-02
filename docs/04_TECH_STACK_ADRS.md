@@ -44,7 +44,7 @@ Gunakan Vercel Git Integration.
 
 ### Important
 
-Jangan memakai Vercel runtime timing sebagai satu-satunya formal research benchmark.
+Formal research benchmark tidak boleh bergantung pada runtime Vercel; jalankan pada environment terkontrol yang dicatat. Vercel tetap untuk aplikasi/demo.
 
 ---
 
@@ -131,7 +131,11 @@ Boleh defer saat local-only foundation. Wajib sebelum custom production domain d
 
 ## ADR-010 — OSRM bukan MVP core
 
-OSRM hanya future/supporting untuk road geometry atau road-network distance experiment bila penelitian membutuhkannya.
+**Status:** Superseded oleh [ADR-012](#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), 2026-10-02.
+
+**Historical decision (tidak berlaku sebagai instruksi aktif):** OSRM hanya future/supporting untuk road geometry atau road-network distance experiment bila penelitian membutuhkannya.
+
+Alasan supersession: keputusan manusia terbaru menetapkan OSRM Table sebagai core infrastructure input formal. Geometry tetap concern terpisah dan OSRM tetap bukan research algorithm. History ini dipertahankan untuk audit.
 
 
 ## ADR-011 — TailAdmin Next.js Free sebagai UI template baseline
@@ -163,3 +167,41 @@ TailAdmin upstream dapat membawa ApexCharts. Current ApexCharts menggunakan comm
 Jika chart diperlukan untuk hasil penelitian, kandidat awal adalah **Recharts (MIT)** melalui task/ADR terpisah.
 
 Detail: `docs/30_UI_TEMPLATE_GUIDE.md`.
+
+---
+
+## ADR-012 — OSRM Road-Network Distance Matrix for Formal Research Benchmark
+
+**Status:** Accepted
+**Date:** 2026-10-02
+**Authority:** Keputusan eksplisit manusia pada task corrective documentation + research contract sync.
+
+### Context
+
+ADR-010 menunda OSRM dan dokumen sebelumnya mengarahkan formal input pada distance methodology yang belum dikunci. Penelitian sekarang memerlukan identical road-network input untuk comparison NN+2-Opt vs ACO, serta input yang bisa diaudit ulang meski layanan jalan berubah.
+
+### Decision
+
+Gunakan OSRM Table Service sebagai approved core input infrastructure untuk membuat **frozen directed/asymmetric distance matrix dalam meter**. Validate routability, stable node order, values dan no unreachable pair; simpan input hash serta matrix hash sebelum formal run. Kedua algoritma harus menerima exact matrix snapshot yang sama.
+
+### Scope and distinctions
+
+- OSRM Table adapter + matrix builder/storage adalah infrastructure, bukan research algorithm.
+- Algorithm domain menerima matrix + params/seed saja: deterministic NN → best-improvement asymmetric-safe 2-Opt vs Classical Ant System.
+- OSRM Route/geometry menerima optimizer sequence untuk Leaflet; visualisasi tidak mengubah matrix/cost penelitian dan boleh dikerjakan kemudian.
+- Formal timer hanya algoritma pada environment terkontrol; mengecualikan OSRM request, DB, HTTP/network, serialization, geometry, dan rendering.
+- ADR ini tidak memilih public vs local/self-hosted endpoint, final numeric ACO parameters, atau mengimplementasikan adapter/migration.
+
+### Consequences
+
+Directed costs mengharuskan full route recomputation untuk reversal 2-Opt dan directed pheromone ACO. Matrix harus disimpan immutable; koordinat saja tidak cukup untuk mereproduksi input jika road network/profile berubah. Storage/provenance dan provider failure handling bertambah. Null/unreachable tidak boleh diganti metric lain.
+
+OSRM distance bukan otomatis mathematical shortest-distance path. Provider/profile/version harus dicatat beserta keterbatasan endpoint. Lihat [OSRM contract](34_OSRM_DISTANCE_CONTRACT.md).
+
+### Why ADR-010 was superseded
+
+Framing OSRM sebagai future untuk seluruh fungsi tidak lagi sesuai approved formal research input. Pemisahan input infrastructure, optimization algorithm, dan geometry membuat peran baru ini jelas tanpa mengganti core TSP-like problem.
+
+### Implementation follow-up
+
+Matrix foundation berada sebelum algorithm integration pada Phase 3. Conceptual storage ada di [database design](08_DATABASE_DESIGN.md); protocol di [docs/15](15_RESEARCH_BENCHMARK_PROTOCOL.md); specification di [docs/33](33_ALGORITHM_SPECIFICATION.md). Tidak ada actual DB migration dalam sinkronisasi dokumentasi ini.
