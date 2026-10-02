@@ -4,20 +4,23 @@ Dokumen ini mencatat third-party source/template yang menjadi baseline atau depe
 
 ## TailAdmin Next.js Free
 
-- Purpose: planned baseline UI/admin template.
-- Upstream: https://github.com/TailAdmin/free-nextjs-admin-dashboard
-- Website: https://tailadmin.com/nextjs
-- License reported by upstream free repository: MIT.
-- Adoption status: **PLANNED — source code belum di-import ke repository project pada saat documentation baseline ini dibuat.**
-- Adoption date: TBD.
-- Adopted commit SHA: TBD — wajib diisi saat import.
+- Product: TailAdmin Next.js Free Admin Dashboard
+- Upstream repository: `https://github.com/TailAdmin/free-nextjs-admin-dashboard`
+- Upstream version: `2.4.0`
+- Upstream commit: `4fba02489c93171220c13cd2b44cc0161ff6d2a1`
+- Upstream commit date: `2026-09-13 15:49:09 +0600`
+- License: MIT
+- Local license copy: `licenses/TAILADMIN-MIT.txt`
+- Purpose: UI/admin dashboard baseline
+- Adoption status: Free edition only
 
-Rules:
+### Adoption notes
 
-- hanya Free/Open-source repository;
-- jangan mengambil Pro/paid assets;
-- preserve required copyright/license notices;
-- template adalah UI baseline, bukan source-of-truth domain architecture.
+The upstream template is used as a presentation/UI baseline only.
+
+Project architecture, domain model, routing algorithms, database design, Git workflow, and research methodology remain governed by this repository's own documentation.
+
+The upstream template contained demo functionality and dependencies that are scheduled for cleanup, including ecommerce demo components and ApexCharts-related dependencies.
 
 ## ApexCharts
 
