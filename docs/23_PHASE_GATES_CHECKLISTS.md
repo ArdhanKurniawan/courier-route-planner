@@ -48,16 +48,21 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] OSM attribution;
 - [ ] seeded generator deterministic;
 - [ ] edit generated order;
-- [ ] all patterns covered by tests;
-- [ ] no OSRM dependency.
+- [ ] primary random generator covered; optional clustered/circular/directional tested if implemented;
+- [ ] marker/map component independent of OSRM HTTP client; Table matrix foundation proceeds at Gate 4.
 
 ## Gate 4 — Research input foundation
 
 - [ ] scenario freeze;
 - [ ] immutable benchmark snapshots;
 - [ ] input hash stable;
-- [ ] distance method approved or marked non-formal;
-- [ ] matrix validation tests.
+- [ ] routability validation dan coordinate/snap evidence;
+- [ ] OSRM Table road-network matrix produced, unit meter;
+- [ ] directed/asymmetric NxN validation, depot index 0, stable node order;
+- [ ] no unreachable/null pair, common ACO zero-distance eligibility checked;
+- [ ] matrix hash stable and verified against actual values;
+- [ ] matrix frozen in immutable storage;
+- [ ] matrix validation/hash/freeze/replay tests.
 
 ## Gate 5 — NN + 2-Opt
 
@@ -66,6 +71,9 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] 2-Opt not worse;
 - [ ] no duplicate/missing point;
 - [ ] framework-independent.
+- [ ] NN deterministic directed minimum, lowest-node-index tie;
+- [ ] best-improvement 2-Opt full directed recomputation, asymmetric trap tests;
+- [ ] symmetric-only delta shortcut absent.
 
 ## Gate 6 — ACO
 
@@ -75,15 +83,24 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] no NaN;
 - [ ] multi-run support;
 - [ ] no hidden default claimed scientific.
+- [ ] Classical Ant System, directed pheromone, all valid ants deposit, fixed iterations;
+- [ ] no 2-Opt after ACO in main comparison.
 
 ## Gate 7 — Benchmark engine
 
-- [ ] same matrix;
+- [ ] same frozen OSRM matrix values/order/input hash/matrix hash;
 - [ ] timing boundary correct;
 - [ ] raw runs stored;
 - [ ] summary reproducible;
 - [ ] CLI runner;
+- [ ] predetermined balanced execution order dan dataset ordinal mapping tersimpan sesuai [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] metadata/commit SHA captured.
+- [ ] timer excludes OSRM/DB/network/serialization/geometry/rendering;
+- [ ] 5 warm-ups excluded, 30 ACO seeded runs, 30 NN+2-Opt timing samples;
+- [ ] calibration separated, global configuration frozen;
+- [ ] main 10/25/50 × 10 random datasets; N=100 conditional and other patterns optional;
+- [ ] mean/median ACO primary comparison, raw failures retained, dataset-level observations;
+- [ ] Phase A verification → B calibration → C pilot → D main evidence per docs/15.
 
 ## Gate 8 — Public security
 

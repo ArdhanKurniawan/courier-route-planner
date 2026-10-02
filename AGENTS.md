@@ -24,10 +24,18 @@ Core problem adalah **multi-stop route sequencing / TSP-like closed tour**, buka
    - Nearest Neighbor + 2-Opt.
    - Ant Colony Optimization.
 6. Kedua algoritma harus menerima **input dan distance matrix yang sama** pada benchmark yang sama.
-7. OSRM bukan algoritma penelitian utama.
+7. OSRM bukan algoritma penelitian utama. OSRM Table Service adalah approved core input infrastructure untuk formal road-network distance matrix; Route/geometry terpisah dari optimizer.
 8. Jangan mengganti problem menjadi Dijkstra/A* source-to-destination.
 9. Formal research benchmark **tidak boleh bergantung pada runtime Vercel**; benchmark resmi dijalankan pada environment terkontrol dan dicatat.
 10. Jangan memperlakukan latitude/longitude mentah sebagai Cartesian kilometer tanpa metode yang disetujui penelitian.
+11. Formal matrix frozen dalam meter, directed/asymmetric, stable node order, tanpa unreachable pair, dengan input hash dan matrix hash. Jangan mengasumsikan symmetry atau membangun matrix berbeda per algoritma.
+12. NN deterministic: depot index 0, minimum directed cost, tie-break lowest node index. 2-Opt best improvement wajib full route recomputation pada reversal dan hanya menerima strict improvement; hasil tidak lebih buruk dari NN.
+13. ACO = Classical Ant System, seeded PRNG, directed pheromone, fixed iterations, deposit semua valid ants. Jangan menambah 2-Opt setelah ACO pada main comparison atau mengarang final numeric parameters.
+14. Main: 10/25/50 customer, masing-masing 10 independent random datasets (30 total). N=100 conditional setelah pilot; clustered/circular/directional hanya optional/additional experiment.
+15. Calibration terpisah dari evaluation; satu global ACO configuration frozen. ACO 30 independent seeded runs per dataset, NN+2-Opt satu quality result + 30 measured timing repetitions; 5 warm-ups per algoritma/dataset, dikecualikan dari statistik.
+16. Algorithm timer mengecualikan OSRM, DB, HTTP/network, serialization, geometry generation, dan rendering. Raw failed/poor runs dipertahankan; ACO mean/median pembanding utama, best tambahan.
+
+Kontrak penelitian wajib: [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md), [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md), [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md), serta [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Perubahan ini mencatat keputusan manusia 2026-10-02; parameter numerik ACO dan keputusan OPEN tetap memerlukan evidence/keputusan lanjutan.
 
 ## 3. Locked engineering stack
 
@@ -149,6 +157,10 @@ Algorithm module tidak boleh tahu tentang:
 - Vercel;
 - TiDB query;
 - cookies/session.
+- OSRM HTTP client;
+- Drizzle/TiDB imports.
+
+Algorithm domain menerima DistanceMatrix saja sebagai input geografis, ditambah parameter/seed. Matrix building/storage dan OSRM adapter ada di application/infrastructure, di luar core algorithm.
 
 ## 8. Algorithm correctness invariants
 
@@ -162,6 +174,9 @@ Setiap hasil closed tour harus memenuhi:
 - total distance dapat direkomputasi dari route + matrix;
 - input tidak dimutasi secara tak terduga;
 - ACO dapat diberi random seed untuk reproducibility testing.
+- directed cost digunakan pada seluruh edges termasuk return ke depot;
+- 2-Opt asymmetric fixture dan best-improvement diuji;
+- NN+2-Opt distance <= NN distance.
 
 ## 9. Database rules
 
@@ -169,12 +184,15 @@ Setiap hasil closed tour harus memenuhi:
 - Gunakan ORM/query parameterization; jangan concat SQL dari input user.
 - Migration harus forward-safe.
 - Eksperimen harus memakai immutable snapshot input (`benchmark_cases`/points).
+- Frozen matrix disimpan konseptual pada `distance_matrices`; experiments mereferensikan snapshot/hash yang sama sesuai docs/08 dan docs/34. Jangan mengganti snapshot history dengan recomputation OSRM dari live orders.
 - Edit order setelah benchmark tidak boleh mengubah sejarah eksperimen lama.
 - Production migration harus punya rollback/mitigation plan.
 
 ## 10. Required checks after implementation
 
-Minimal jalankan:
+Sebelum validation, inspect scripts aktual di `package.json` dan status Phase 0 Foundation. Jangan mengarang command/script yang belum tersedia.
+
+**SETELAH Phase 0 Foundation selesai**, normal contract mewajibkan:
 
 ```bash
 npm run lint
@@ -183,7 +201,14 @@ npm run test
 npm run build
 ```
 
-Jika script belum tersedia, agent boleh menambahkan script yang wajar dan menjelaskan perubahan.
+**SEBELUM Phase 0 Foundation selesai**, jika `typecheck` atau `test` belum tersedia:
+
+- jalankan hanya scripts aktual yang tersedia dan relevan;
+- laporkan missing scripts sebagai **FOUNDATION PREREQUISITE / GAP**, bukan PASS/FAIL command;
+- jangan membuat script/dependency baru kecuali task memang Phase 0 Foundation atau secara eksplisit meminta setup testing/typecheck;
+- jangan mengklaim typecheck/test PASS bila command belum tersedia.
+
+Phase 0 tetap bertanggung jawab menyediakan lint/typecheck/test/build. Jika Phase 0 Foundation sudah dinyatakan selesai tetapi required script hilang, **STOP** dan laporkan sebagai **regression** atau **unmet prerequisite**.
 
 Untuk perubahan algoritma, tambah:
 

@@ -113,6 +113,12 @@ Dan set customer output = set customer input.
 
 Recompute route distance secara fungsi terpisah. Jangan mempercayai `totalDistance` yang dikembalikan algoritma sendiri.
 
+Gunakan frozen OSRM directed matrix dalam meter; cocokkan input hash, node order dan matrix hash di kedua metode. Jangan hanya mencocokkan coordinates atau nama scenario. Matrix/benchmark case tetap immutable setelah orders diedit.
+
+### NN and 2-Opt
+
+NN: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt: best improvement setelah semua candidates, reverse segment dan full directed recomputation. Jalankan asymmetric fixtures di [docs/33](33_ALGORITHM_SPECIFICATION.md); jangan menerima symmetric-only two-boundary-edge delta. Hasil final harus <= NN distance.
+
 ### ACO reproducibility
 
 Run dua kali dengan same seed + same matrix + same params.
@@ -122,6 +128,16 @@ Expected untuk test deterministic RNG path:
 ```text
 same result
 ```
+
+Pastikan varian Classical Ant System: directed pheromone, semua valid ants deposit, fixed iterations, state reset per run, tidak ada post-ACO 2-Opt. Parameter numerik ilmiah harus berasal dari literature/calibration, bukan tebakan AI.
+
+### Benchmark evidence
+
+Periksa [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 × 10 random datasets; N=100 conditional, other patterns optional; calibration terpisah dan satu global configuration frozen. Per dataset ada 30 independent seeded ACO runs, 30 NN+2-Opt timing samples, dan 5 warm-ups yang dikeluarkan. ACO mean/median pembanding utama, best tambahan. Dataset-level observations tidak diganti dengan jumlah runs. Raw poor-valid/failed runs tetap ada.
+
+Timer harus mengecualikan OSRM/DB/network/serialization/geometry/rendering dan dijalankan terkontrol di luar runtime Vercel. Untuk task dokumentasi, periksa keselarasan sumber dengan MASTER_GUIDE/MANIFEST; application lint/build tidak membuktikan metodologi penelitian.
+
+Periksa dataset ordinal mapping dan balanced execution schedule yang disimpan terhadap [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary), termasuk warm-up tepat sebelum masing-masing measured block.
 
 ## 8. AI review trap
 

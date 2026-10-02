@@ -176,12 +176,19 @@ Scenario
 → Map
 → Dummy generator
 → Freeze benchmark
-→ Distance matrix
-→ NN
-→ 2-Opt
-→ ACO
-→ Benchmark runner
+→ Road routability validation
+→ OSRM Table directed matrix (meter) + hash + freeze
+→ deterministic NN (depot=0, lowest-index tie)
+→ best-improvement 2-Opt (full directed recomputation)
+→ ACO Classical Ant System
+→ Verification → separate calibration → pilot → main experiment
 ```
+
+Sebelum algorithm checkpoint, baca [docs/32](32_RESEARCH_DECISIONS.md), [docs/33](33_ALGORITHM_SPECIFICATION.md), dan [docs/34](34_OSRM_DISTANCE_CONTRACT.md). Evidence input sebelum integrasi algoritma: immutable case/matrix, stable node order, no unreachable pair, input/matrix hashes. Saat checkpoint 2-Opt selesai, tunjukkan symmetric-shortcut trap fixture PASS.
+
+Benchmark checkpoint mengikuti [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 customer × 10 independent random datasets, 30 seeded ACO runs, satu NN+2-Opt quality output + 30 timing repetitions, 5 warm-ups. Satu global ACO config frozen sesudah calibration terpisah. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
+
+Verifikasi timer mengecualikan OSRM/DB/network/serialization/geometry/rendering. Review raw failure retention dan dataset-level summaries, bukan hanya best ACO result. Current UI Template Baseline belum berarti checkpoint riset ini sudah dikerjakan.
 
 ## Bagaimana bertanya saat bingung
 

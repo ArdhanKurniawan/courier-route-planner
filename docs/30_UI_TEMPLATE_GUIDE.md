@@ -253,6 +253,8 @@ System
 
 `Auth/User Management` tidak muncul sampai phase auth disetujui.
 
+`Benchmark Batches` pada contoh menu adalah optional/future design consideration, bukan kewajiban membuat tabel `benchmark_batches`. Main experiment dan comparison mengikuti [docs/32](32_RESEARCH_DECISIONS.md) dan [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md); jangan menurunkan schema penelitian dari contoh menu.
+
 ## 9. Dashboard mapping
 
 Contoh widget yang relevan:
@@ -269,7 +271,7 @@ Chart/visual yang mungkin dipakai nanti:
 - distance NN+2Opt vs ACO;
 - execution time vs customer count;
 - mean ± standard deviation ACO;
-- distribution pattern comparison.
+- distribution pattern comparison bila optional/additional experiment dipilih; primary pattern tetap random.
 
 Jangan tampilkan statistik palsu hanya agar dashboard terlihat penuh.
 

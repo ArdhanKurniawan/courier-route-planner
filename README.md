@@ -1,12 +1,14 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Baseline v1.2  
-**Tanggal baseline:** 2026-09-26  
+**Status:** Research contract sync v1, UI Template Baseline
+**Tanggal sinkronisasi:** 2026-10-02
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
 
-## Keputusan utama yang sudah dikunci
+## Approved Target Architecture
+
+Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelaskan terpisah di bawah.
 
 - Scope: **Web Admin Route Planner**, bukan aplikasi kurir realtime.
 - Arsitektur: full-stack **Next.js App Router + TypeScript**.
@@ -22,9 +24,32 @@
 - Deploy: **Vercel Git Integration**.
 - Algoritma penelitian:
   - Hybrid **Nearest Neighbor + 2-Opt**.
-  - **Ant Colony Optimization (ACO)**.
+  - **Ant Colony Optimization (ACO) / Classical Ant System**, tanpa 2-Opt sesudah ACO pada main comparison.
 - Fokus pengujian: total distance, execution time, scalability, consistency/stability.
-- OSRM: supporting/future layer, **bukan core MVP**.
+- OSRM Table Service: **approved core infrastructure** untuk frozen road-network distance matrix formal, unit meter, directed/asymmetric. OSRM bukan algoritma penelitian; Route/geometry terpisah untuk visualisasi.
+- NN deterministic: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt best improvement memakai full directed route recomputation.
+- Main experiment: **10/25/50 customer × 10 independent random datasets = 30 datasets**. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
+- Calibration terpisah dari evaluation; satu global ACO configuration dibekukan. ACO 30 independent seeded runs per dataset; NN+2-Opt satu quality result dan 30 timing repetitions; 5 warm-ups per algoritma/dataset.
+- Kedua metode memakai input dan matrix hash identik. Timer hanya algoritma, tanpa OSRM/DB/network/serialization/geometry/rendering, pada environment terkontrol di luar runtime Vercel.
+
+## Current Implementation Status
+
+Audit branch `feature/ui-template-baseline`, 2026-10-02:
+
+| Status | Evidence / kondisi aktual |
+|---|---|
+| Tersedia | Repository documentation dan local branch guard files `.githooks/pre-commit`, `.githooks/pre-push`; ini bukan bukti GitHub protections sudah aktif |
+| Tersedia | TailAdmin Free 2.4.0 di `src/` dan `public/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
+| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; `package.json` mempunyai dev/build/start/lint |
+| Current | UI Template Baseline; `src/app/[locale]/(admin)/page.tsx` masih dashboard e-commerce dan sidebar masih menu template |
+| Belum | Domain cleanup, project branding, Route Planner navigation; `apexcharts`, `react-apexcharts`, dan `next-intl` masih ada |
+| Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
+| Belum | Auth/authorization aktual; halaman sign-in/sign-up yang ada hanya UI demo |
+| Foundation gap | Script typecheck/test, Vitest/Playwright, CI workflow, health endpoint, dan Node 24 engines pin belum tersedia |
+
+Deployment/env/remote branch protections tidak diverifikasi melalui audit file lokal. Tidak ada klaim seluruh foundation atau template cleanup selesai.
+
+Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
 ## Urutan baca wajib
 
@@ -80,6 +105,9 @@ Setelah itu baca dokumen spesifik sesuai pekerjaan.
 | `29_HUMAN_REVIEW_GUIDE.md` | Cara manusia mengecek output AI |
 | `30_UI_TEMPLATE_GUIDE.md` | Keputusan TailAdmin, download, cleanup, license & UI adoption |
 | `31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | Pencegahan commit/push tidak sengaja ke main/testing, GitHub protection, local hooks & recovery |
+| [32_RESEARCH_DECISIONS.md](docs/32_RESEARCH_DECISIONS.md) | RQ, scope, design eksperimen, metrics, dan keputusan OPEN |
+| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, Classical Ant System, validator dan fixtures |
+| [34_OSRM_DISTANCE_CONTRACT.md](docs/34_OSRM_DISTANCE_CONTRACT.md) | OSRM Table matrix, hashing/freeze, fairness dan reproducibility |
 | `THIRD_PARTY_NOTICES.md` | Provenance/license third-party penting |
 
 ## Template tim

@@ -2,6 +2,10 @@
 
 Prompt di bawah dirancang untuk coding agent seperti Codex/Claude/Gemini/agent IDE. Sesuaikan nama tool bila perlu.
 
+Semua prompt penelitian tunduk pada [docs/32](32_RESEARCH_DECISIONS.md), [docs/33](33_ALGORITHM_SPECIFICATION.md), [docs/34](34_OSRM_DISTANCE_CONTRACT.md) dan [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md). Approved target berbeda dari current implementation di README. Prompt adalah template untuk task berikutnya, bukan otorisasi menjalankan seluruh fitur pada task documentation sync.
+
+Semua prompt yang meminta validation commands mengikuti Foundation guard pada master prompts A/B: inspect script aktual sebelum menjalankan command. Phase 0 tetap wajib menyediakan lint/typecheck/test/build; missing scripts sesudah Foundation bukan pengecualian terhadap contract.
+
 ---
 
 # A. MASTER IMPLEMENTATION PROMPT
@@ -11,7 +15,7 @@ Anda bekerja pada repository Courier Route Planner.
 
 MANDATORY BEFORE ANY CHANGE:
 1. Baca AGENTS.md sepenuhnya.
-2. Baca README.md dan dokumentasi yang relevan dengan task.
+2. Baca README.md dan dokumentasi yang relevan dengan task; untuk research baca docs/15, docs/32, docs/33, docs/34.
 3. Audit state repository, kode existing, tests, dan schema terkait.
 4. Jangan mengubah kode sebelum audit singkat selesai.
 
@@ -39,7 +43,15 @@ ENGINEERING RULES:
 - Jangan commit/push.
 - Jangan mengubah scope penelitian.
 
-AFTER IMPLEMENTATION, WAJIB RUN:
+VALIDATION FOUNDATION GUARD:
+- Sebelum validation, inspect scripts actual di package.json dan status Phase 0 Foundation.
+- Jangan mengarang command/script yang belum tersedia.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP.
+- Jangan membuat script/dependency baru kecuali task memang Phase 0 Foundation atau secara eksplisit meminta setup testing/typecheck.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- SETELAH Foundation, jika contract mengharuskan scripts tersebut tetapi script hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+AFTER IMPLEMENTATION, WAJIB RUN SESUAI FOUNDATION GUARD:
 - npm run lint
 - npm run typecheck
 - npm run test
@@ -53,7 +65,7 @@ OUTPUT AKHIR:
 2. Plan yang benar-benar dikerjakan.
 3. Changed files.
 4. Design decisions.
-5. Test/command evidence dengan PASS/FAIL.
+5. Test/command evidence dengan PASS/FAIL untuk command yang dijalankan; missing script dilaporkan FOUNDATION PREREQUISITE / GAP.
 6. Manual checks yang masih diperlukan.
 7. Known limitations/risks.
 8. Out-of-scope yang sengaja tidak dikerjakan.
@@ -76,7 +88,14 @@ MANDATORY:
 4. Review hanya perubahan terkait task dan side effect-nya.
 5. Cari bug, regression, security issue, architecture violation, schema risk, missing tests, dan scope creep.
 
-WAJIB VALIDATE:
+VALIDATION FOUNDATION GUARD:
+- Inspect scripts actual di package.json dan status Phase 0 Foundation sebelum menjalankan validation commands; jangan mengarang command/script.
+- SEBELUM Phase 0 menyediakan typecheck/test: jalankan hanya scripts actual yang tersedia dan relevan; laporkan missing scripts sebagai FOUNDATION PREREQUISITE / GAP, bukan PASS/FAIL command.
+- Jangan mengklaim typecheck/test PASS bila command belum tersedia.
+- Jangan membuat script/dependency baru dalam verification. Setup hanya boleh pada task implementasi Phase 0 atau task setup testing/typecheck yang eksplisit.
+- SETELAH Foundation, jika contract mewajibkan scripts yang hilang: STOP dan laporkan regression atau unmet prerequisite.
+
+WAJIB VALIDATE SESUAI FOUNDATION GUARD:
 - acceptance criteria satu per satu;
 - lint/typecheck/test/build;
 - no secret;
@@ -147,9 +166,10 @@ DO NOT:
 - commit/push.
 
 MANDATORY VERIFICATION:
+- inspect package.json scripts actual dan terapkan Foundation guard pada master prompt A; sesudah Foundation, missing required script berarti STOP/report regression atau unmet prerequisite
 - npm run lint
-- npm run typecheck (add baseline script if project requires it)
-- npm run test (if baseline exists; otherwise document foundation gap)
+- npm run typecheck (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
+- npm run test (bila script tersedia; sebelum Foundation, missing script dilaporkan FOUNDATION PREREQUISITE / GAP)
 - npm run build
 - npm ls apexcharts react-apexcharts
 - manual responsive sidebar/header check
@@ -285,7 +305,7 @@ Mandatory:
 - markers for depot and customers;
 - fit bounds safely;
 - no geocoding API;
-- no OSRM;
+- OSRM Table adapter tidak dikerjakan dalam task marker/map ini; formal benchmark tetap memakai frozen OSRM matrix dari infrastructure task;
 - no optimization algorithm in map component.
 
 Add tests for data transformation; manual browser verification documented.
@@ -298,11 +318,11 @@ Add tests for data transformation; manual browser verification documented.
 ```text
 Implement seeded Dummy Order Generator.
 
-Patterns in scope:
-- random
-- clustered
-- circular
-- directional
+Primary pattern: random.
+Optional engineering patterns sesuai task: clustered, circular, directional.
+Optional patterns bukan mandatory primary experiment atau core novelty.
+Main evaluation adalah 10/25/50 customer, 10 independent datasets per ukuran.
+N=100 conditional/optional setelah pilot.
 
 Requirements:
 - same seed+config => same generated coordinates/order identity;
@@ -312,7 +332,7 @@ Requirements:
 - overwrite/regenerate requires explicit behavior and tests;
 - generator logic pure and unit-tested.
 
-Do NOT decide formal research distance formula here.
+Formal distance input memakai frozen OSRM road-network matrix sesuai docs/34; jangan mengubahnya pada task generator. Coordinate generation tidak menjamin routability; validation dilakukan sebelum freeze matrix.
 ```
 
 ---
@@ -320,20 +340,48 @@ Do NOT decide formal research distance formula here.
 # I. DISTANCE ENGINE PROMPT
 
 ```text
-Implement DistanceProvider abstraction and distance matrix infrastructure.
+Implement OSRM road-network matrix infrastructure according to docs/34_OSRM_DISTANCE_CONTRACT.md.
 
 IMPORTANT:
-The final geographic-to-Euclidean method is a research decision. Do not invent/finalize it unless docs explicitly mark it approved.
+OSRM Table Service is approved core formal input infrastructure. OSRM is NOT the research algorithm. Audit AGENTS.md, docs/03, docs/08, docs/33 and docs/34 first.
 
 Implement:
-- DistanceProvider interface;
-- matrix builder;
-- matrix validation;
-- unit/metadata support;
-- test doubles/fixture provider if needed;
-- known synthetic Cartesian provider for algorithm unit tests.
+- DistanceProvider port outside algorithm domain;
+- road validation and Table adapter;
+- stable node order with depot index 0;
+- directed/asymmetric meter matrix validation, no null/unreachable;
+- input and matrix hash, provider/profile/provenance;
+- immutable matrix builder/storage and tests;
+- synthetic matrix fixtures only for unit tests, never substitute formal input.
 
-Do NOT claim geographic distance correctness without approved methodology.
+No OSRM/network/DB in algorithm core or formal timer. Do not claim OSRM distances are mathematical shortest-distance paths. Keep geometry separate. Do not choose open study-area/endpoint methodology silently.
+```
+
+---
+
+# I2. OSRM MATRIX PROMPT
+
+```text
+Implement only the approved OSRM Table matrix foundation.
+Audit AGENTS.md, docs/08, docs/15, docs/32, docs/33, docs/34 and actual code/tests first.
+
+Requirements:
+- road coordinate validation/routability and recorded snapping evidence;
+- Table Service adapter outside algorithm core; explicitly request distance;
+- depot=0 and stable saved customer/node order;
+- NxN including depot, unit meter, directed matrix, no symmetry assumption;
+- reject null/unreachable, invalid values/shape, no fallback metric;
+- reject zero off-diagonal at common ACO eligibility without epsilon substitution;
+- canonical input hash and matrix hash with versioned serialization;
+- immutable snapshot, provider/profile/options/version provenance;
+- same matrix/hash for NN+2-Opt and ACO;
+- tests for request/response order, failures, hashing, freeze, and replay;
+- no algorithm timing contamination by OSRM/DB/network/serialization.
+
+Do not implement optimizer or geometry UI in this task.
+Do not pick final endpoint/study-area/sampling thresholds if still OPEN.
+Do not overwrite existing frozen matrices or silently repair unreachable pairs.
+No commit/push; follow the task's approved schema/migration scope.
 ```
 
 ---
@@ -344,9 +392,9 @@ Do NOT claim geographic distance correctness without approved methodology.
 Implement Nearest Neighbor as framework-independent domain code.
 
 Input:
-- validated distance matrix;
-- depot index;
-- customer point IDs.
+- validated directed DistanceMatrix only as geographic input;
+- depot fixed index 0; customers inferred as indices 1..n;
+- application maps point IDs outside solver.
 
 Output:
 - closed route;
@@ -358,7 +406,7 @@ Mandatory tests:
 - known small matrix;
 - starts/ends depot;
 - each customer exactly once;
-- deterministic tie-breaking documented;
+- choose minimum directed outgoing distance; ties use lowest node index;
 - input not mutated.
 
 Do not implement 2-Opt in this task.
@@ -370,14 +418,19 @@ Do not implement 2-Opt in this task.
 
 ```text
 Implement 2-Opt improvement over an existing valid closed route.
+Follow docs/33; production pipeline initial route comes from NN.
 
 Mandatory:
 - depot remains fixed start/end;
 - preserve customer permutation;
-- result distance <= input distance within numeric tolerance;
-- termination rule explicit;
+- BEST IMPROVEMENT: evaluate all candidate segment reversals before accepting best;
+- recompute FULL route distance for each candidate on frozen directed matrix;
+- accept strict improvement only; result distance <= NN input distance;
+- deterministic candidate order/ties and stop when no strict improvement;
 - no UI/DB dependency;
-- unit tests including a route with a known improvable crossing.
+- unit tests including asymmetric cheap-cycle and symmetric-shortcut trap in docs/33;
+- reversal must account for directed internal edges as well as boundaries;
+- forbid symmetric-only delta shortcut; any later optimization needs mathematical directed-cost proof and contract review.
 
 Do not change NN behavior except integration adapter if necessary.
 ```
@@ -387,15 +440,17 @@ Do not change NN behavior except integration adapter if necessary.
 # L. ACO PROMPT
 
 ```text
-Implement Ant Colony Optimization domain module only.
+Implement Ant Colony Optimization domain module only, variant = Classical Ant System according to docs/33.
 
 Requirements:
 - typed parameter object;
 - parameter validation;
-- seeded RNG injectable;
-- pheromone matrix initialization;
-- probabilistic route construction;
-- pheromone evaporation/update;
+- seeded deterministic PRNG injectable/versioned, reset for every run;
+- directed pheromone initialization with explicit tau0;
+- eta_ij=1/d_ij and roulette-wheel probabilistic selection;
+- explicit alpha, beta, rho, Q, tau0, antCount, maxIterations;
+- evaporation followed by deposit from ALL valid ants, directed return edge included;
+- fixed iteration stopping criterion;
 - best observed route tracking;
 - valid closed tour;
 - no framework/DB dependency.
@@ -407,7 +462,9 @@ Mandatory tests:
 - no NaN/Infinity probabilities;
 - small matrix sanity.
 
-Do NOT invent final research default parameters. Use clearly labeled engineering defaults/fixtures only or require explicit params.
+Do NOT add 2-Opt after ACO in main comparison or substitute another ACO variant.
+Require explicit parameters; do NOT hardcode final scientific numeric defaults.
+Fixture values are tests only. Final research values require literature/calibration evidence and one global configuration frozen separately from main evaluation datasets.
 ```
 
 ---
@@ -426,6 +483,8 @@ Requirements:
 - transactional creation;
 - immutable repository API (no update method for frozen points);
 - tests showing later order edits do not alter old benchmark case.
+- stable node order, depot index 0, case ready for OSRM matrix foundation in docs/34;
+- immutable distance_matrices reference after validated matrix freeze; do not merge editable scenario and immutable snapshot into one dataset table.
 ```
 
 ---
@@ -436,14 +495,23 @@ Requirements:
 Implement benchmark orchestration according to docs/15_RESEARCH_BENCHMARK_PROTOCOL.md.
 
 Requirements:
-- one frozen case -> one distance matrix;
-- run NN+2Opt and ACO against same matrix;
+- one frozen case -> frozen OSRM directed meter matrix with verified input/matrix hash;
+- run NN+2Opt and Classical Ant System against exact same matrix/order/hash;
+- main 10/25/50 x 10 independent random datasets; 100 optional after pilot;
+- separate calibration/evaluation, one frozen global ACO configuration;
+- 5 warmups per algorithm/dataset, excluded from measured statistics;
+- 30 independent seeded ACO runs with predetermined saved seeds;
+- NN+2Opt one deterministic quality output plus 30 timing repetitions;
 - timing only around algorithm execution;
-- DB/network excluded from execution timer;
+- OSRM/DB/HTTP/network/serialization/geometry/rendering excluded from execution timer;
 - seed/run metadata saved;
 - invalid route rejected;
 - raw run results saved before summary;
 - summary computed from raw runs.
+- keep all poor valid/failed run records, no silent replacements/cherry-picking;
+- primary quality comparison ACO mean/median, best additional; report SD/range/CV;
+- dataset-level summaries are independent observations, not 30 runs as 30 datasets;
+- mark incomplete planned run sets, preserve attempt identities and failure causes.
 
 Do NOT use Vercel timing as formal scientific benchmark result.
 ```

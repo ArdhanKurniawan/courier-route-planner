@@ -30,32 +30,35 @@
 - depot/customer marker;
 - edit marker/coordinates;
 - dummy generator;
-- seeded patterns;
+- seeded random primary generator; clustered/circular/directional optional additional support;
 - scenario data QA.
 
-## Phase 3 — Benchmark foundation
+## Phase 3 — Benchmark Input Foundation
 
 - freeze scenario;
 - benchmark case snapshots;
 - canonical input hash;
-- distance provider interface;
-- research distance method after approval;
-- matrix tests.
+- road routability validation;
+- OSRM Table adapter / DistanceProvider infrastructure sesuai [docs/34](34_OSRM_DISTANCE_CONTRACT.md);
+- directed/asymmetric road-network matrix, meter, stable node order;
+- no null/unreachable pair, ACO common eligibility;
+- matrix hash + immutable distance_matrices storage/freeze;
+- validation and freeze/replay tests.
 
 ## Phase 4 — Algorithm A
 
-- Nearest Neighbor;
+- deterministic Nearest Neighbor (depot=0, lowest-index tie);
 - route validator;
-- 2-Opt;
+- best-improvement 2-Opt, full directed recomputation;
 - distance recomputation;
 - tests.
 
 ## Phase 5 — Algorithm B
 
 - seeded RNG;
-- ACO parameters;
-- pheromone update;
-- iteration;
+- Classical Ant System explicit parameters (numerical final values tetap OPEN);
+- directed pheromone evaporation/deposit semua valid ants;
+- fixed iterations, tanpa post-ACO 2-Opt;
 - route validation;
 - reproducibility tests.
 
@@ -72,8 +75,9 @@
 
 - CLI benchmark;
 - hardware/environment metadata;
-- scenario matrix;
-- repetitions;
+- Phase A verification → B separate calibration + global config freeze → C pilot → D main sesuai [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md);
+- main 10/25/50 customer × 10 independent random datasets = 30 datasets;
+- 5 warm-ups, 30 independent seeded ACO runs, satu NN quality + 30 timing repetitions;
 - output dataset;
 - verification script.
 
@@ -97,10 +101,12 @@
 ## P2 / Future
 
 - OSRM road geometry;
-- road-network distance comparison;
+- N=100 conditional setelah pilot, serta clustered/circular/directional additional experiments bila dipilih;
 - courier-facing app;
 - realtime tracking;
 - multi-depot/VRP.
+
+OSRM **Table matrix** ada di Phase 3 dan merupakan core formal research input. Item OSRM road geometry di atas hanya visualisasi. Roadmap adalah target; [README](../README.md#current-implementation-status) mencatat baseline aktual.
 
 ## Backlog priority convention
 
