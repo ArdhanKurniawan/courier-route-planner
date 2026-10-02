@@ -1,100 +1,108 @@
 "use client";
 
-import type React from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useSyncExternalStore,
+} from "react";
 
 type ThemeMode = "light" | "dark" | "auto";
 type ResolvedTheme = "light" | "dark";
-
 type ThemeContextType = {
-  theme: ResolvedTheme; // Resolved theme actually active ("light" or "dark")
-  themeMode: ThemeMode; // The configured preference ("light", "dark", or "auto")
+  theme: ResolvedTheme;
+  themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const themeChangeEvent = "courier-theme-change";
+let transientMode: ThemeMode | null = null;
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [themeMode, setThemeModeState] = useState<ThemeMode>("light");
-  const [theme, setTheme] = useState<ResolvedTheme>("light");
-  const [isInitialized, setIsInitialized] = useState(false);
+function isThemeMode(value: string | null): value is ThemeMode {
+  return value === "light" || value === "dark" || value === "auto";
+}
 
-  useEffect(() => {
-    // This code will only run on the client side
-    const savedMode = localStorage.getItem("theme-mode") as ThemeMode | null;
-    const legacySavedTheme = localStorage.getItem(
-      "theme",
-    ) as ResolvedTheme | null;
-    const initialMode = savedMode || (legacySavedTheme as ThemeMode) || "light";
+function readThemeMode(): ThemeMode {
+  if (transientMode) return transientMode;
+  try {
+    const mode = localStorage.getItem("theme-mode");
+    if (isThemeMode(mode)) return mode;
+    const legacyTheme = localStorage.getItem("theme");
+    if (legacyTheme === "light" || legacyTheme === "dark") return legacyTheme;
+  } catch {
+    // Keep the toggle usable when browser storage is unavailable.
+  }
+  return "light";
+}
 
-    setThemeModeState(initialMode);
-    setIsInitialized(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    localStorage.setItem("theme-mode", themeMode);
-
-    if (themeMode === "auto") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-      const handleChange = () => {
-        const resolved = mediaQuery.matches ? "dark" : "light";
-        setTheme(resolved);
-      };
-
-      handleChange();
-
-      mediaQuery.addEventListener("change", handleChange);
-      return () => {
-        mediaQuery.removeEventListener("change", handleChange);
-      };
-    } else {
-      setTheme(themeMode as ResolvedTheme);
-    }
-  }, [themeMode, isInitialized]);
-
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem("theme", theme);
-      if (theme === "dark") {
-        document.documentElement.classList.add("dark");
-        document.documentElement.setAttribute("data-color-scheme", "dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.setAttribute("data-color-scheme", "light");
-      }
-    }
-  }, [theme, isInitialized]);
-
-  const setThemeMode = (mode: ThemeMode) => {
-    setThemeModeState(mode);
+function subscribeThemeMode(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(themeChangeEvent, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(themeChangeEvent, onChange);
   };
+}
 
-  const toggleTheme = () => {
-    setThemeModeState((prevMode) => {
-      const currentResolved = theme;
-      return currentResolved === "light" ? "dark" : "light";
-    });
-  };
+function readSystemDark() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+function subscribeSystemTheme(onChange: () => void) {
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  mediaQuery.addEventListener("change", onChange);
+  return () => mediaQuery.removeEventListener("change", onChange);
+}
+
+function setThemeMode(mode: ThemeMode) {
+  try {
+    localStorage.setItem("theme-mode", mode);
+    transientMode = null;
+  } catch {
+    transientMode = mode;
+    // The preference still works for this page when storage is blocked.
+  }
+  window.dispatchEvent(new Event(themeChangeEvent));
+}
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const themeMode = useSyncExternalStore(
+    subscribeThemeMode,
+    readThemeMode,
+    () => "light" as ThemeMode,
+  );
+  const systemDark = useSyncExternalStore(
+    subscribeSystemTheme,
+    readSystemDark,
+    () => false,
+  );
+  const theme: ResolvedTheme =
+    themeMode === "auto" ? (systemDark ? "dark" : "light") : themeMode;
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.setAttribute("data-color-scheme", theme);
+    // Legacy `theme` is read for migration only. Hydration must not overwrite it.
+  }, [theme]);
 
   return (
     <ThemeContext.Provider
-      value={{ theme, themeMode, setThemeMode, toggleTheme }}
+      value={{
+        theme,
+        themeMode,
+        setThemeMode,
+        toggleTheme: () => setThemeMode(theme === "light" ? "dark" : "light"),
+      }}
     >
       {children}
     </ThemeContext.Provider>
   );
-};
+}
 
-export const useTheme = () => {
+export function useTheme() {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
+  if (!context) throw new Error("useTheme must be used within a ThemeProvider");
   return context;
-};
+}

@@ -1,6 +1,6 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Research contract sync v1, UI Template Baseline
+**Status:** Research contract sync v1, UI Template Cleanup / Route Planner application shell
 **Tanggal sinkronisasi:** 2026-10-02
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -34,20 +34,24 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Audit branch `feature/ui-template-baseline`, 2026-10-02:
+Audit branch `feature/ui-template-cleanup`, 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
 | Tersedia | Repository documentation dan local branch guard files `.githooks/pre-commit`, `.githooks/pre-push`; ini bukan bukti GitHub protections sudah aktif |
-| Tersedia | TailAdmin Free 2.4.0 di `src/` dan `public/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
+| Tersedia | Shell dan reusable UI primitives dari TailAdmin Free 2.4.0 di `src/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
 | Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; `package.json` mempunyai dev/build/start/lint |
-| Current | UI Template Baseline; `src/app/[locale]/(admin)/page.tsx` masih dashboard e-commerce dan sidebar masih menu template |
-| Belum | Domain cleanup, project branding, Route Planner navigation; `apexcharts`, `react-apexcharts`, dan `next-intl` masih ada |
+| Current | UI Template Cleanup terverifikasi lokal; branding Courier Route Planner, dashboard status kesiapan fitur tanpa data palsu, sidebar sesuai mapping project, header dan tema light/dark |
+| Tersedia | Routing sederhana tanpa locale: `/`, `/about`, dan 10 route modul dengan status **Belum diimplementasikan**; seluruh link sidebar dan refresh route diuji melalui browser |
+| Dibersihkan | Demo e-commerce, charts, demographic map, calendar, profile/auth, showcase, mock data dan assets; `apexcharts`, `react-apexcharts`, `next-intl`, JVectorMap, FullCalendar, Swiper, DnD, Dropzone dan SimpleBar dihapus setelah audit usage |
+| Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
 | Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
-| Belum | Auth/authorization aktual; halaman sign-in/sign-up yang ada hanya UI demo |
+| Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
 | Foundation gap | Script typecheck/test, Vitest/Playwright, CI workflow, health endpoint, dan Node 24 engines pin belum tersedia |
 
-Deployment/env/remote branch protections tidak diverifikasi melalui audit file lokal. Tidak ada klaim seluruh foundation atau template cleanup selesai.
+Validasi lokal: `npm run lint` PASS (0 errors, 0 warnings), `npm run build` PASS, dependency removal terkonfirmasi melalui `npm ls`, dan `git diff --check` PASS. Browser checks mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji. Build memeriksa TypeScript, tetapi belum menggantikan foundation typecheck/test yang terpisah.
+
+Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Vercel Preview serta human review masih diperlukan. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 

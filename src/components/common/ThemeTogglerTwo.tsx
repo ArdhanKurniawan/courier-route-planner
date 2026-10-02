@@ -3,9 +3,13 @@
 import { useTheme } from "@/context/ThemeContext";
 
 export default function ThemeTogglerTwo() {
-  const { toggleTheme } = useTheme();
+  const { toggleTheme, theme } = useTheme();
   return (
     <button
+      type="button"
+      aria-label={
+        theme === "light" ? "Aktifkan tema gelap" : "Aktifkan tema terang"
+      }
       onClick={toggleTheme}
       className="inline-flex size-14 items-center justify-center rounded-full bg-brand-500 text-white transition-colors hover:bg-brand-600"
     >
