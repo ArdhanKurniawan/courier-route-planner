@@ -2,18 +2,37 @@
 
 ## Phase 0 — Foundation
 
-- repo;
-- TailAdmin Next.js Free provenance/license audit;
-- template baseline build;
-- template cleanup (branding/menu/demo-only code/dependencies);
-- Next.js TS;
-- Node 24 standardization;
-- TiDB Dev/Test/Prod;
-- Drizzle connection;
-- Vercel Production/Preview;
-- env isolation;
-- CI skeleton;
-- health endpoint.
+### Phase 0A — Quality Foundation
+
+Implemented locally, verified 2026-10-03; independent review dan reproduksi anggota kedua masih pending:
+
+- [x] repo, Next.js + TypeScript strict;
+- [x] TailAdmin Next.js Free provenance/license audit, template baseline build dan cleanup (branding/menu/demo-only code/dependencies);
+- [x] controlled Next.js + eslint-config-next patch `16.3.6`;
+- [x] Node 24 contract (`engines.node = 24.x`, `.nvmrc = 24`);
+- [x] explicit typecheck dengan Next type generation;
+- [x] Vitest/RTL/jest-dom/jsdom/V8 coverage, 2 regression test files / 11 tests PASS;
+- [x] clean install lint/typecheck/test/coverage/build PASS dan audit delta terdokumentasi.
+
+### Phase 0B — Environment + Health
+
+- [ ] env validation dan contoh env tanpa secret;
+- [ ] app-only health endpoint.
+
+### Phase 0C — Database Foundation
+
+- [ ] TiDB Dev/Test/Prod;
+- [ ] Drizzle connection, Zod validation dan migration foundation;
+- [ ] safe DB health verification.
+
+### Phase 0D — CI + Vercel Integration
+
+- [ ] Vercel Production/Preview;
+- [ ] env isolation dan Preview DB != Production DB;
+- [ ] CI skeleton menjalankan quality scripts;
+- [ ] second-member setup reproduction dan Gate 1 review.
+
+Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 

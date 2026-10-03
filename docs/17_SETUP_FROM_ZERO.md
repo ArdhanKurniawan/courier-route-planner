@@ -104,6 +104,8 @@ Pastikan `package.json` project final memiliki:
 }
 ```
 
+Kontrak Phase 0A sudah tersedia: `.nvmrc` berisi `24`. Gunakan patch Node 24 yang memenuhi engines dependency dalam lockfile; jsdom `30.1.1` membutuhkan Node `24.15.0` atau lebih baru pada major 24. Quality suite diverifikasi pada Node `24.19.0` dan npm `11.6.0`.
+
 ### Template cleanup tidak dilakukan sekaligus
 
 Buat task/branch khusus. Hapus hanya demo yang tidak relevan dan dependency yang benar-benar sudah tidak dipakai.
@@ -122,16 +124,29 @@ Jangan uninstall sebelum imports/pages dependennya dibereskan.
 
 Fallback ke blank `create-next-app` hanya jika template adoption gagal secara teknis dan tim membuat ADR baru.
 
-## PHASE E — Install project foundation dependencies
+## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Setelah template baseline build berhasil dan cleanup plan jelas, install hanya dependency project yang belum tersedia:
+Phase 0A Quality Foundation sudah diimplementasikan lokal. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
-npm install drizzle-orm @tidbcloud/serverless zod leaflet react-leaflet
-npm install -D drizzle-kit vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @playwright/test
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run build
 ```
 
-Jangan install auth package sampai phase auth dimulai.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Initial suite menguji navigation/dashboard; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
+
+Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
+
+- Phase 0B — Environment + Health: env validation, contoh env tanpa secret, app-only health; belum diimplementasikan.
+- Phase 0C — Database Foundation: TiDB Dev/Test/Prod, Drizzle ORM, `@tidbcloud/serverless`, migration tooling dan Zod sesuai task; belum diimplementasikan.
+- Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
+- Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
+
+Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; provisioning/deployment dan Gate 1 masih OPEN.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -198,6 +213,9 @@ Sebelum commit:
 
 ```bash
 npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
 npm run build
 ```
 

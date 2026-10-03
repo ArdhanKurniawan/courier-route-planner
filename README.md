@@ -1,7 +1,7 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Research contract sync v1, UI Template Cleanup / Route Planner application shell
-**Tanggal sinkronisasi:** 2026-10-02
+**Status:** Research contract sync v1, Route Planner application shell; Phase 0A Quality Foundation implemented locally
+**Tanggal sinkronisasi:** 2026-10-03
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -34,24 +34,40 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Audit branch `feature/ui-template-cleanup`, 2026-10-02:
+Audit branch `feature/foundation-quality-gates`, 2026-10-03; shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
 | Tersedia | Repository documentation dan local branch guard files `.githooks/pre-commit`, `.githooks/pre-push`; ini bukan bukti GitHub protections sudah aktif |
 | Tersedia | Shell dan reusable UI primitives dari TailAdmin Free 2.4.0 di `src/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
-| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; `package.json` mempunyai dev/build/start/lint |
+| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; Node `24.x` dalam `engines.node` dan `.nvmrc` berisi `24` |
 | Current | UI Template Cleanup terverifikasi lokal; branding Courier Route Planner, dashboard status kesiapan fitur tanpa data palsu, sidebar sesuai mapping project, header dan tema light/dark |
 | Tersedia | Routing sederhana tanpa locale: `/`, `/about`, dan 10 route modul dengan status **Belum diimplementasikan**; seluruh link sidebar dan refresh route diuji melalui browser |
 | Dibersihkan | Demo e-commerce, charts, demographic map, calendar, profile/auth, showcase, mock data dan assets; `apexcharts`, `react-apexcharts`, `next-intl`, JVectorMap, FullCalendar, Swiper, DnD, Dropzone dan SimpleBar dihapus setelah audit usage |
 | Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
 | Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
 | Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
-| Foundation gap | Script typecheck/test, Vitest/Playwright, CI workflow, health endpoint, dan Node 24 engines pin belum tersedia |
+| Phase 0A lokal | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
+| Phase 0A lokal | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
+| Security audit | Next.js dan eslint-config-next dipatch ke `16.3.6`; audit 2026-10-03: runtime-only 0 findings, full 15 dev-only findings (1 low, 2 moderate, 12 high), tercatat di laporan Phase 0A |
+| Foundation gap | Phase 0B env validation + health; Phase 0C TiDB/Drizzle/Zod; Phase 0D GitHub Actions + Vercel/Preview/env isolation; Playwright/E2E masih pending |
 
-Validasi lokal: `npm run lint` PASS (0 errors, 0 warnings), `npm run build` PASS, dependency removal terkonfirmasi melalui `npm ls`, dan `git diff --check` PASS. Browser checks mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji. Build memeriksa TypeScript, tetapi belum menggantikan foundation typecheck/test yang terpisah.
+Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Vercel Preview serta human review masih diperlukan. Kontrak penelitian tetap sama.
+Jalankan quality gates lokal setelah clone/pull:
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run build
+```
+
+`npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
+
+Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0B/0C/0D, Vercel Preview, independent Phase 0A review dan reproduksi anggota kedua masih diperlukan. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 

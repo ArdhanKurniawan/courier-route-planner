@@ -16,6 +16,19 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 1 — Foundation
 
+**Status: OPEN.** Phase 0A implemented locally; evidence 2026-10-03 pada [quality foundation report](proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md):
+
+- [x] Node 24 contract dalam `package.json` dan `.nvmrc`;
+- [x] clean `npm ci` PASS;
+- [x] lint PASS;
+- [x] typecheck dari generated state bersih PASS;
+- [x] unit/component testing foundation PASS (2 files, 11 tests);
+- [x] V8 coverage command/report PASS, tanpa threshold;
+- [x] build PASS;
+- [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
+
+Checklist foundation keseluruhan di bawah tetap memerlukan independent verification. Health, TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua masih OPEN:
+
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
 - [ ] template baseline build pass sebelum cleanup;
