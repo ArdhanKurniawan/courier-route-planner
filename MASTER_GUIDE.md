@@ -4,7 +4,7 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-10-03. Read source files for canonical headings and context. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-10-04. Read source files for canonical headings and context. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
 
 ---
@@ -13,7 +13,7 @@ Derived from the source list below, in order. Regenerated 2026-10-03. Read sourc
 
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Research contract sync v1, Route Planner application shell; Phase 0A Quality Foundation implemented locally
+**Status:** Research contract sync v1, Route Planner application shell; Phase 0A CLOSED/merged via PR #7; Phase 0B Environment + Health implemented locally
 **Tanggal sinkronisasi:** 2026-10-03
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -47,7 +47,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Audit branch `feature/foundation-quality-gates`, 2026-10-03; shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Verifikasi branch `feature/foundation-environment-health`, 2026-10-03. Phase 0A CLOSED dan merged melalui PR #7 ke `testing` pada `f73834aa4bb38ada5c289fa30a0b6fb6aa608f26`; shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -60,12 +60,17 @@ Audit branch `feature/foundation-quality-gates`, 2026-10-03; shell UI berasal da
 | Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
 | Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
 | Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
-| Phase 0A lokal | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
-| Phase 0A lokal | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
+| Phase 0A CLOSED | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
+| Phase 0A CLOSED | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
 | Security audit | Next.js dan eslint-config-next dipatch ke `16.3.6`; audit 2026-10-03: runtime-only 0 findings, full 15 dev-only findings (1 low, 2 moderate, 12 high), tercatat di laporan Phase 0A |
-| Foundation gap | Phase 0B env validation + health; Phase 0C TiDB/Drizzle/Zod; Phase 0D GitHub Actions + Vercel/Preview/env isolation; Playwright/E2E masih pending |
+| Phase 0B lokal | `.env.example` berisi `APP_ENV=development`; pure typed parser di `src/config/env.ts`, exact enum `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation |
+| Phase 0B lokal | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB |
+| Tests current | 4 files / 48 tests PASS: navigation/dashboard + env parser (18) dan health (19); server tests memakai Node per file |
+| Foundation gap | Phase 0B independent verification; Phase 0C TiDB/Drizzle/Zod; Phase 0D GitHub Actions + Vercel/Preview/env isolation; Playwright/E2E masih pending |
 
-Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+
+Phase 0A independent verification: [report](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0B local implementation: [report](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md). Fresh lint/typecheck/test/coverage/build PASS tanpa `.env.local`, APP_ENV inherited, atau DATABASE_URL. Health memerlukan APP_ENV saat GET dipanggil; developer dapat menyalin `.env.example` ke ignored `.env.local`. DATABASE_URL ditunda ke Phase 0C; NEXT_PUBLIC_APP_NAME tidak diperkenalkan. Tidak ada dependency baru.
 
 Jalankan quality gates lokal setelah clone/pull:
 
@@ -80,7 +85,7 @@ npm run build
 
 `npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0B/0C/0D, Vercel Preview, independent Phase 0A review dan reproduksi anggota kedua masih diperlukan. Kontrak penelitian tetap sama.
+Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0B independent verification, Phase 0C/0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
@@ -2213,6 +2218,9 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 │   │   │   └── ...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
+│   ├── config/
+│   │   ├── navigation.ts
+│   │   └── env.ts          # pure APP_ENV parser; server call-site pada health
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
@@ -2227,7 +2235,6 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 │   │   ├── routing/
 │   │   └── experiments/
 │   ├── lib/
-│   │   ├── env/
 │   │   ├── validation/
 │   │   ├── security/
 │   │   └── utils/
@@ -2318,34 +2325,25 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 ## 1. Environment matrix
 
+Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
+
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
 | Local | developer branch | TiDB Dev | coding |
 | Preview | feature/fix/testing | TiDB Testing | review/integration |
 | Production | main | TiDB Production | demo/live |
 
-## 2. Required environment variables
+## 2. Environment variables menurut phase
 
-Initial:
+**Phase 0B current:** hanya `APP_ENV`, required ketika server membaca runtime config. Exact values: `development`, `testing`, `production`. Missing, empty, whitespace-only, case variant, padded value dan nilai lain ditolak. Tidak ada implicit default, trimming atau normalisasi.
 
-```text
-DATABASE_URL=
-APP_ENV=development|testing|production
-```
+`src/config/env.ts` menyediakan typed pure `parseAppEnv(rawValue)` dan safe `AppEnvValidationError`. Parser tidak membaca process.env. Route health membaca `process.env.APP_ENV` ketika GET dipanggil; tidak ada validation saat import/typegen/build. APP_ENV server-side dan tidak dikirim ke health payload/client.
 
-Future auth:
+**Phase 0C future:** `DATABASE_URL` untuk DB connection; belum dibaca, divalidasi atau diwajibkan pada Phase 0B.
 
-```text
-AUTH_SECRET=
-GITHUB_ID=
-GITHUB_SECRET=
-```
+**Auth phase future:** `AUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`.
 
-Optional:
-
-```text
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
-```
+`NEXT_PUBLIC_APP_NAME` optional secara konsep, tidak diperkenalkan atau diperlukan saat ini. `NODE_ENV` dikelola framework (`development/test/production`), terpisah dari APP_ENV; jangan memakai NODE_ENV=testing.
 
 ## 3. Rules
 
@@ -2356,13 +2354,17 @@ NEXT_PUBLIC_APP_NAME=Courier Route Planner
 - Preview menggunakan testing DB credential.
 - dev laptop menggunakan dev DB credential.
 
-## 4. `.env.example`
+## 4. `.env.example` — Phase 0B
+
+Exact current template, dengan trailing newline:
 
 ```dotenv
-DATABASE_URL=mysql://USER:PASSWORD@HOST/DATABASE
 APP_ENV=development
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
 ```
+
+Manusia dapat menyalin template ini ke `.env.local` untuk local runtime. `.env` dan `.env.*` ignored, dengan exception `!.env.example`; `.env.local` tidak boleh di-commit. Tests memakai scoped env fixtures, bukan file secret; build/tests tidak memerlukan DB credential.
+
+GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk konfigurasi invalid/missing; JSON dan `Cache-Control: no-store`. Payload tidak memuat env, version, timestamp atau detail error. Lihat [runbook](docs/16_OBSERVABILITY_RUNBOOK.md#4-health-endpoint).
 
 ## 5. Secret rotation
 
@@ -2385,7 +2387,7 @@ Setelah rotate:
 
 ## 6. Prevent accidental production access
 
-Server startup/health diagnostics harus mengetahui `APP_ENV`.
+Phase 0B health memvalidasi APP_ENV pada invocation, bukan global startup. Nilai env dan raw validation input tidak diekspos dalam response. Deployment env scope/isolation masih Phase 0D; label APP_ENV sendiri tidak membuktikan DB isolation.
 
 Tambahkan guard pada script destructive seed/reset:
 
@@ -2976,15 +2978,19 @@ Bedakan:
 
 Jangan campur keduanya.
 
-## 10. Current testing foundation — Phase 0A
+## 10. Current testing foundation — Phase 0A + Phase 0B
 
 Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing Library, jest-dom dan jsdom tersedia sebagai dev dependencies. `tests/setup.ts` memuat jest-dom Vitest matchers dan explicit `afterEach(cleanup)` agar render antar test tetap independent tanpa global Vitest APIs. `next/link` diuji langsung tanpa mock.
 
-`tests/unit/navigation.test.ts` memproteksi 12 routes, href valid/unique dan 10 domain placeholders. `tests/unit/dashboard.test.tsx` memproteksi identitas, status shell yang jujur, status Depot/Route Optimization, link `/about`, serta absennya Revenue/Monthly Sales/Monthly Target. Total: 2 files, 11 tests PASS.
+`tests/unit/navigation.test.ts` memproteksi 12 routes, href valid/unique dan 10 domain placeholders. `tests/unit/dashboard.test.tsx` memproteksi identitas, status shell yang jujur, status Depot/Route Optimization, link `/about`, serta absennya Revenue/Monthly Sales/Monthly Target. Baseline Phase 0A: 2 files, 11 tests PASS; CLOSED/merged via PR #7.
+
+Phase 0B menambah `tests/unit/env.test.ts` (18 tests) dan `tests/unit/health.test.ts` (19 tests), dengan `// @vitest-environment node` per file. Tests memeriksa exact APP_ENV enum/rejections, fixed safe error, pure parser, import safety, GET current-value validation, 200/503 exact minimal JSON, JSON/no-store headers, DATABASE_URL absent, dan unexpected exception propagation. Semua handler/parser diuji langsung; satu scoped parser spy mensimulasikan unexpected exception. Env stubs dipulihkan dengan afterEach; tidak ada HTTP server, DB atau Playwright.
+
+Current fresh suite: **4 files / 48 tests PASS**, termasuk 11 tests lama dan 37 tests baru. Coverage V8: statements 4.95% (22/444), branches 3.68% (13/353), functions 6% (9/150), lines 5.36% (22/410); tanpa threshold atau exclusion tambahan. [Phase 0B implementation evidence](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
 
 Scripts aktual: `npm run typecheck` menghasilkan Next route types sebelum `tsc --noEmit`; `npm run test`, `npm run test:watch` dan `npm run test:coverage` tersedia. Clean install lint/typecheck/test/coverage/build PASS. Coverage V8 menghasilkan text, HTML dan JSON summary untuk seluruh `src/**/*.{ts,tsx}`, termasuk modules yang belum diuji; **NO COVERAGE THRESHOLD**, angka hanya baseline informasi. Generated reports di `coverage/` ignored oleh Git dan ESLint. Vite memberi warning future native config loader pada config TypeScript yang ada; current runner PASS.
 
-Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas masih pending sampai implementation target tersedia. Detail evidence: [Phase 0A report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md). Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency tanpa menambah implementation di luar scope.
+Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas masih pending sampai implementation target tersedia. Detail evidence: [Phase 0A report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md). Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency tanpa menambah implementation di luar scope.
 
 
 ---
@@ -3220,14 +3226,16 @@ RESOURCE_LIMIT_EXCEEDED
 
 ## 4. Health endpoint
 
-`/api/health` minimal mengembalikan app status tanpa membocorkan secret.
+Phase 0B menyediakan app-only `GET /api/health`; APP_ENV dibaca dan divalidasi saat invocation. Import/typegen/build tidak membutuhkan APP_ENV atau DB credential.
 
-Boleh memisahkan:
+| Kondisi | HTTP | Exact JSON |
+|---|---:|---|
+| APP_ENV exact development/testing/production | 200 | `{"status":"ok"}` |
+| APP_ENV missing/invalid | 503 | `{"status":"error"}` |
 
-- liveness: app process berjalan;
-- readiness: DB connectivity bila perlu.
+Keduanya application/json dan `Cache-Control: no-store`. Hanya AppEnvValidationError yang dipetakan ke 503; unexpected exception diteruskan ke framework. Route memakai native Response.json dan default request-time GET behavior Next 16.3.6, tanpa dynamic/revalidate/runtime exports atau custom HEAD/OPTIONS.
 
-Production health response jangan expose raw DB host/credential.
+Health menunjukkan app liveness + config validity lokal. Tidak mengecek DB, network/provider, filesystem, auth/session atau deployment. Tidak mengirim env, app name, timestamp/version, credential, host/path, error detail atau stack. DB readiness tetap pekerjaan Phase 0C; deployment/isolation evidence Phase 0D. Local env workflow: [setup Phase 0B](docs/17_SETUP_FROM_ZERO.md#phase-0b--local-env--app-only-health).
 
 ## 5. Incident response
 
@@ -3395,7 +3403,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A Quality Foundation sudah diimplementasikan lokal. Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A Quality Foundation CLOSED dan merged ke `testing` melalui PR #7; [independent verification](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md) tersedia. Phase 0B Environment + Health diimplementasikan lokal dan menunggu independent verification. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -3406,11 +3414,11 @@ npm run test:coverage
 npm run build
 ```
 
-`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Initial suite menguji navigation/dashboard; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Current suite: 4 files / 48 tests untuk navigation/dashboard, APP_ENV parser dan app-only health; server tests memakai Node per file; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
 
 Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
 
-- Phase 0B — Environment + Health: env validation, contoh env tanpa secret, app-only health; belum diimplementasikan.
+- Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C — Database Foundation: TiDB Dev/Test/Prod, Drizzle ORM, `@tidbcloud/serverless`, migration tooling dan Zod sesuai task; belum diimplementasikan.
 - Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
@@ -3419,7 +3427,25 @@ Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; pro
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
-## PHASE F — Create TiDB instances
+## PHASE 0B — Local env + app-only health
+
+Untuk local runtime, manusia menyalin root `.env.example` menjadi ignored `.env.local`:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Exact template:
+
+```dotenv
+APP_ENV=development
+```
+
+Set salah satu exact `development/testing/production`; missing/invalid, case variant dan padded value ditolak tanpa default/trim. Jangan commit `.env.local`. NEXT_PUBLIC_APP_NAME tidak diperlukan; DATABASE_URL ditunda ke Phase 0C.
+
+`GET /api/health`: 200 `{"status":"ok"}` dengan APP_ENV valid, atau 503 `{"status":"error"}` untuk missing/invalid config. Keduanya JSON + Cache-Control:no-store; tidak ada env disclosure, DB atau network check. Import/typegen/build tetap PASS tanpa real env file atau inherited APP_ENV/DATABASE_URL. Unit tests memakai scoped vi.stubEnv, tanpa .env.local atau HTTP server. [Implementation report](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+
+## PHASE F — Create TiDB instances (future Phase 0C)
 
 Di TiDB Cloud:
 
@@ -3434,21 +3460,15 @@ Di TiDB Cloud:
 
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
-## PHASE G — Local env
+## PHASE G — Database env (future Phase 0C)
 
-Buat `.env.local`:
-
-```dotenv
-DATABASE_URL="mysql://...DEV..."
-APP_ENV="development"
-NEXT_PUBLIC_APP_NAME="Courier Route Planner"
-```
+Setelah task Phase 0C menyetujui DB connection, tambahkan DATABASE_URL TiDB Dev ke `.env.local` yang sudah memakai APP_ENV=development. DATABASE_URL bukan prerequisite Phase 0B dan tidak masuk current `.env.example`.
 
 Pastikan `.gitignore` mencakup `.env*` kecuali `.env.example` sesuai kebijakan project.
 
 Buat `.env.example` tanpa secret.
 
-## PHASE H — Drizzle connection
+## PHASE H — Drizzle connection (future Phase 0C)
 
 `src/db/index.ts` konsep:
 
@@ -3467,14 +3487,7 @@ Buat satu tabel learning/health terlebih dahulu sebelum schema project penuh.
 
 ## PHASE I — Health check
 
-Buat endpoint sederhana:
-
-```text
-GET /api/health
-```
-
-Tahap 1: app-only health.  
-Tahap 2: optional DB read check yang aman.
+App-only `GET /api/health` sudah tersedia pada Phase 0B; contract 200/503 dan env workflow dijelaskan pada bagian Phase 0B di atas. Safe DB readiness check tetap future Phase 0C dan harus mengikuti task/contract tersendiri.
 
 ## PHASE J — First Git commit
 
@@ -3632,7 +3645,7 @@ Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
 
 ### Phase 0A — Quality Foundation
 
-Implemented locally, verified 2026-10-03; independent review dan reproduksi anggota kedua masih pending:
+**CLOSED / merged via PR #7** ke `testing` pada `f73834aa4bb38ada5c289fa30a0b6fb6aa608f26`; [independent verification](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md) tersedia. Reproduksi anggota kedua tetap Phase 0D:
 
 - [x] repo, Next.js + TypeScript strict;
 - [x] TailAdmin Next.js Free provenance/license audit, template baseline build dan cleanup (branding/menu/demo-only code/dependencies);
@@ -3644,8 +3657,11 @@ Implemented locally, verified 2026-10-03; independent review dan reproduksi angg
 
 ### Phase 0B — Environment + Health
 
-- [ ] env validation dan contoh env tanpa secret;
-- [ ] app-only health endpoint.
+Implemented locally, fresh verification PASS 2026-10-03; **independent Phase 0B verification masih pending**. Evidence: [implementation report](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+
+- [x] strict runtime APP_ENV validation dan `.env.example` tanpa secret;
+- [x] app-only GET health, 200/503 minimal JSON + no-store, tanpa DB;
+- [x] env/health Node unit tests; current full suite 4 files / 48 tests PASS.
 
 ### Phase 0C — Database Foundation
 
@@ -3660,7 +3676,7 @@ Implemented locally, verified 2026-10-03; independent review dan reproduksi angg
 - [ ] CI skeleton menjalankan quality scripts;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
-Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 
@@ -4729,7 +4745,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 1 — Foundation
 
-**Status: OPEN.** Phase 0A implemented locally; evidence 2026-10-03 pada [quality foundation report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md):
+**Status: OPEN.** Phase 0A CLOSED/merged via PR #7; evidence pada [quality foundation report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md) dan [independent verification](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md):
 
 - [x] Node 24 contract dalam `package.json` dan `.nvmrc`;
 - [x] clean `npm ci` PASS;
@@ -4740,7 +4756,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [x] build PASS;
 - [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
 
-Checklist foundation keseluruhan di bawah tetap memerlukan independent verification. Health, TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua masih OPEN:
+Phase 0B implemented locally: strict APP_ENV parser, safe template, app-only GET health 200/503 JSON + no-store, dan current full suite 4 files / 48 tests PASS. [Implementation evidence](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md); independent Phase 0B verification masih pending. Checklist keseluruhan tetap OPEN: TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -4749,13 +4765,13 @@ Checklist foundation keseluruhan di bawah tetap memerlukan independent verificat
 - [ ] ApexCharts tidak menjadi approved core dependency / cleanup status terdokumentasi;
 - [ ] Next.js local works;
 - [ ] build pass;
-- [ ] health endpoint;
+- [x] app-only health endpoint (Phase 0B local evidence; independent verification pending);
 - [ ] TiDB Dev connection;
 - [ ] Vercel main deployment;
 - [ ] Vercel feature preview;
 - [ ] Preview DB != Production DB;
 - [ ] CI basic green;
-- [ ] `.env.local` ignored;
+- [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 
 ## Gate 2 — CRUD baseline

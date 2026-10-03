@@ -126,7 +126,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A Quality Foundation sudah diimplementasikan lokal. Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A Quality Foundation CLOSED dan merged ke `testing` melalui PR #7; [independent verification](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md) tersedia. Phase 0B Environment + Health diimplementasikan lokal dan menunggu independent verification. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -137,11 +137,11 @@ npm run test:coverage
 npm run build
 ```
 
-`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Initial suite menguji navigation/dashboard; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Current suite: 4 files / 48 tests untuk navigation/dashboard, APP_ENV parser dan app-only health; server tests memakai Node per file; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
 
 Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
 
-- Phase 0B — Environment + Health: env validation, contoh env tanpa secret, app-only health; belum diimplementasikan.
+- Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C — Database Foundation: TiDB Dev/Test/Prod, Drizzle ORM, `@tidbcloud/serverless`, migration tooling dan Zod sesuai task; belum diimplementasikan.
 - Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
@@ -150,7 +150,25 @@ Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; pro
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
-## PHASE F — Create TiDB instances
+## PHASE 0B — Local env + app-only health
+
+Untuk local runtime, manusia menyalin root `.env.example` menjadi ignored `.env.local`:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Exact template:
+
+```dotenv
+APP_ENV=development
+```
+
+Set salah satu exact `development/testing/production`; missing/invalid, case variant dan padded value ditolak tanpa default/trim. Jangan commit `.env.local`. NEXT_PUBLIC_APP_NAME tidak diperlukan; DATABASE_URL ditunda ke Phase 0C.
+
+`GET /api/health`: 200 `{"status":"ok"}` dengan APP_ENV valid, atau 503 `{"status":"error"}` untuk missing/invalid config. Keduanya JSON + Cache-Control:no-store; tidak ada env disclosure, DB atau network check. Import/typegen/build tetap PASS tanpa real env file atau inherited APP_ENV/DATABASE_URL. Unit tests memakai scoped vi.stubEnv, tanpa .env.local atau HTTP server. [Implementation report](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+
+## PHASE F — Create TiDB instances (future Phase 0C)
 
 Di TiDB Cloud:
 
@@ -165,21 +183,15 @@ Di TiDB Cloud:
 
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
-## PHASE G — Local env
+## PHASE G — Database env (future Phase 0C)
 
-Buat `.env.local`:
-
-```dotenv
-DATABASE_URL="mysql://...DEV..."
-APP_ENV="development"
-NEXT_PUBLIC_APP_NAME="Courier Route Planner"
-```
+Setelah task Phase 0C menyetujui DB connection, tambahkan DATABASE_URL TiDB Dev ke `.env.local` yang sudah memakai APP_ENV=development. DATABASE_URL bukan prerequisite Phase 0B dan tidak masuk current `.env.example`.
 
 Pastikan `.gitignore` mencakup `.env*` kecuali `.env.example` sesuai kebijakan project.
 
 Buat `.env.example` tanpa secret.
 
-## PHASE H — Drizzle connection
+## PHASE H — Drizzle connection (future Phase 0C)
 
 `src/db/index.ts` konsep:
 
@@ -198,14 +210,7 @@ Buat satu tabel learning/health terlebih dahulu sebelum schema project penuh.
 
 ## PHASE I — Health check
 
-Buat endpoint sederhana:
-
-```text
-GET /api/health
-```
-
-Tahap 1: app-only health.  
-Tahap 2: optional DB read check yang aman.
+App-only `GET /api/health` sudah tersedia pada Phase 0B; contract 200/503 dan env workflow dijelaskan pada bagian Phase 0B di atas. Safe DB readiness check tetap future Phase 0C dan harus mengikuti task/contract tersendiri.
 
 ## PHASE J — First Git commit
 

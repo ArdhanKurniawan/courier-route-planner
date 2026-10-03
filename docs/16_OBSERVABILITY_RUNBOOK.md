@@ -55,14 +55,16 @@ RESOURCE_LIMIT_EXCEEDED
 
 ## 4. Health endpoint
 
-`/api/health` minimal mengembalikan app status tanpa membocorkan secret.
+Phase 0B menyediakan app-only `GET /api/health`; APP_ENV dibaca dan divalidasi saat invocation. Import/typegen/build tidak membutuhkan APP_ENV atau DB credential.
 
-Boleh memisahkan:
+| Kondisi | HTTP | Exact JSON |
+|---|---:|---|
+| APP_ENV exact development/testing/production | 200 | `{"status":"ok"}` |
+| APP_ENV missing/invalid | 503 | `{"status":"error"}` |
 
-- liveness: app process berjalan;
-- readiness: DB connectivity bila perlu.
+Keduanya application/json dan `Cache-Control: no-store`. Hanya AppEnvValidationError yang dipetakan ke 503; unexpected exception diteruskan ke framework. Route memakai native Response.json dan default request-time GET behavior Next 16.3.6, tanpa dynamic/revalidate/runtime exports atau custom HEAD/OPTIONS.
 
-Production health response jangan expose raw DB host/credential.
+Health menunjukkan app liveness + config validity lokal. Tidak mengecek DB, network/provider, filesystem, auth/session atau deployment. Tidak mengirim env, app name, timestamp/version, credential, host/path, error detail atau stack. DB readiness tetap pekerjaan Phase 0C; deployment/isolation evidence Phase 0D. Local env workflow: [setup Phase 0B](17_SETUP_FROM_ZERO.md#phase-0b--local-env--app-only-health).
 
 ## 5. Incident response
 

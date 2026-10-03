@@ -28,6 +28,9 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 │   │   │   └── ...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
+│   ├── config/
+│   │   ├── navigation.ts
+│   │   └── env.ts          # pure APP_ENV parser; server call-site pada health
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
@@ -42,7 +45,6 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 │   │   ├── routing/
 │   │   └── experiments/
 │   ├── lib/
-│   │   ├── env/
 │   │   ├── validation/
 │   │   ├── security/
 │   │   └── utils/
