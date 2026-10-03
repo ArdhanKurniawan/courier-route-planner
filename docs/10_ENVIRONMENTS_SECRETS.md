@@ -2,34 +2,25 @@
 
 ## 1. Environment matrix
 
+Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
+
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
 | Local | developer branch | TiDB Dev | coding |
 | Preview | feature/fix/testing | TiDB Testing | review/integration |
 | Production | main | TiDB Production | demo/live |
 
-## 2. Required environment variables
+## 2. Environment variables menurut phase
 
-Initial:
+**Phase 0B current:** hanya `APP_ENV`, required ketika server membaca runtime config. Exact values: `development`, `testing`, `production`. Missing, empty, whitespace-only, case variant, padded value dan nilai lain ditolak. Tidak ada implicit default, trimming atau normalisasi.
 
-```text
-DATABASE_URL=
-APP_ENV=development|testing|production
-```
+`src/config/env.ts` menyediakan typed pure `parseAppEnv(rawValue)` dan safe `AppEnvValidationError`. Parser tidak membaca process.env. Route health membaca `process.env.APP_ENV` ketika GET dipanggil; tidak ada validation saat import/typegen/build. APP_ENV server-side dan tidak dikirim ke health payload/client.
 
-Future auth:
+**Phase 0C future:** `DATABASE_URL` untuk DB connection; belum dibaca, divalidasi atau diwajibkan pada Phase 0B.
 
-```text
-AUTH_SECRET=
-GITHUB_ID=
-GITHUB_SECRET=
-```
+**Auth phase future:** `AUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`.
 
-Optional:
-
-```text
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
-```
+`NEXT_PUBLIC_APP_NAME` optional secara konsep, tidak diperkenalkan atau diperlukan saat ini. `NODE_ENV` dikelola framework (`development/test/production`), terpisah dari APP_ENV; jangan memakai NODE_ENV=testing.
 
 ## 3. Rules
 
@@ -40,13 +31,17 @@ NEXT_PUBLIC_APP_NAME=Courier Route Planner
 - Preview menggunakan testing DB credential.
 - dev laptop menggunakan dev DB credential.
 
-## 4. `.env.example`
+## 4. `.env.example` — Phase 0B
+
+Exact current template, dengan trailing newline:
 
 ```dotenv
-DATABASE_URL=mysql://USER:PASSWORD@HOST/DATABASE
 APP_ENV=development
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
 ```
+
+Manusia dapat menyalin template ini ke `.env.local` untuk local runtime. `.env` dan `.env.*` ignored, dengan exception `!.env.example`; `.env.local` tidak boleh di-commit. Tests memakai scoped env fixtures, bukan file secret; build/tests tidak memerlukan DB credential.
+
+GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk konfigurasi invalid/missing; JSON dan `Cache-Control: no-store`. Payload tidak memuat env, version, timestamp atau detail error. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#4-health-endpoint).
 
 ## 5. Secret rotation
 
@@ -69,7 +64,7 @@ Setelah rotate:
 
 ## 6. Prevent accidental production access
 
-Server startup/health diagnostics harus mengetahui `APP_ENV`.
+Phase 0B health memvalidasi APP_ENV pada invocation, bukan global startup. Nilai env dan raw validation input tidak diekspos dalam response. Deployment env scope/isolation masih Phase 0D; label APP_ENV sendiri tidak membuktikan DB isolation.
 
 Tambahkan guard pada script destructive seed/reset:
 

@@ -4,7 +4,7 @@
 
 ### Phase 0A — Quality Foundation
 
-Implemented locally, verified 2026-10-03; independent review dan reproduksi anggota kedua masih pending:
+**CLOSED / merged via PR #7** ke `testing` pada `f73834aa4bb38ada5c289fa30a0b6fb6aa608f26`; [independent verification](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md) tersedia. Reproduksi anggota kedua tetap Phase 0D:
 
 - [x] repo, Next.js + TypeScript strict;
 - [x] TailAdmin Next.js Free provenance/license audit, template baseline build dan cleanup (branding/menu/demo-only code/dependencies);
@@ -16,8 +16,11 @@ Implemented locally, verified 2026-10-03; independent review dan reproduksi angg
 
 ### Phase 0B — Environment + Health
 
-- [ ] env validation dan contoh env tanpa secret;
-- [ ] app-only health endpoint.
+Implemented locally, fresh verification PASS 2026-10-03; **independent Phase 0B verification masih pending**. Evidence: [implementation report](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+
+- [x] strict runtime APP_ENV validation dan `.env.example` tanpa secret;
+- [x] app-only GET health, 200/503 minimal JSON + no-store, tanpa DB;
+- [x] env/health Node unit tests; current full suite 4 files / 48 tests PASS.
 
 ### Phase 0C — Database Foundation
 
@@ -32,7 +35,7 @@ Implemented locally, verified 2026-10-03; independent review dan reproduksi angg
 - [ ] CI skeleton menjalankan quality scripts;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
-Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 

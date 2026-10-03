@@ -16,7 +16,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 1 — Foundation
 
-**Status: OPEN.** Phase 0A implemented locally; evidence 2026-10-03 pada [quality foundation report](proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md):
+**Status: OPEN.** Phase 0A CLOSED/merged via PR #7; evidence pada [quality foundation report](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md) dan [independent verification](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md):
 
 - [x] Node 24 contract dalam `package.json` dan `.nvmrc`;
 - [x] clean `npm ci` PASS;
@@ -27,7 +27,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [x] build PASS;
 - [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
 
-Checklist foundation keseluruhan di bawah tetap memerlukan independent verification. Health, TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua masih OPEN:
+Phase 0B implemented locally: strict APP_ENV parser, safe template, app-only GET health 200/503 JSON + no-store, dan current full suite 4 files / 48 tests PASS. [Implementation evidence](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md); independent Phase 0B verification masih pending. Checklist keseluruhan tetap OPEN: TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -36,13 +36,13 @@ Checklist foundation keseluruhan di bawah tetap memerlukan independent verificat
 - [ ] ApexCharts tidak menjadi approved core dependency / cleanup status terdokumentasi;
 - [ ] Next.js local works;
 - [ ] build pass;
-- [ ] health endpoint;
+- [x] app-only health endpoint (Phase 0B local evidence; independent verification pending);
 - [ ] TiDB Dev connection;
 - [ ] Vercel main deployment;
 - [ ] Vercel feature preview;
 - [ ] Preview DB != Production DB;
 - [ ] CI basic green;
-- [ ] `.env.local` ignored;
+- [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 
 ## Gate 2 — CRUD baseline
