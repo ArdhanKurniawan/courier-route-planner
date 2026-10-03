@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Repository AI skills and their helper scripts are not application source.
+    ".agents/skills/**",
   ]),
 ]);
 

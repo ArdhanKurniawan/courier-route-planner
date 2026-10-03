@@ -20,16 +20,16 @@ The upstream template is used as a presentation/UI baseline only.
 
 Project architecture, domain model, routing algorithms, database design, Git workflow, and research methodology remain governed by this repository's own documentation.
 
-The upstream template contained demo functionality and dependencies that are scheduled for cleanup, including ecommerce demo components and ApexCharts-related dependencies.
+UI template cleanup was verified locally on 2026-10-02. The application retains the Free edition shell patterns and reusable UI primitives. Ecommerce, chart, demographic map, calendar, profile/auth and showcase demos, their mock data and unused public demo assets were removed. The original source revision and MIT notice above remain applicable to retained template source.
 
 ## ApexCharts
 
-TailAdmin upstream snapshot dapat membawa `apexcharts` / `react-apexcharts`.
+Historical provenance: the adopted TailAdmin snapshot included `apexcharts` / `react-apexcharts`. Both packages and their demo source usage were removed during UI template cleanup on 2026-10-02; `package.json`, `package-lock.json`, and `npm ls` confirm their absence from the current application.
 
 Project decision:
 
 - **NOT APPROVED sebagai core dependency**;
-- hapus pada template cleanup jika tidak dibutuhkan;
+- current application: removed, no replacement chart library installed;
 - jika penggunaan diusulkan, lakukan license review + ADR terlebih dahulu.
 
 Reason: current ApexCharts uses a revenue-based/community licensing model; project memilih dependency licensing yang lebih sederhana untuk baseline Rp0.
