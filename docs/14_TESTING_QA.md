@@ -149,4 +149,12 @@ Bedakan:
 
 Jangan campur keduanya.
 
-Target tests di atas belum tersedia pada baseline TailAdmin. Audit 2026-10-02 menemukan script lint/build saja; typecheck/test dan Vitest/Playwright adalah foundation gap, bukan PASS. Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency; jalankan lint/build jika environment tersedia tanpa menambah implementation di luar scope.
+## 10. Current testing foundation — Phase 0A
+
+Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing Library, jest-dom dan jsdom tersedia sebagai dev dependencies. `tests/setup.ts` memuat jest-dom Vitest matchers dan explicit `afterEach(cleanup)` agar render antar test tetap independent tanpa global Vitest APIs. `next/link` diuji langsung tanpa mock.
+
+`tests/unit/navigation.test.ts` memproteksi 12 routes, href valid/unique dan 10 domain placeholders. `tests/unit/dashboard.test.tsx` memproteksi identitas, status shell yang jujur, status Depot/Route Optimization, link `/about`, serta absennya Revenue/Monthly Sales/Monthly Target. Total: 2 files, 11 tests PASS.
+
+Scripts aktual: `npm run typecheck` menghasilkan Next route types sebelum `tsc --noEmit`; `npm run test`, `npm run test:watch` dan `npm run test:coverage` tersedia. Clean install lint/typecheck/test/coverage/build PASS. Coverage V8 menghasilkan text, HTML dan JSON summary untuk seluruh `src/**/*.{ts,tsx}`, termasuk modules yang belum diuji; **NO COVERAGE THRESHOLD**, angka hanya baseline informasi. Generated reports di `coverage/` ignored oleh Git dan ESLint. Vite memberi warning future native config loader pada config TypeScript yang ada; current runner PASS.
+
+Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas masih pending sampai implementation target tersedia. Detail evidence: [Phase 0A report](proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md). Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency tanpa menambah implementation di luar scope.

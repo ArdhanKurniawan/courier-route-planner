@@ -4,7 +4,7 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-10-02. Read source files for canonical headings and context. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-10-03. Read source files for canonical headings and context. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
 
 ---
@@ -13,8 +13,8 @@ Derived from the source list below, in order. Regenerated 2026-10-02. Read sourc
 
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Research contract sync v1, UI Template Cleanup / Route Planner application shell
-**Tanggal sinkronisasi:** 2026-10-02
+**Status:** Research contract sync v1, Route Planner application shell; Phase 0A Quality Foundation implemented locally
+**Tanggal sinkronisasi:** 2026-10-03
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -47,24 +47,40 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Audit branch `feature/ui-template-cleanup`, 2026-10-02:
+Audit branch `feature/foundation-quality-gates`, 2026-10-03; shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
 | Tersedia | Repository documentation dan local branch guard files `.githooks/pre-commit`, `.githooks/pre-push`; ini bukan bukti GitHub protections sudah aktif |
 | Tersedia | Shell dan reusable UI primitives dari TailAdmin Free 2.4.0 di `src/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
-| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; `package.json` mempunyai dev/build/start/lint |
+| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; Node `24.x` dalam `engines.node` dan `.nvmrc` berisi `24` |
 | Current | UI Template Cleanup terverifikasi lokal; branding Courier Route Planner, dashboard status kesiapan fitur tanpa data palsu, sidebar sesuai mapping project, header dan tema light/dark |
 | Tersedia | Routing sederhana tanpa locale: `/`, `/about`, dan 10 route modul dengan status **Belum diimplementasikan**; seluruh link sidebar dan refresh route diuji melalui browser |
 | Dibersihkan | Demo e-commerce, charts, demographic map, calendar, profile/auth, showcase, mock data dan assets; `apexcharts`, `react-apexcharts`, `next-intl`, JVectorMap, FullCalendar, Swiper, DnD, Dropzone dan SimpleBar dihapus setelah audit usage |
 | Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
 | Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
 | Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
-| Foundation gap | Script typecheck/test, Vitest/Playwright, CI workflow, health endpoint, dan Node 24 engines pin belum tersedia |
+| Phase 0A lokal | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
+| Phase 0A lokal | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
+| Security audit | Next.js dan eslint-config-next dipatch ke `16.3.6`; audit 2026-10-03: runtime-only 0 findings, full 15 dev-only findings (1 low, 2 moderate, 12 high), tercatat di laporan Phase 0A |
+| Foundation gap | Phase 0B env validation + health; Phase 0C TiDB/Drizzle/Zod; Phase 0D GitHub Actions + Vercel/Preview/env isolation; Playwright/E2E masih pending |
 
-Validasi lokal: `npm run lint` PASS (0 errors, 0 warnings), `npm run build` PASS, dependency removal terkonfirmasi melalui `npm ls`, dan `git diff --check` PASS. Browser checks mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji. Build memeriksa TypeScript, tetapi belum menggantikan foundation typecheck/test yang terpisah.
+Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Vercel Preview serta human review masih diperlukan. Kontrak penelitian tetap sama.
+Jalankan quality gates lokal setelah clone/pull:
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run build
+```
+
+`npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
+
+Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0B/0C/0D, Vercel Preview, independent Phase 0A review dan reproduksi anggota kedua masih diperlukan. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
@@ -2960,7 +2976,15 @@ Bedakan:
 
 Jangan campur keduanya.
 
-Target tests di atas belum tersedia pada baseline TailAdmin. Audit 2026-10-02 menemukan script lint/build saja; typecheck/test dan Vitest/Playwright adalah foundation gap, bukan PASS. Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency; jalankan lint/build jika environment tersedia tanpa menambah implementation di luar scope.
+## 10. Current testing foundation — Phase 0A
+
+Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing Library, jest-dom dan jsdom tersedia sebagai dev dependencies. `tests/setup.ts` memuat jest-dom Vitest matchers dan explicit `afterEach(cleanup)` agar render antar test tetap independent tanpa global Vitest APIs. `next/link` diuji langsung tanpa mock.
+
+`tests/unit/navigation.test.ts` memproteksi 12 routes, href valid/unique dan 10 domain placeholders. `tests/unit/dashboard.test.tsx` memproteksi identitas, status shell yang jujur, status Depot/Route Optimization, link `/about`, serta absennya Revenue/Monthly Sales/Monthly Target. Total: 2 files, 11 tests PASS.
+
+Scripts aktual: `npm run typecheck` menghasilkan Next route types sebelum `tsc --noEmit`; `npm run test`, `npm run test:watch` dan `npm run test:coverage` tersedia. Clean install lint/typecheck/test/coverage/build PASS. Coverage V8 menghasilkan text, HTML dan JSON summary untuk seluruh `src/**/*.{ts,tsx}`, termasuk modules yang belum diuji; **NO COVERAGE THRESHOLD**, angka hanya baseline informasi. Generated reports di `coverage/` ignored oleh Git dan ESLint. Vite memberi warning future native config loader pada config TypeScript yang ada; current runner PASS.
+
+Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas masih pending sampai implementation target tersedia. Detail evidence: [Phase 0A report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md). Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency tanpa menambah implementation di luar scope.
 
 
 ---
@@ -3349,6 +3373,8 @@ Pastikan `package.json` project final memiliki:
 }
 ```
 
+Kontrak Phase 0A sudah tersedia: `.nvmrc` berisi `24`. Gunakan patch Node 24 yang memenuhi engines dependency dalam lockfile; jsdom `30.1.1` membutuhkan Node `24.15.0` atau lebih baru pada major 24. Quality suite diverifikasi pada Node `24.19.0` dan npm `11.6.0`.
+
 ### Template cleanup tidak dilakukan sekaligus
 
 Buat task/branch khusus. Hapus hanya demo yang tidak relevan dan dependency yang benar-benar sudah tidak dipakai.
@@ -3367,16 +3393,29 @@ Jangan uninstall sebelum imports/pages dependennya dibereskan.
 
 Fallback ke blank `create-next-app` hanya jika template adoption gagal secara teknis dan tim membuat ADR baru.
 
-## PHASE E — Install project foundation dependencies
+## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Setelah template baseline build berhasil dan cleanup plan jelas, install hanya dependency project yang belum tersedia:
+Phase 0A Quality Foundation sudah diimplementasikan lokal. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
-npm install drizzle-orm @tidbcloud/serverless zod leaflet react-leaflet
-npm install -D drizzle-kit vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom @playwright/test
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run build
 ```
 
-Jangan install auth package sampai phase auth dimulai.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Initial suite menguji navigation/dashboard; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
+
+Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
+
+- Phase 0B — Environment + Health: env validation, contoh env tanpa secret, app-only health; belum diimplementasikan.
+- Phase 0C — Database Foundation: TiDB Dev/Test/Prod, Drizzle ORM, `@tidbcloud/serverless`, migration tooling dan Zod sesuai task; belum diimplementasikan.
+- Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
+- Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
+
+Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; provisioning/deployment dan Gate 1 masih OPEN.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -3443,6 +3482,9 @@ Sebelum commit:
 
 ```bash
 npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
 npm run build
 ```
 
@@ -3588,18 +3630,37 @@ Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
 
 ## Phase 0 — Foundation
 
-- repo;
-- TailAdmin Next.js Free provenance/license audit;
-- template baseline build;
-- template cleanup (branding/menu/demo-only code/dependencies);
-- Next.js TS;
-- Node 24 standardization;
-- TiDB Dev/Test/Prod;
-- Drizzle connection;
-- Vercel Production/Preview;
-- env isolation;
-- CI skeleton;
-- health endpoint.
+### Phase 0A — Quality Foundation
+
+Implemented locally, verified 2026-10-03; independent review dan reproduksi anggota kedua masih pending:
+
+- [x] repo, Next.js + TypeScript strict;
+- [x] TailAdmin Next.js Free provenance/license audit, template baseline build dan cleanup (branding/menu/demo-only code/dependencies);
+- [x] controlled Next.js + eslint-config-next patch `16.3.6`;
+- [x] Node 24 contract (`engines.node = 24.x`, `.nvmrc = 24`);
+- [x] explicit typecheck dengan Next type generation;
+- [x] Vitest/RTL/jest-dom/jsdom/V8 coverage, 2 regression test files / 11 tests PASS;
+- [x] clean install lint/typecheck/test/coverage/build PASS dan audit delta terdokumentasi.
+
+### Phase 0B — Environment + Health
+
+- [ ] env validation dan contoh env tanpa secret;
+- [ ] app-only health endpoint.
+
+### Phase 0C — Database Foundation
+
+- [ ] TiDB Dev/Test/Prod;
+- [ ] Drizzle connection, Zod validation dan migration foundation;
+- [ ] safe DB health verification.
+
+### Phase 0D — CI + Vercel Integration
+
+- [ ] Vercel Production/Preview;
+- [ ] env isolation dan Preview DB != Production DB;
+- [ ] CI skeleton menjalankan quality scripts;
+- [ ] second-member setup reproduction dan Gate 1 review.
+
+Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 
@@ -4667,6 +4728,19 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [ ] paham template Free vs Pro dan third-party provenance.
 
 ## Gate 1 — Foundation
+
+**Status: OPEN.** Phase 0A implemented locally; evidence 2026-10-03 pada [quality foundation report](docs/proses/PHASE_0A_QUALITY_FOUNDATION_REPORT.md):
+
+- [x] Node 24 contract dalam `package.json` dan `.nvmrc`;
+- [x] clean `npm ci` PASS;
+- [x] lint PASS;
+- [x] typecheck dari generated state bersih PASS;
+- [x] unit/component testing foundation PASS (2 files, 11 tests);
+- [x] V8 coverage command/report PASS, tanpa threshold;
+- [x] build PASS;
+- [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
+
+Checklist foundation keseluruhan di bawah tetap memerlukan independent verification. Health, TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua masih OPEN:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;

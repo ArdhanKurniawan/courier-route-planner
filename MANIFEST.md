@@ -1,13 +1,13 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-10-02. Scope: existing documentation-pack sources plus docs/32-34; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. This is a documentation manifest, not a full application dependency inventory.
+Actual filesystem bytes and SHA-256, regenerated 2026-10-03. Scope: existing documentation-pack sources plus docs/32-34; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. This is a documentation manifest, not a full application dependency inventory.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 225640 | `4d98d465d12d94a2154184ce97f434adb4bf923f16793da7d881695c10e72528` |
-| `README.md` | 9619 | `d0c7b30607cc3b9bc5b41ceb5a8895e1e74cc1eb7499f638d28badc9ce4c7e63` |
+| `MASTER_GUIDE.md` | 231063 | `b15d591f017a0aebc74a5bceb59761765a6d046623f0df2c3305e84e9d483a6c` |
+| `README.md` | 10760 | `72709b048332703557c2ca4ad28c5397097678868d54504d32a5b81345981abb` |
 | `THIRD_PARTY_NOTICES.md` | 2146 | `f58d1d9995cf9c8810bbfe56c360422c31a282f7bcb18b6e95fb2c54d34a93e3` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
@@ -23,16 +23,16 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-02. Scope: existing doc
 | `docs/11_GIT_WORKFLOW.md` | 4154 | `dc27f55413e4c49746e851b88b5f0c85ce9e0891ca74cca5feaf7e370deac385` |
 | `docs/12_CI_CD_RELEASE.md` | 2330 | `446673d68aba08873d541b08b00ff0e35089e521a5718e74e47eed9a7ee99306` |
 | `docs/13_SECURITY.md` | 2353 | `5ae03942b9f2a988ec38ab1b9cbd692043513798baba00deeb6ad8068da44105` |
-| `docs/14_TESTING_QA.md` | 4402 | `9ab572b85bfffae1671c91899ec0d4a3de2bc749e773295af0e0e6af56f291e6` |
+| `docs/14_TESTING_QA.md` | 5648 | `c17bf34dea338a9f8c56f6b63e2cf0ec94cd7147d951c58b18bdbb0d4ffc7bde` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 1792 | `980446cb966ac96bd53a2b837851dd72fd66e683e87f4a18d24cf683ae49a247` |
-| `docs/17_SETUP_FROM_ZERO.md` | 7118 | `747c70e9d6c7a88921ff575c99c40a9a9653b5a115f83f993b43ebfe9284761c` |
-| `docs/18_ROADMAP_BACKLOG.md` | 3160 | `45b514c0f9a43a668cf0e5b0b0263a916ce90db62fabafe3f8d2bd54a6154245` |
+| `docs/17_SETUP_FROM_ZERO.md` | 8367 | `0da07611fb911e09f5f75ee82e098d2095168a1c51002094b497ac9f7ae12405` |
+| `docs/18_ROADMAP_BACKLOG.md` | 4225 | `abbc705c44494c7215cead4f52d0c7acaf4e29a9f7ddda217b882aca5925b809` |
 | `docs/19_DEFINITION_OF_DONE.md` | 3539 | `189fc14c213882e3e3a3dc0082b40e092b4c694b7599a6c4eca171d9c44c8904` |
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 4107 | `fc855740ea4d07b1a8bf9bf72b342c06a68b0a4356eec887e1438fcc90817879` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 4814 | `546248c337a4c9f70ec77bc8cb7c4f1f7a98f202eaeda81bbf817e3ea992c0ec` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

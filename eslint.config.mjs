@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // V8 coverage reports contain generated JavaScript, not application source.
+    "coverage/**",
     // Repository AI skills and their helper scripts are not application source.
     ".agents/skills/**",
   ]),
