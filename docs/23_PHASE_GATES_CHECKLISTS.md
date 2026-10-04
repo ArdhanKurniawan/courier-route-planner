@@ -29,9 +29,11 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md): strict APP_ENV parser, safe template, app-only health unchanged; baseline 4 files / 48 tests PASS.
 
-Phase 0C Stage 1 offline foundation implemented locally / verification PASS: pure DB parser, lazy server-only HTTP client, depots-only schema, separate readiness unit behavior, generated/reviewed SQL + db:check PASS (initial migration kini Dev-applied oleh manusia). Current suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical), +4 moderate dev-tooling delta. [Stage 1 evidence](proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). [Independent offline verification PASS](proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md). Dev sudah diprovision manusia; [live read-only verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, migration TCP/TLS, ledger 1 entry dan depots schema/PK/index. Final independent Phase 0C review pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout. Target tiga independent resources tetap ADR-008.
+Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [live verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing/Production tetap deferred ke later Phase 0D tasks; tiga independent resources, tanpa shared fallback.
 
-Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
+Phase 0D-1 [quality workflow](../.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**. PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+Checklist keseluruhan tetap OPEN: remote Actions/required checks, Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua belum diverifikasi:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -44,11 +46,13 @@ Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main
 - [x] Phase 0C offline parser/client/depots/migration/readiness + unit evidence;
 - [x] human Dev provisioning/first migration apply selesai; account/settings approval adalah human evidence, tidak diaudit ulang oleh task read-only;
 - [x] TiDB Dev connection: HTTP application dan TCP/TLS migration roles verified;
-- [ ] final independent Phase 0C verification;
+- [x] final independent Phase 0C verification PASS dan PR #9 merged/remote testing verified;
+- [x] quality-only CI workflow implemented locally;
 - [ ] Vercel main deployment;
 - [ ] Vercel feature preview;
 - [ ] Preview DB != Production DB;
-- [ ] CI basic green;
+- [ ] CI basic green pada real GitHub Linux runner;
+- [ ] exact required check dipilih/enforced setelah first successful actual run dan human approval;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 

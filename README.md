@@ -1,6 +1,6 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8, independent verification PASS; Phase 0C Dev live foundation VERIFIED; FINAL PHASE 0C REVIEW PENDING
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Phase 0D-1 CI IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING; Gate 1 OPEN
 **Tanggal sinkronisasi:** 2026-10-04
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -34,7 +34,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Phase 0C Dev live verification pada branch `feature/foundation-database`, 2026-10-04, berbasis `11985b6a3532b3773eebe63d330d84788bbf2be1`. Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8 dan independent verification PASS. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Baseline Phase 0D-1 pada `feature/foundation-ci-vercel`: `e1c36988e588e397af312a140677c3f71bd451d2`. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -52,10 +52,11 @@ Phase 0C Dev live verification pada branch `feature/foundation-database`, 2026-1
 | Security audit | Next.js/eslint-config-next `16.3.6`; Stage 1 audit: runtime 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Delta +4 moderate pada dev tooling Drizzle Kit; detail pada laporan Stage 1 |
 | Phase 0B CLOSED | Pure typed APP_ENV parser, exact `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation; independent verification PASS |
 | Phase 0B CLOSED | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB; behavior tetap |
-| Phase 0C Dev VERIFIED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
-| Phase 0C Dev VERIFIED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
+| Phase 0C CLOSED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
+| Phase 0C CLOSED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
 | Tests current | 9 files / 147 tests PASS: 48 tests lama + 99 DB/schema/readiness tests; server tests memakai Node dan transport palsu |
-| Foundation gap | Final independent Phase 0C verification pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout; CI/Vercel/Playwright/E2E pending, Gate 1 OPEN |
+| Phase 0D-1 local | [Quality workflow](.github/workflows/quality.yml): PR dan push ke testing/main; job Quality Gate, Node 24/npm cache, read-only contents, sembilan required commands, runtime audit hard gate dan full audit informational dengan tool-error handling |
+| Foundation gap | Remote Actions run/exact required check masih pending Phase 0D-2; Testing/Production provisioning, Vercel/isolation, second-member reproduction dan Playwright/E2E belum diverifikasi; Gate 1 OPEN |
 
 Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
@@ -71,11 +72,16 @@ npm run test
 npm run test:coverage
 npm run db:check
 npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
 ```
+
+Sembilan command pertama adalah required CI gates; typecheck kedua dijalankan setelah build. Full audit terakhir informational untuk advisories valid; malformed/transport/command failure tetap gagal. Coverage tanpa numeric threshold. CI tidak mendefinisikan APP_ENV/DATABASE_URL, tidak menghubungi TiDB, tidak migrate dan tidak deploy. Detail: [CI contract](docs/12_CI_CD_RELEASE.md), [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
 `npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; final independent Phase 0C review, Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev-first tetap menargetkan tiga independent TiDB Starter resources sesuai ADR-008; tidak ada shared-instance fallback. Kontrak penelitian tetap sama.
+Deployment/env dan remote CI belum diverifikasi dalam stage ini; required-check enforcement belum dikonfigurasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev-first tetap menargetkan tiga independent TiDB Starter resources, tanpa shared-instance fallback. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 

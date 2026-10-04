@@ -7,52 +7,64 @@
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
+**Current Phase 0D-1:** [quality.yml](../.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**. Vercel, Testing/Production provisioning, migrations dan required-check configuration tidak dilakukan stage ini. Gate 1 tetap OPEN. Evidence: [implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
 ## 2. CI triggers
 
-Minimal:
+Actual triggers:
 
-- pull request ke `testing`;
-- pull request ke `main`.
+- `pull_request` dengan base branches `testing` dan `main`, default opened/synchronize/reopened;
+- `push` ke `testing` dan `main`, untuk actual merge/branch SHA.
 
-Optional push check pada `testing`/`main`.
+Tidak ada feature push trigger, pull_request_target, schedule, workflow_dispatch, path filter atau matrix. Workflow **Quality**, job ID **quality**, display/check job **Quality Gate**. Exact remote check context dipilih setelah first successful actual Actions run pada Phase 0D-2; belum ada enforcement baru dari stage ini.
 
 ## 3. CI stages
 
 ```text
 checkout
-→ setup Node 24
+→ setup Node 24 + npm cache
 → npm ci
 → lint
 → typecheck
-→ unit/integration tests
+→ unit/component tests
+→ coverage tanpa threshold
+→ offline db:check
 → build
+→ post-build typecheck
+→ runtime audit hard gate
+→ full audit informational
 ```
 
-Tambahkan Playwright terpisah ketika E2E stabil.
+Sembilan required commands fail pada nonzero exit. Full audit memakai inline Node standard library: jalankan npm audit --json, parse/validate evidence, tampilkan counts dan affected package names/severity. Valid advisory result dengan exit 0/1 nonblocking; spawn/signal/unexpected exit, error JSON, malformed output atau inconsistent counts gagal step. Tidak ada `|| true`, continue-on-error, atau acceptance count yang di-hardcode. [npm audit reference](https://docs.npmjs.com/cli/v11/commands/npm-audit/) menjelaskan exit nonzero untuk advisories; tool error tidak boleh disamakan dengan advisory result.
+
+Runtime `npm audit --omit=dev --json` hard gate untuk advisory severity apa pun, tanpa audit-level override. Full findings tetap visible dan ditriage terpisah; tidak menjalankan audit fix. Coverage command wajib tanpa numeric threshold/third-party upload. Playwright/E2E dan live integration DB tests belum menjadi workflow commands.
+
+Runner ubuntu-latest, timeout 10 menit. Permissions hanya contents:read; checkout persist-credentials:false. Actions dipin ke full SHA dengan version comments. Setup-node menggunakan Node 24 dan cache:npm/package-lock.json; tidak cache node_modules. Workflow tidak memberikan project/cloud/DB secrets atau APP_ENV/DATABASE_URL. GitHub automatic token tetap ada dengan read scope; tidak ada custom token/PAT atau write permission.
+
+Concurrency group `${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}`, cancel-in-progress hanya saat pull_request. PR superseded dapat dibatalkan; unrelated PRs terpisah; running push tidak aktif dibatalkan. Default pending-run replacement tetap mungkin, sehingga evidence terbaru harus cocok current SHA. Ini mengikuti [GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
 
 ## 4. Required npm scripts
 
-Target:
+Actual commands dari package.json; urutan workflow:
 
-```json
-{
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "e2e": "playwright test"
-  }
-}
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run db:check
+npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
 ```
 
-Sesuaikan dengan tooling actual hasil bootstrap.
+Typecheck menjalankan next typegen && tsc --noEmit. db:check adalah offline migration-history validation, bukan live DB. Tidak ada db:generate, db:migrate, health/readiness HTTP call, Vercel command, environment deployment job atau artifact upload. APP_ENV/DATABASE_URL/private env tidak diperlukan untuk quality. Script e2e belum tersedia; jangan mengarang existing command.
 
 ## 5. Deploy model
+
+Bagian 5–9 adalah panduan release lanjutan setelah task/approval terkait. Stage 0D-1 tidak membuktikan cloud deployment atau memberikan izin migration/release.
 
 ```text
 feature branch → Vercel Preview
