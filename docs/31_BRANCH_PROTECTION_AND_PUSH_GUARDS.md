@@ -46,6 +46,14 @@ Tidak ada direct code change ke `main` atau `testing`.
 
 Kita memakai minimum lima lapisan.
 
+### Current Phase 0D-1 CI state
+
+[Quality workflow](../.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**: workflow Quality, job ID quality, display/check job Quality Gate. Triggers PR dan push testing/main. Read-only contents, no project/cloud/DB secrets, no deploy/migration. [CI contract](12_CI_CD_RELEASE.md), [implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+Stage ini tidak push/create PR atau mengubah protections. Baseline read-only audit mengamati protect-main/protect-testing active dengan PR/force/delete rules; tidak ada required-status-check rule pada dua rulesets yang terbaca, sedangkan classic/bypass state belum terverifikasi. Lihat [bounded baseline evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#g-current-github-actions-state).
+
+Phase 0D-2 harus terlebih dahulu menjalankan real Linux Actions, membaca exact check name/app/context untuk current SHA, lalu meminta explicit human approval sebelum mengatur required checks testing/main. Jangan menyatakan enforcement sudah aktif dari file YAML lokal. Pending/cancelled/failed quality run belum memenuhi merge gate. Local hooks tetap control terpisah dan tidak diganti oleh workflow.
+
 ### Layer A — GitHub server-side branch protection (authoritative)
 
 Protected branch:

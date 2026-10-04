@@ -65,12 +65,15 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── docs/
 └── .github/
     ├── workflows/
+    │   └── quality.yml       # actual local Quality / Quality Gate; remote pending
     └── pull_request_template.md
 ```
 
 ## Domain routing structure
 
-Phase 0C actual files marked di atas tersedia lokal; initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Final independent Phase 0C review pending. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/CI/E2E dalam target ini tetap belum diimplementasikan.
+Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md). Initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/E2E dalam target ini tetap belum diimplementasikan.
+
+Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](../.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Workflow IMPLEMENTED LOCALLY; remote run dan required-check enforcement PENDING. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](12_CI_CD_RELEASE.md).
 
 ```text
 src/domain/routing/

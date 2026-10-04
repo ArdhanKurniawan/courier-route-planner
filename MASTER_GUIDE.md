@@ -13,7 +13,7 @@ Derived from the source list below, in order. Regenerated 2026-10-04. Read sourc
 
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8, independent verification PASS; Phase 0C Dev live foundation VERIFIED; FINAL PHASE 0C REVIEW PENDING
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Phase 0D-1 CI IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING; Gate 1 OPEN
 **Tanggal sinkronisasi:** 2026-10-04
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -47,7 +47,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Phase 0C Dev live verification pada branch `feature/foundation-database`, 2026-10-04, berbasis `11985b6a3532b3773eebe63d330d84788bbf2be1`. Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8 dan independent verification PASS. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Baseline Phase 0D-1 pada `feature/foundation-ci-vercel`: `e1c36988e588e397af312a140677c3f71bd451d2`. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -65,10 +65,11 @@ Phase 0C Dev live verification pada branch `feature/foundation-database`, 2026-1
 | Security audit | Next.js/eslint-config-next `16.3.6`; Stage 1 audit: runtime 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Delta +4 moderate pada dev tooling Drizzle Kit; detail pada laporan Stage 1 |
 | Phase 0B CLOSED | Pure typed APP_ENV parser, exact `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation; independent verification PASS |
 | Phase 0B CLOSED | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB; behavior tetap |
-| Phase 0C Dev VERIFIED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
-| Phase 0C Dev VERIFIED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
+| Phase 0C CLOSED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
+| Phase 0C CLOSED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
 | Tests current | 9 files / 147 tests PASS: 48 tests lama + 99 DB/schema/readiness tests; server tests memakai Node dan transport palsu |
-| Foundation gap | Final independent Phase 0C verification pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout; CI/Vercel/Playwright/E2E pending, Gate 1 OPEN |
+| Phase 0D-1 local | [Quality workflow](.github/workflows/quality.yml): PR dan push ke testing/main; job Quality Gate, Node 24/npm cache, read-only contents, sembilan required commands, runtime audit hard gate dan full audit informational dengan tool-error handling |
+| Foundation gap | Remote Actions run/exact required check masih pending Phase 0D-2; Testing/Production provisioning, Vercel/isolation, second-member reproduction dan Playwright/E2E belum diverifikasi; Gate 1 OPEN |
 
 Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
@@ -84,11 +85,16 @@ npm run test
 npm run test:coverage
 npm run db:check
 npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
 ```
+
+Sembilan command pertama adalah required CI gates; typecheck kedua dijalankan setelah build. Full audit terakhir informational untuk advisories valid; malformed/transport/command failure tetap gagal. Coverage tanpa numeric threshold. CI tidak mendefinisikan APP_ENV/DATABASE_URL, tidak menghubungi TiDB, tidak migrate dan tidak deploy. Detail: [CI contract](docs/12_CI_CD_RELEASE.md), [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
 `npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; final independent Phase 0C review, Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev-first tetap menargetkan tiga independent TiDB Starter resources sesuai ADR-008; tidak ada shared-instance fallback. Kontrak penelitian tetap sama.
+Deployment/env dan remote CI belum diverifikasi dalam stage ini; required-check enforcement belum dikonfigurasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev-first tetap menargetkan tiga independent TiDB Starter resources, tanpa shared-instance fallback. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
@@ -169,7 +175,6 @@ Dokumen ini bukan “sekali jadi”. Jika ada keputusan arsitektur berubah:
 3. update `README.md` bila keputusan utama berubah;
 4. jangan mengubah project invariant diam-diam melalui prompt AI;
 5. perubahan scope penelitian harus melalui diskusi tim/dosen.
-
 
 ---
 
@@ -427,7 +432,6 @@ Agent dilarang menyatakan:
 - “lebih akurat” tanpa metric;
 - “research gap belum pernah diteliti” tanpa literature evidence.
 
-
 ---
 
 # SOURCE: CONTRIBUTING.md
@@ -580,7 +584,6 @@ Hotfix masuk ke `main` melalui Pull Request, kemudian perubahan wajib disinkronk
 - Aktifkan repository hooks dengan `git config core.hooksPath .githooks` setelah hooks tersedia.
 - Semua perubahan masuk melalui PR sesuai `docs/31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md`.
 
-
 ---
 
 # SOURCE: THIRD_PARTY_NOTICES.md
@@ -627,7 +630,6 @@ Reason: current ApexCharts uses a revenue-based/community licensing model; proje
 - Upstream: https://github.com/recharts/recharts
 - License: MIT according to upstream repository.
 - Intended use: possible charts for research/benchmark result visualization after explicit task/ADR.
-
 
 ---
 
@@ -769,7 +771,6 @@ Status implementasi aktual ada di [README](README.md#current-implementation-stat
 
 Sebelum bootstrap UI, baca `docs/30_UI_TEMPLATE_GUIDE.md`. Project memakai **TailAdmin Next.js Free** sebagai baseline shell; Free edition only.
 
-
 ---
 
 # SOURCE: docs/01_PROJECT_CHARTER.md
@@ -890,7 +891,6 @@ Gunakan istilah:
 - “best observed solution”;
 
 bukan “rute paling optimal” tanpa bukti optimum.
-
 
 ---
 
@@ -1099,7 +1099,6 @@ Tidak menetapkan SLA enterprise. Target MVP:
 
 Setiap feature task harus mencantumkan FR/NFR yang disentuh agar review tidak menjadi “feeling-based”.
 
-
 ---
 
 # SOURCE: docs/03_SYSTEM_ARCHITECTURE.md
@@ -1292,7 +1291,6 @@ Bukan prioritas:
 - microservices;
 - event bus;
 - Kubernetes.
-
 
 ---
 
@@ -1528,7 +1526,6 @@ Alternative: custom HTTP migrator ditolak untuk foundation karena menambah runne
 
 Resource sequence yang disetujui: **Dev-first**; Dev telah diprovision manusia dan koneksi HTTP/TCP-TLS diverifikasi read-only, Testing sebelum integration/Preview Phase 0D, Production sebelum controlled rollout. Target ADR-008 tetap tiga independent Starter resources, tanpa shared fallback. Stage 1 hanya `depots`. Initial migration sudah diterapkan sekali oleh manusia pada Dev; ledger dan schema live cocok dengan artifact lokal. [Live evidence](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Final independent Phase 0C review pending; Gate 1 OPEN.
 
-
 ---
 
 # SOURCE: docs/05_NEXTJS_FOR_PHP_DEVS.md
@@ -1678,7 +1675,6 @@ Sebelum core project, setiap anggota idealnya mampu:
 
 Baru kemudian mengambil task core.
 
-
 ---
 
 # SOURCE: docs/06_VERCEL_GUIDE.md
@@ -1805,7 +1801,6 @@ Setelah setup:
 - [ ] custom domain production valid;
 - [ ] testing branch/domain valid bila dikonfigurasi;
 - [ ] env secret tidak tampil di browser bundle.
-
 
 ---
 
@@ -1941,7 +1936,6 @@ Gunakan explain hanya saat ada evidence query lambat.
 - pagination result history;
 - simpan frozen OSRM distance matrix sekali sebagai immutable snapshot dan referensikan dari experiments; jangan request/recompute matrix untuk setiap run karena road network dapat berubah (lihat [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md));
 - batasi export/run abuse dengan auth dan server validation.
-
 
 ---
 
@@ -2223,7 +2217,6 @@ Dev/testing boleh reset. Production research history jangan dihapus tanpa backup
 
 `benchmark_batches` boleh dievaluasi nanti untuk pengelompokan eksperimen. Bukan schema wajib yang telah disetujui dan tidak menggantikan scenario/case/matrix/experiment boundaries. Tidak ada actual migration pada task documentation sync.
 
-
 ---
 
 # SOURCE: docs/09_REPO_STRUCTURE.md
@@ -2295,12 +2288,15 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 ├── docs/
 └── .github/
     ├── workflows/
+    │   └── quality.yml       # actual local Quality / Quality Gate; remote pending
     └── pull_request_template.md
 ```
 
 ## Domain routing structure
 
-Phase 0C actual files marked di atas tersedia lokal; initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Final independent Phase 0C review pending. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/CI/E2E dalam target ini tetap belum diimplementasikan.
+Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md). Initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/E2E dalam target ini tetap belum diimplementasikan.
+
+Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Workflow IMPLEMENTED LOCALLY; remote run dan required-check enforcement PENDING. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](docs/12_CI_CD_RELEASE.md).
 
 ```text
 src/domain/routing/
@@ -2361,7 +2357,6 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 - database: `snake_case`;
 - TS properties: `camelCase`;
 - constants: `UPPER_SNAKE_CASE` bila benar-benar constant.
-
 
 ---
 
@@ -2462,7 +2457,6 @@ Semua feature Preview memakai TiDB Testing secara default. Untuk menghindari col
 - jangan truncate global table dari preview;
 - migration coordinated via testing branch;
 - feature yang butuh incompatible schema harus ditunda merge atau memakai temporary TiDB instance bila quota memungkinkan.
-
 
 ---
 
@@ -2640,7 +2634,6 @@ Tambahan khusus PR menuju `main`:
 - terdapat unresolved review conversation;
 - latest reviewable push belum memperoleh review yang dipersyaratkan.
 
-
 ---
 
 # SOURCE: docs/12_CI_CD_RELEASE.md
@@ -2654,52 +2647,64 @@ Tambahan khusus PR menuju `main`:
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
+**Current Phase 0D-1:** [quality.yml](.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**. Vercel, Testing/Production provisioning, migrations dan required-check configuration tidak dilakukan stage ini. Gate 1 tetap OPEN. Evidence: [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
 ## 2. CI triggers
 
-Minimal:
+Actual triggers:
 
-- pull request ke `testing`;
-- pull request ke `main`.
+- `pull_request` dengan base branches `testing` dan `main`, default opened/synchronize/reopened;
+- `push` ke `testing` dan `main`, untuk actual merge/branch SHA.
 
-Optional push check pada `testing`/`main`.
+Tidak ada feature push trigger, pull_request_target, schedule, workflow_dispatch, path filter atau matrix. Workflow **Quality**, job ID **quality**, display/check job **Quality Gate**. Exact remote check context dipilih setelah first successful actual Actions run pada Phase 0D-2; belum ada enforcement baru dari stage ini.
 
 ## 3. CI stages
 
 ```text
 checkout
-→ setup Node 24
+→ setup Node 24 + npm cache
 → npm ci
 → lint
 → typecheck
-→ unit/integration tests
+→ unit/component tests
+→ coverage tanpa threshold
+→ offline db:check
 → build
+→ post-build typecheck
+→ runtime audit hard gate
+→ full audit informational
 ```
 
-Tambahkan Playwright terpisah ketika E2E stabil.
+Sembilan required commands fail pada nonzero exit. Full audit memakai inline Node standard library: jalankan npm audit --json, parse/validate evidence, tampilkan counts dan affected package names/severity. Valid advisory result dengan exit 0/1 nonblocking; spawn/signal/unexpected exit, error JSON, malformed output atau inconsistent counts gagal step. Tidak ada `|| true`, continue-on-error, atau acceptance count yang di-hardcode. [npm audit reference](https://docs.npmjs.com/cli/v11/commands/npm-audit/) menjelaskan exit nonzero untuk advisories; tool error tidak boleh disamakan dengan advisory result.
+
+Runtime `npm audit --omit=dev --json` hard gate untuk advisory severity apa pun, tanpa audit-level override. Full findings tetap visible dan ditriage terpisah; tidak menjalankan audit fix. Coverage command wajib tanpa numeric threshold/third-party upload. Playwright/E2E dan live integration DB tests belum menjadi workflow commands.
+
+Runner ubuntu-latest, timeout 10 menit. Permissions hanya contents:read; checkout persist-credentials:false. Actions dipin ke full SHA dengan version comments. Setup-node menggunakan Node 24 dan cache:npm/package-lock.json; tidak cache node_modules. Workflow tidak memberikan project/cloud/DB secrets atau APP_ENV/DATABASE_URL. GitHub automatic token tetap ada dengan read scope; tidak ada custom token/PAT atau write permission.
+
+Concurrency group `${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}`, cancel-in-progress hanya saat pull_request. PR superseded dapat dibatalkan; unrelated PRs terpisah; running push tidak aktif dibatalkan. Default pending-run replacement tetap mungkin, sehingga evidence terbaru harus cocok current SHA. Ini mengikuti [GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency).
 
 ## 4. Required npm scripts
 
-Target:
+Actual commands dari package.json; urutan workflow:
 
-```json
-{
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "e2e": "playwright test"
-  }
-}
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run db:check
+npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
 ```
 
-Sesuaikan dengan tooling actual hasil bootstrap.
+Typecheck menjalankan next typegen && tsc --noEmit. db:check adalah offline migration-history validation, bukan live DB. Tidak ada db:generate, db:migrate, health/readiness HTTP call, Vercel command, environment deployment job atau artifact upload. APP_ENV/DATABASE_URL/private env tidak diperlukan untuk quality. Script e2e belum tersedia; jangan mengarang existing command.
 
 ## 5. Deploy model
+
+Bagian 5–9 adalah panduan release lanjutan setelah task/approval terkait. Stage 0D-1 tidak membuktikan cloud deployment atau memberikan izin migration/release.
 
 ```text
 feature branch → Vercel Preview
@@ -2761,7 +2766,6 @@ add new column
 → switch reads
 → later remove old column
 ```
-
 
 ---
 
@@ -2878,7 +2882,6 @@ Jangan auto-upgrade major dependency tanpa test. Dependabot/Renovate boleh ditam
 - [ ] no unsafe HTML;
 - [ ] resource limits enforced;
 - [ ] error message tidak expose secret/stack sensitif ke user.
-
 
 ---
 
@@ -3035,7 +3038,7 @@ Bedakan:
 
 Jangan campur keduanya.
 
-## 10. Current testing foundation — Phase 0A/0B closed + Phase 0C offline
+## 10. Current testing foundation — Phase 0A/0B/0C closed + Phase 0D-1 local
 
 Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing Library, jest-dom dan jsdom tersedia sebagai dev dependencies. `tests/setup.ts` memuat jest-dom Vitest matchers dan explicit `afterEach(cleanup)` agar render antar test tetap independent tanpa global Vitest APIs. `next/link` diuji langsung tanpa mock.
 
@@ -3047,12 +3050,17 @@ Phase 0B CLOSED/merged via PR #8, [independent verification PASS](docs/proses/ph
 
 Phase 0C Stage 1 offline suite: **9 files / 147 tests PASS**, seluruh 48 tests lama dipertahankan. Lima file baru: `db-env` (53), `db-schema` (1), `db-client` (7), `db-readiness` (27), `ready` (11). TDD RED/GREEN memeriksa pure Zod parser + safe errors + Dev guard/TLS, schema import safety, lazy real ORM/HTTP driver dengan fake transport, fresh 5000 ms signal, abort sebelum headers dan saat body pending, no retry, provider/malformed/unexpected result, serta exact 200/503 JSON/no-store. Route menggunakan real readiness logic dengan scoped acquisition boundary; unexpected acquisition bugs tidak dilaporkan sukses. Tidak ada real network/DB credential.
 
-Vitest membutuhkan test-only alias/fixture untuk Next `server-only` marker; production boundary tetap aktif. Coverage mencakup seluruh src TS/TSX termasuk DB, tanpa threshold/exclusion baru. Metrics aktual dan full/runtime audit delta tercatat pada [Stage 1 report](docs/proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). `npm run db:check` memeriksa offline migration history, bukan live schema/status. Independent offline verification PASS. [Dev live read-only verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) mencatat health/readiness HTTP 200, application SELECT COUNT(*) FROM depots, migrator SELECT 1/TLS dan ledger/schema/PK/index checks PASS; initial migration diterapkan manusia sebelum verification. DB integration/CRUD tests tetap pending. Fresh quality suite memakai salinan source dengan lockfile yang sama dan tanpa env privat; final independent Phase 0C review pending.
+Vitest membutuhkan test-only alias/fixture untuk Next `server-only` marker; production boundary tetap aktif. Coverage mencakup seluruh src TS/TSX termasuk DB, tanpa threshold/exclusion baru. Metrics aktual dan full/runtime audit delta tercatat pada [Stage 1 report](docs/proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). `npm run db:check` memeriksa offline migration history, bukan live schema/status. Independent offline verification PASS. [Dev live read-only verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) mencatat health/readiness HTTP 200, application SELECT COUNT(*) FROM depots, migrator SELECT 1/TLS dan ledger/schema/PK/index checks PASS; initial migration diterapkan manusia sebelum verification. DB integration/CRUD tests tetap pending. [Final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`. Fresh quality tetap memakai salinan source dengan lockfile yang sama tanpa env privat.
 
 Scripts aktual: `npm run typecheck` menghasilkan Next route types sebelum `tsc --noEmit`; `npm run test`, `npm run test:watch` dan `npm run test:coverage` tersedia. Clean install lint/typecheck/test/coverage/build PASS. Coverage V8 menghasilkan text, HTML dan JSON summary untuk seluruh `src/**/*.{ts,tsx}`, termasuk modules yang belum diuji; **NO COVERAGE THRESHOLD**, angka hanya baseline informasi. Generated reports di `coverage/` ignored oleh Git dan ESLint. Vite memberi warning future native config loader pada config TypeScript yang ada; current runner PASS.
 
 Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas masih pending sampai implementation target tersedia. Detail evidence: [Phase 0A report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md). Untuk task documentation-only, periksa diff, internal links, source/derived parity, actual manifest hashes, dan research contract consistency tanpa menambah implementation di luar scope.
 
+## 11. Phase 0D-1 quality-only CI
+
+[Quality workflow](.github/workflows/quality.yml) IMPLEMENTED LOCALLY; remote Linux run dan required-status-check enforcement PENDING Phase 0D-2. Required order: npm ci → lint → typecheck → test → test:coverage → db:check → build → typecheck → runtime audit. Full audit terakhir informational untuk valid advisories; invalid/tool/transport result gagal, tanpa blanket ignore. [Exact CI contract](docs/12_CI_CD_RELEASE.md) dan [fresh local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+Coverage tanpa numeric threshold. Workflow tidak memakai secret, real DB, migration, deploy atau live readiness check. YAML/static review dan probe perilaku audit memakai tooling existing/TEMP; tidak menambah dependency atau mengubah application tests. Local reproduction tidak membuktikan GitHub remotely green. Gate 1 tetap OPEN.
 
 ---
 
@@ -3225,7 +3233,6 @@ Laporkan hasil berdasarkan evidence, misalnya “median ACO lebih rendah pada da
 
 OPEN sebelum generation/main: numeric ACO config dan evidence, exact depot/study area/sampling-routability acceptance, public vs local/self-hosted OSRM final provenance, N=100 feasibility, dan pilihan additional scenarios. Main counts, 30 seeded runs, 30 timing repetitions, 5 warm-ups, directed frozen matrix, serta Classical Ant System sudah dikunci.
 
-
 ---
 
 # SOURCE: docs/16_OBSERVABILITY_RUNBOOK.md
@@ -3345,7 +3352,6 @@ Jika production gagal:
 ### Algorithm returns invalid route
 
 Immediately fail request/run and keep evidence. Do not “repair” silently unless repair algorithm is explicit part of method.
-
 
 ---
 
@@ -3479,7 +3485,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C offline foundation dan independent offline verification PASS; Dev diprovision manusia, first migration applied dan live read-only verification PASS. Final independent Phase 0C review pending. Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live read-only verification PASS. Phase 0D-1 workflow IMPLEMENTED LOCALLY; remote verification PENDING. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -3489,7 +3495,12 @@ npm run test
 npm run test:coverage
 npm run db:check
 npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
 ```
+
+Sembilan command pertama required quality gates; full audit terakhir informational untuk valid advisory JSON. Tool/transport/invalid JSON failure tetap harus diinvestigasi, bukan diabaikan. Workflow menyediakan handling ini tanpa dependency tambahan. Tidak ada numeric coverage threshold atau DB/cloud secret untuk quality.
 
 `typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Vitest/RTL/jest-dom/jsdom/V8 tersedia. Current suite: 9 files / 147 tests, termasuk 48 tests lama dan 99 DB/schema/readiness tests tanpa real network; server tests memakai Node per file. Coverage hanya informasi tanpa threshold; output tidak masuk Git. Build/tests tetap PASS tanpa APP_ENV/DATABASE_URL atau real env file.
 
@@ -3497,10 +3508,10 @@ Install dependency berikutnya hanya pada task phase terkait, setelah audit stack
 
 - Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C Stage 1: Drizzle ORM `0.45.3`, TiDB HTTP driver `0.3.0`, Zod `4.6.5`; Drizzle Kit `0.31.11` + mysql2 `3.24.5` dev-only, pure parser/lazy client/depots/readiness dan offline migration tersedia. Dev live verified; Testing/Production deferred.
-- Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
+- Phase 0D-1 — GitHub Actions quality workflow tersedia lokal; remote CI/required checks PENDING Phase 0D-2. Main/Preview deployment dan env/DB isolation tetap pekerjaan lanjutan.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
 
-Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; Dev provisioning/first apply sudah dilakukan manusia; deployment, final independent Phase 0C review dan Gate 1 masih OPEN.
+Bagian F–Q di bawah adalah panduan phase terkait; Dev provisioning/first apply dan final Phase 0C verification sudah selesai. Cloud deployment, remote CI dan Gate 1 tetap pending/OPEN. Sebelum mengikuti panduan cloud lanjutan, gunakan [approved baseline/staging checkpoints](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#ad-proposed-phase-0d-staging-plan); stage 0D-1 tidak mengotorisasi cloud setup atau Git operations.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -3536,7 +3547,7 @@ Current Dev sudah diprovision dan initial migration applied sekali oleh manusia.
 4. generate connection password masing-masing;
 5. jangan share screenshot credential.
 
-Testing resource deferred sebelum integration/Preview Phase 0D; Production sebelum controlled rollout. Target ADR-008 tetap tiga independent Starter resources; tidak memakai shared fallback. Offline Stage 1 tidak provisioning; current Dev kini live verified. Final independent Phase 0C review masih pending.
+Testing resource deferred ke stage integration/Preview Phase 0D; Production ke controlled rollout preparation. Target tetap tiga independent Starter resources; tidak memakai shared fallback. Offline Stage 1 tidak provisioning; Dev kini live verified dan Phase 0C CLOSED dengan final independent PASS. Current 0D-1 tidak provision/apply resource apa pun.
 
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
@@ -3565,7 +3576,7 @@ Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot suda
 
 ## PHASE I — Health check
 
-App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi: HTTP 200, exact status JSON + no-store. Final independent Phase 0C review pending; Testing/Production deferred. Lihat [runbook](docs/16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
+App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi: HTTP 200, exact status JSON + no-store. Final independent Phase 0C verification PASS dan Phase 0C CLOSED; Testing/Production deferred. CI hanya menjalankan offline tests/history/build, tanpa memanggil endpoint live. Lihat [runbook](docs/16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
 
 ## PHASE J — First Git commit
 
@@ -3693,9 +3704,11 @@ Ikuti DNS instruction Vercel. Jangan menebak record bila dashboard memberikan ta
 
 ## PHASE Q — CI
 
-Tambahkan GitHub Actions quality workflow setelah scripts lint/typecheck/test/build tersedia.
+[`.github/workflows/quality.yml`](.github/workflows/quality.yml) tersedia lokal: workflow **Quality**, job **quality / Quality Gate**, PR dan push ke testing/main, ubuntu-latest, Node 24, npm lockfile cache, timeout 10 menit, read-only contents. Approved concurrency membatalkan superseded PR run, bukan running push atau unrelated PR.
 
-Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
+Sembilan required commands mengikuti PHASE E; full audit menjalankan parser valid-evidence agar advisories tetap visible/nonblocking dan tool/network failure gagal. Tidak ada secret, migration, deployment, DB network, coverage token/upload atau E2E command. Lihat [exact CI contract](docs/12_CI_CD_RELEASE.md) dan [implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+**IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING.** Phase 0D-2 memerlukan explicit human task untuk remote Git/PR verification; setelah first actual successful run baru pilih exact check context dan minta approval required-check mutation. Vercel Git Integration tetap target deployment terpisah, belum dibuktikan pada stage ini.
 
 ## EXIT CRITERIA FOUNDATION
 
@@ -3711,7 +3724,6 @@ Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
 - [ ] team can reproduce setup on second laptop.
 
 **Jangan masuk Depot CRUD sebelum gate ini lulus.**
-
 
 ---
 
@@ -3743,7 +3755,7 @@ Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
 
 ### Phase 0C — Database Foundation
 
-**Dev live foundation VERIFIED — final independent Phase 0C review pending.** Offline implementation dan [independent offline verification PASS](docs/proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [read-only live report](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C belum closed.
+**CLOSED / merged via PR #9** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Offline implementation dan [independent offline verification PASS](docs/proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [read-only live report](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md).
 
 - [x] approved exact runtime Drizzle/TiDB HTTP/Zod + dev-only Kit/mysql2;
 - [x] pure DB URL parser/Dev CLI guard, lazy server-only client;
@@ -3754,7 +3766,7 @@ Jangan otomatis deploy dari Actions; Vercel sudah deploy via Git Integration.
 - [x] independent offline verification PASS;
 - [x] live Dev health/readiness HTTP 200; application read dan migration TCP/TLS SELECT 1 PASS;
 - [x] ledger 1 entry + hash/journal match; live depots schema/PK/index sesuai source/SQL;
-- [ ] final independent Phase 0C verification;
+- [x] final independent Phase 0C verification PASS; PR #9 merged dan remote testing verified;
 - [ ] Testing resource/evidence: deferred sebelum integration/Preview Phase 0D;
 - [ ] Production resource/evidence: deferred sebelum controlled rollout.
 
@@ -3762,9 +3774,14 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
+**0D-1 CI IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING.** [Implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). D1–D8 implemented; D9–D20 remain later scopes.
+
+- [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
+- [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
+- [x] existing required commands, coverage tanpa threshold, offline db:check, runtime hard audit/full informational parser;
+- [ ] real remote Linux Actions verification dan exact required-check enforcement (Phase 0D-2, explicit approval);
 - [ ] Vercel Production/Preview;
 - [ ] env isolation dan Preview DB != Production DB;
-- [ ] CI skeleton menjalankan quality scripts;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
 Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
@@ -3869,7 +3886,6 @@ OSRM **Table matrix** ada di Phase 3 dan merupakan core formal research input. I
 - P2: useful but optional.
 - P3: future.
 
-
 ---
 
 # SOURCE: docs/19_DEFINITION_OF_DONE.md
@@ -3969,7 +3985,6 @@ Detail contract: [docs/32](docs/32_RESEARCH_DECISIONS.md), [docs/33](docs/33_ALG
 ## 7. Documentation-only DoD
 
 Untuk perubahan yang tidak menyentuh source/package: audit initial branch/status, review changed docs, diff --check, internal links, contradictions, MASTER_GUIDE parity, dan MANIFEST actual bytes/SHA-256. Jalankan existing lint/build bila environment memungkinkan; missing typecheck/test dilaporkan sebagai foundation gap, bukan hasil PASS. Jangan membuat scripts/dependencies hanya untuk menyatakan documentation task lolos application tests.
-
 
 ---
 
@@ -4083,7 +4098,6 @@ Setiap anggota harus bisa menjawab tanpa AI:
 9. mengapa TailAdmin hanya UI shell, bukan domain architecture?
 
 Jika belum bisa, jangan memberikan task sensitif production kepada anggota tersebut tanpa pairing.
-
 
 ---
 
@@ -4215,7 +4229,6 @@ Minimal isi:
 - tests;
 - manual checks;
 - unresolved issues.
-
 
 ---
 
@@ -4815,7 +4828,6 @@ Process:
 Do not rotate/delete/redeploy production resources without asking.
 ```
 
-
 ---
 
 # SOURCE: docs/23_PHASE_GATES_CHECKLISTS.md
@@ -4851,9 +4863,11 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md): strict APP_ENV parser, safe template, app-only health unchanged; baseline 4 files / 48 tests PASS.
 
-Phase 0C Stage 1 offline foundation implemented locally / verification PASS: pure DB parser, lazy server-only HTTP client, depots-only schema, separate readiness unit behavior, generated/reviewed SQL + db:check PASS (initial migration kini Dev-applied oleh manusia). Current suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical), +4 moderate dev-tooling delta. [Stage 1 evidence](docs/proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). [Independent offline verification PASS](docs/proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md). Dev sudah diprovision manusia; [live read-only verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, migration TCP/TLS, ledger 1 entry dan depots schema/PK/index. Final independent Phase 0C review pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout. Target tiga independent resources tetap ADR-008.
+Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [live verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing/Production tetap deferred ke later Phase 0D tasks; tiga independent resources, tanpa shared fallback.
 
-Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
+Phase 0D-1 [quality workflow](.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**. PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+Checklist keseluruhan tetap OPEN: remote Actions/required checks, Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua belum diverifikasi:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -4866,11 +4880,13 @@ Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main
 - [x] Phase 0C offline parser/client/depots/migration/readiness + unit evidence;
 - [x] human Dev provisioning/first migration apply selesai; account/settings approval adalah human evidence, tidak diaudit ulang oleh task read-only;
 - [x] TiDB Dev connection: HTTP application dan TCP/TLS migration roles verified;
-- [ ] final independent Phase 0C verification;
+- [x] final independent Phase 0C verification PASS dan PR #9 merged/remote testing verified;
+- [x] quality-only CI workflow implemented locally;
 - [ ] Vercel main deployment;
 - [ ] Vercel feature preview;
 - [ ] Preview DB != Production DB;
-- [ ] CI basic green;
+- [ ] CI basic green pada real GitHub Linux runner;
+- [ ] exact required check dipilih/enforced setelah first successful actual run dan human approval;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 
@@ -4963,7 +4979,6 @@ Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main
 - [ ] release notes;
 - [ ] rollback plan;
 - [ ] post-deploy smoke plan.
-
 
 ---
 
@@ -5077,7 +5092,6 @@ Check:
 - commit SHA;
 - apakah timer memasukkan DB/network.
 
-
 ---
 
 # SOURCE: docs/25_COST_GUARDRAILS.md
@@ -5152,7 +5166,6 @@ Formal heavy benchmark dilakukan controlled local runner.
 - ApexCharts bukan core dependency yang disetujui karena current licensing menggunakan community/revenue-based model; targetkan removal saat cleanup;
 - bila perlu chart penelitian, pilih dependency berlisensi sederhana/open-source yang disetujui (preferensi awal Recharts MIT) melalui task/ADR.
 
-
 ---
 
 # SOURCE: docs/26_GLOSSARY.md
@@ -5214,7 +5227,6 @@ Formal heavy benchmark dilakukan controlled local runner.
 **OSRM** — Open Source Routing Machine. Table Service adalah core input infrastructure formal road-network matrix, bukan research algorithm. Route Service/geometry adalah concern visualisasi terpisah.
 
 Kontrak lengkap: [docs/32](docs/32_RESEARCH_DECISIONS.md), [docs/33](docs/33_ALGORITHM_SPECIFICATION.md), [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md).
-
 
 ---
 
@@ -5352,7 +5364,6 @@ Project policy:
 
 - ApexCharts current license is community/revenue-based; not approved as core baseline dependency.
 - Recharts upstream declares MIT and is the preferred future candidate if chart visualization is needed.
-
 
 ---
 
@@ -5603,7 +5614,6 @@ Stop dan minta review sebelum:
 - mengubah ACO parameter penelitian final;
 - mengaktifkan paid/billing setting.
 
-
 ---
 
 # SOURCE: docs/29_HUMAN_REVIEW_GUIDE.md
@@ -5805,7 +5815,6 @@ Jika task menyentuh TailAdmin/template:
 - jalankan `npm ls apexcharts react-apexcharts`; target normal setelah cleanup adalah tidak ada;
 - cek sidebar desktop/mobile, header, empty state, console, dan Vercel Preview;
 - jangan approve hanya karena UI “terlihat bagus” jika build/test/license/dependency review gagal.
-
 
 ---
 
@@ -6183,7 +6192,6 @@ Mengganti TailAdmin dengan template lain setelah development dimulai membutuhkan
 
 Jangan mengganti template hanya karena menemukan desain yang “lebih keren”.
 
-
 ---
 
 # SOURCE: docs/31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md
@@ -6235,6 +6243,14 @@ Tidak ada direct code change ke `main` atau `testing`.
 ## 2. Protection layers
 
 Kita memakai minimum lima lapisan.
+
+### Current Phase 0D-1 CI state
+
+[Quality workflow](.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**: workflow Quality, job ID quality, display/check job Quality Gate. Triggers PR dan push testing/main. Read-only contents, no project/cloud/DB secrets, no deploy/migration. [CI contract](docs/12_CI_CD_RELEASE.md), [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+Stage ini tidak push/create PR atau mengubah protections. Baseline read-only audit mengamati protect-main/protect-testing active dengan PR/force/delete rules; tidak ada required-status-check rule pada dua rulesets yang terbaca, sedangkan classic/bypass state belum terverifikasi. Lihat [bounded baseline evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#g-current-github-actions-state).
+
+Phase 0D-2 harus terlebih dahulu menjalankan real Linux Actions, membaca exact check name/app/context untuk current SHA, lalu meminta explicit human approval sebelum mengatur required checks testing/main. Jangan menyatakan enforcement sudah aktif dari file YAML lokal. Pending/cancelled/failed quality run belum memenuhi merge gate. Local hooks tetap control terpisah dan tidak diganti oleh workflow.
 
 ### Layer A — GitHub server-side branch protection (authoritative)
 
@@ -6644,7 +6660,6 @@ Vercel production isolation
 
 Human error diasumsikan **akan terjadi**. Sistem harus membuat human error sulit berubah menjadi production incident.
 
-
 ---
 
 # SOURCE: docs/32_RESEARCH_DECISIONS.md
@@ -6761,7 +6776,6 @@ Shortest-path A→B sebagai problem utama, Dijkstra/A* sebagai metode penelitian
 - TODO-LIT-01: evidence bibliografi untuk posisi/gap. Tidak boleh dianggap sudah dipenuhi oleh dokumentasi teknis platform.
 
 Keputusan yang sudah dikunci (main counts, jumlah dataset, repetitions, warm-up, varian algoritma, input formal, dan RQ) tidak termasuk OPEN.
-
 
 ---
 
@@ -6979,7 +6993,6 @@ Valid initial route [0,1,2,3,0] cost 16. Reversal [1..2] memberi [0,2,1,3,0] cos
 
 Generated finite matrices (positive off-diagonal untuk ACO), termasuk asymmetric, harus selalu menghasilkan valid closed tours, preserve input, dan cost recomputation cocok. 2-Opt tidak lebih buruk dari NN. ACO fixed-seed result identik; jangan mewajibkan ACO mengalahkan NN atau mencapai optimum pada setiap fixture. Pada small instance boleh exhaustive enumeration sebagai test oracle tanpa mengubah metode penelitian.
 
-
 ---
 
 # SOURCE: docs/34_OSRM_DISTANCE_CONTRACT.md
@@ -7086,7 +7099,6 @@ Keputusan endpoint final masih OPEN. Evaluasi dukungan distance annotation, limi
 
 Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Retry terbatas hanya untuk transient infrastructure errors sebelum freeze dan dicatat. Jangan fallback ke metric lain atau overwrite snapshot sukses. Failed generation disimpan sebagai failure record, bukan successful benchmark case. Geometry error ditangani terpisah dari matrix/algorithm errors.
 
-
 ---
 
 # SOURCE: templates/ADR_TEMPLATE.md
@@ -7144,7 +7156,6 @@ Negative:
 
 ## Review date
 
-
 ---
 
 # SOURCE: templates/BUG_REPORT_TEMPLATE.md
@@ -7198,7 +7209,6 @@ Negative:
 ## Safety note
 
 Apakah bug menyentuh production data/secret?
-
 
 ---
 
@@ -7257,7 +7267,6 @@ Relevant docs:
 - CI:
 - Preview:
 - screenshot:
-
 
 ---
 
@@ -7344,7 +7353,6 @@ npm run build     : PASS/FAIL
 
 -
 
-
 ---
 
 # SOURCE: templates/VERIFICATION_REPORT_TEMPLATE.md
@@ -7399,7 +7407,6 @@ PASS / PASS WITH FINDINGS / FAIL
 ## Manual checks still required
 
 ## Corrective actions
-
 
 ---
 

@@ -24,7 +24,7 @@
 
 ### Phase 0C — Database Foundation
 
-**Dev live foundation VERIFIED — final independent Phase 0C review pending.** Offline implementation dan [independent offline verification PASS](proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [read-only live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C belum closed.
+**CLOSED / merged via PR #9** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Offline implementation dan [independent offline verification PASS](proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [read-only live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md).
 
 - [x] approved exact runtime Drizzle/TiDB HTTP/Zod + dev-only Kit/mysql2;
 - [x] pure DB URL parser/Dev CLI guard, lazy server-only client;
@@ -35,7 +35,7 @@
 - [x] independent offline verification PASS;
 - [x] live Dev health/readiness HTTP 200; application read dan migration TCP/TLS SELECT 1 PASS;
 - [x] ledger 1 entry + hash/journal match; live depots schema/PK/index sesuai source/SQL;
-- [ ] final independent Phase 0C verification;
+- [x] final independent Phase 0C verification PASS; PR #9 merged dan remote testing verified;
 - [ ] Testing resource/evidence: deferred sebelum integration/Preview Phase 0D;
 - [ ] Production resource/evidence: deferred sebelum controlled rollout.
 
@@ -43,9 +43,14 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
+**0D-1 CI IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). D1–D8 implemented; D9–D20 remain later scopes.
+
+- [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
+- [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
+- [x] existing required commands, coverage tanpa threshold, offline db:check, runtime hard audit/full informational parser;
+- [ ] real remote Linux Actions verification dan exact required-check enforcement (Phase 0D-2, explicit approval);
 - [ ] Vercel Production/Preview;
 - [ ] env isolation dan Preview DB != Production DB;
-- [ ] CI skeleton menjalankan quality scripts;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
 Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).

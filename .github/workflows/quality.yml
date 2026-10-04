@@ -1,0 +1,108 @@
+name: Quality
+
+on:
+  pull_request:
+    branches:
+      - testing
+      - main
+  push:
+    branches:
+      - testing
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Runtime versions
+        run: |
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and component tests
+        run: npm run test
+
+      - name: Coverage without threshold
+        run: npm run test:coverage
+
+      - name: Offline migration history check
+        run: npm run db:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck after build
+        run: npm run typecheck
+
+      - name: Runtime audit gate
+        run: npm audit --omit=dev --json
+
+      - name: Full audit information
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { spawnSync } = require('node:child_process');
+          const audit = spawnSync('npm', ['audit', '--json'], { encoding: 'utf8' });
+          const fail = (message) => {
+            console.error(`Full audit failed: ${message}`);
+            process.exit(1);
+          };
+
+          if (audit.error || audit.signal || ![0, 1].includes(audit.status)) {
+            fail('command did not produce a normal audit result');
+          }
+
+          let report;
+          try {
+            report = JSON.parse(audit.stdout);
+          } catch {
+            fail('output is not valid JSON');
+          }
+
+          const counts = report?.metadata?.vulnerabilities;
+          const findings = report?.vulnerabilities;
+          const severities = ['info', 'low', 'moderate', 'high', 'critical'];
+          if (report?.error || !counts || !findings || typeof findings !== 'object' ||
+              Array.isArray(findings) ||
+              ![...severities, 'total'].every((key) => Number.isSafeInteger(counts[key]) && counts[key] >= 0) ||
+              counts.total !== severities.reduce((sum, key) => sum + counts[key], 0) ||
+              Object.keys(findings).length !== counts.total ||
+              !Object.values(findings).every((finding) => severities.includes(finding?.severity)) ||
+              (audit.status === 1 && counts.total === 0)) {
+            fail('missing or inconsistent audit evidence');
+          }
+
+          console.log(`Full audit counts: ${JSON.stringify(counts)}`);
+          console.log(`Affected packages: ${JSON.stringify(Object.entries(findings).map(([name, finding]) => `${name} (${finding.severity})`))}`);
+          console.log(counts.total === 0 ? 'No full-audit advisories.' : 'Full-audit advisories are informational; review separately.');
+          NODE
