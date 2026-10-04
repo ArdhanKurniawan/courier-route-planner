@@ -1,7 +1,7 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Research contract sync v1, Route Planner application shell; Phase 0A CLOSED/merged via PR #7; Phase 0B Environment + Health implemented locally
-**Tanggal sinkronisasi:** 2026-10-03
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8, independent verification PASS; Phase 0C Dev live foundation VERIFIED; FINAL PHASE 0C REVIEW PENDING
+**Tanggal sinkronisasi:** 2026-10-04
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -34,7 +34,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Verifikasi branch `feature/foundation-environment-health`, 2026-10-03. Phase 0A CLOSED dan merged melalui PR #7 ke `testing` pada `f73834aa4bb38ada5c289fa30a0b6fb6aa608f26`; shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Phase 0C Dev live verification pada branch `feature/foundation-database`, 2026-10-04, berbasis `11985b6a3532b3773eebe63d330d84788bbf2be1`. Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8 dan independent verification PASS. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -45,19 +45,21 @@ Verifikasi branch `feature/foundation-environment-health`, 2026-10-03. Phase 0A 
 | Tersedia | Routing sederhana tanpa locale: `/`, `/about`, dan 10 route modul dengan status **Belum diimplementasikan**; seluruh link sidebar dan refresh route diuji melalui browser |
 | Dibersihkan | Demo e-commerce, charts, demographic map, calendar, profile/auth, showcase, mock data dan assets; `apexcharts`, `react-apexcharts`, `next-intl`, JVectorMap, FullCalendar, Swiper, DnD, Dropzone dan SimpleBar dihapus setelah audit usage |
 | Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
-| Belum | TiDB/Drizzle, Zod, Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
+| Belum | Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
 | Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
 | Phase 0A CLOSED | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
 | Phase 0A CLOSED | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
-| Security audit | Next.js dan eslint-config-next dipatch ke `16.3.6`; audit 2026-10-03: runtime-only 0 findings, full 15 dev-only findings (1 low, 2 moderate, 12 high), tercatat di laporan Phase 0A |
-| Phase 0B lokal | `.env.example` berisi `APP_ENV=development`; pure typed parser di `src/config/env.ts`, exact enum `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation |
-| Phase 0B lokal | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB |
-| Tests current | 4 files / 48 tests PASS: navigation/dashboard + env parser (18) dan health (19); server tests memakai Node per file |
-| Foundation gap | Phase 0B independent verification; Phase 0C TiDB/Drizzle/Zod; Phase 0D GitHub Actions + Vercel/Preview/env isolation; Playwright/E2E masih pending |
+| Security audit | Next.js/eslint-config-next `16.3.6`; Stage 1 audit: runtime 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Delta +4 moderate pada dev tooling Drizzle Kit; detail pada laporan Stage 1 |
+| Phase 0B CLOSED | Pure typed APP_ENV parser, exact `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation; independent verification PASS |
+| Phase 0B CLOSED | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB; behavior tetap |
+| Phase 0C Dev VERIFIED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
+| Phase 0C Dev VERIFIED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
+| Tests current | 9 files / 147 tests PASS: 48 tests lama + 99 DB/schema/readiness tests; server tests memakai Node dan transport palsu |
+| Foundation gap | Final independent Phase 0C verification pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout; CI/Vercel/Playwright/E2E pending, Gate 1 OPEN |
 
 Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
-Phase 0A independent verification: [report](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0B local implementation: [report](docs/proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md). Fresh lint/typecheck/test/coverage/build PASS tanpa `.env.local`, APP_ENV inherited, atau DATABASE_URL. Health memerlukan APP_ENV saat GET dipanggil; developer dapat menyalin `.env.example` ke ignored `.env.local`. DATABASE_URL ditunda ke Phase 0C; NEXT_PUBLIC_APP_NAME tidak diperkenalkan. Tidak ada dependency baru.
+Phase 0A independent verification: [report](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0B CLOSED/PR #8: [independent verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C Stage 1: [implementation report](docs/proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md); [independent offline PASS](docs/proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [Dev live verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Build/typegen/tests tetap tidak memerlukan APP_ENV, DATABASE_URL atau real env file. `.env.example` kini memuat APP_ENV dan DATABASE_URL kosong; credential Dev diisi manusia pada ignored file privat dan tidak disalin ke Git. NEXT_PUBLIC_APP_NAME tidak diperlukan.
 
 Jalankan quality gates lokal setelah clone/pull:
 
@@ -67,12 +69,13 @@ npm run lint
 npm run typecheck
 npm run test
 npm run test:coverage
+npm run db:check
 npm run build
 ```
 
 `npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
 
-Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0B independent verification, Phase 0C/0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Kontrak penelitian tetap sama.
+Deployment/env/remote branch protections belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; final independent Phase 0C review, Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev-first tetap menargetkan tiga independent TiDB Starter resources sesuai ADR-008; tidak ada shared-instance fallback. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 

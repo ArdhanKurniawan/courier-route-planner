@@ -126,7 +126,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A Quality Foundation CLOSED dan merged ke `testing` melalui PR #7; [independent verification](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md) tersedia. Phase 0B Environment + Health diimplementasikan lokal dan menunggu independent verification. Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C offline foundation dan independent offline verification PASS; Dev diprovision manusia, first migration applied dan live read-only verification PASS. Final independent Phase 0C review pending. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -134,19 +134,20 @@ npm run lint
 npm run typecheck
 npm run test
 npm run test:coverage
+npm run db:check
 npm run build
 ```
 
-`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Test stack dev yang tersedia: `vitest`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/jest-dom`, dan `jsdom`. Current suite: 4 files / 48 tests untuk navigation/dashboard, APP_ENV parser dan app-only health; server tests memakai Node per file; `npm run test:watch` untuk development. Coverage hanya baseline informasi tanpa threshold; output tidak masuk Git.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Vitest/RTL/jest-dom/jsdom/V8 tersedia. Current suite: 9 files / 147 tests, termasuk 48 tests lama dan 99 DB/schema/readiness tests tanpa real network; server tests memakai Node per file. Coverage hanya informasi tanpa threshold; output tidak masuk Git. Build/tests tetap PASS tanpa APP_ENV/DATABASE_URL atau real env file.
 
 Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
 
 - Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
-- Phase 0C — Database Foundation: TiDB Dev/Test/Prod, Drizzle ORM, `@tidbcloud/serverless`, migration tooling dan Zod sesuai task; belum diimplementasikan.
+- Phase 0C Stage 1: Drizzle ORM `0.45.3`, TiDB HTTP driver `0.3.0`, Zod `4.6.5`; Drizzle Kit `0.31.11` + mysql2 `3.24.5` dev-only, pure parser/lazy client/depots/readiness dan offline migration tersedia. Dev live verified; Testing/Production deferred.
 - Phase 0D — CI + Vercel Integration: GitHub Actions, main/Preview deployments dan env/DB isolation; belum diimplementasikan.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
 
-Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; provisioning/deployment dan Gate 1 masih OPEN.
+Bagian F–Q di bawah adalah panduan pekerjaan lanjutan untuk phase terkait; Dev provisioning/first apply sudah dilakukan manusia; deployment, final independent Phase 0C review dan Gate 1 masih OPEN.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -162,55 +163,56 @@ Exact template:
 
 ```dotenv
 APP_ENV=development
+
+# Set a Dev-only TiDB connection URL in .env.local.
+# Never commit credentials. Migration credentials use .env.migrations.local.
+DATABASE_URL=
 ```
 
-Set salah satu exact `development/testing/production`; missing/invalid, case variant dan padded value ditolak tanpa default/trim. Jangan commit `.env.local`. NEXT_PUBLIC_APP_NAME tidak diperlukan; DATABASE_URL ditunda ke Phase 0C.
+Set salah satu exact `development/testing/production`; missing/invalid, case variant dan padded value ditolak tanpa default/trim. Jangan commit `.env.local`. NEXT_PUBLIC_APP_NAME tidak diperlukan; URL kosong tetap cukup untuk app-only health, tetapi readiness akan 503 sampai DB credential valid dan koneksi tersedia.
 
 `GET /api/health`: 200 `{"status":"ok"}` dengan APP_ENV valid, atau 503 `{"status":"error"}` untuk missing/invalid config. Keduanya JSON + Cache-Control:no-store; tidak ada env disclosure, DB atau network check. Import/typegen/build tetap PASS tanpa real env file atau inherited APP_ENV/DATABASE_URL. Unit tests memakai scoped vi.stubEnv, tanpa .env.local atau HTTP server. [Implementation report](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
 
-## PHASE F — Create TiDB instances (future Phase 0C)
+## PHASE F — TiDB Dev-first (Dev live verified)
 
-Di TiDB Cloud:
+Current Dev sudah diprovision dan initial migration applied sekali oleh manusia. Read-only verification 2026-10-04 PASS; [live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Langkah berikut adalah referensi onboarding resource baru yang diotorisasi terpisah; jangan ulang provisioning atau migration pada current Dev. Settings/account/quota tetap tanggung jawab review manusia:
 
 1. buat Organization;
-2. create Starter instance:
-   - `route-planner-dev`;
-   - `route-planner-testing`;
-   - `route-planner-production`;
+2. create independent Dev Starter resource `route-planner-dev` dan DB `courier_route_planner_dev`;
 3. pastikan spending/budget setting tetap pada konfigurasi zero-cost yang diinginkan;
 4. generate connection password masing-masing;
 5. jangan share screenshot credential.
 
+Testing resource deferred sebelum integration/Preview Phase 0D; Production sebelum controlled rollout. Target ADR-008 tetap tiga independent Starter resources; tidak memakai shared fallback. Offline Stage 1 tidak provisioning; current Dev kini live verified. Final independent Phase 0C review masih pending.
+
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
-## PHASE G — Database env (future Phase 0C)
+## PHASE G — Private database env (human-managed)
 
-Setelah task Phase 0C menyetujui DB connection, tambahkan DATABASE_URL TiDB Dev ke `.env.local` yang sudah memakai APP_ENV=development. DATABASE_URL bukan prerequisite Phase 0B dan tidak masuk current `.env.example`.
+Setelah provisioning/credential approval, manusia mengisi DATABASE_URL TiDB Dev server-only di ignored `.env.local` dengan APP_ENV=development. Template tracked sudah memuat URL kosong. Dedicated migration credential berada di ignored `.env.migrations.local`; kedua file dibuat manusia setelah Stage 1 offline, kini hadir dan ignored, tidak boleh dicetak/di-commit. Jangan memakai NEXT_PUBLIC_DATABASE_URL.
 
 Pastikan `.gitignore` mencakup `.env*` kecuali `.env.example` sesuai kebijakan project.
 
 Buat `.env.example` tanpa secret.
 
-## PHASE H — Drizzle connection (future Phase 0C)
+## PHASE H — Current lazy Drizzle foundation + offline migration
 
-`src/db/index.ts` konsep:
+`src/config/db-env.ts` pure Zod parser dan Dev credential helper; `src/db/client.ts` lazy server-only `getDatabase()` memakai Drizzle → TiDB HTTP. Tidak ada import-time env validation/I/O atau mysql2 app import. `src/db/schema.ts` hanya depots sesuai [docs/08](08_DATABASE_DESIGN.md); learning/health table tidak ditambahkan.
 
-```ts
-import { connect } from '@tidbcloud/serverless';
-import { drizzle } from 'drizzle-orm/tidb-serverless';
+Offline commands, tanpa credential:
 
-const url = process.env.DATABASE_URL;
-if (!url) throw new Error('DATABASE_URL is required');
-
-const client = connect({ url });
-export const db = drizzle(client);
+```bash
+npm run db:generate
+npm run db:check
 ```
 
-Buat satu tabel learning/health terlebih dahulu sebelum schema project penuh.
+Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot sudah direview; **APPLIED ONCE ON DEV oleh manusia**. Live ledger berisi satu entry, hash SQL/timestamp journal dan live schema cocok. `db:check` hanya offline consistency. Jangan mengubah generated history sembarangan, atau menggunakan `drizzle-kit push`.
+
+`db:migrate` memakai installed Kit bin via Node 24 `--env-file=.env.migrations.local`, guarded Dev config: APP_ENV exact development, DB exact courier_route_planner_dev, TLS certificate verification aktif. Inherited shell vars override file; mulai dari clean/verified shell tanpa mencetak credential. Initial apply sudah dilakukan manusia; jangan rerun untuk menguji idempotence. Setiap migration berikutnya memerlukan task dan approval manusia tersendiri. Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel.
 
 ## PHASE I — Health check
 
-App-only `GET /api/health` sudah tersedia pada Phase 0B; contract 200/503 dan env workflow dijelaskan pada bagian Phase 0B di atas. Safe DB readiness check tetap future Phase 0C dan harus mengikuti task/contract tersendiri.
+App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi: HTTP 200, exact status JSON + no-store. Final independent Phase 0C review pending; Testing/Production deferred. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
 
 ## PHASE J — First Git commit
 

@@ -1,6 +1,6 @@
 # 08 — DATABASE DESIGN
 
-**Conceptual target design only.** Tabel/kolom di bawah belum merupakan schema/migration terimplementasi. Sinkronisasi 2026-10-02 menambahkan frozen matrix storage; Editable Scenario → Immutable Benchmark Case tetap dipertahankan.
+**Conceptual target design only.** Pengecualian aktual Phase 0C: **depots saja** di `src/db/schema.ts` dan generated migration `drizzle/0000_dear_rictor.sql`, offline independently verified dan sudah diterapkan manusia pada Dev. Verifikasi live read-only 2026-10-04 memastikan delapan kolom, PK/index saja dan satu ledger entry cocok dengan source/SQL; BOOLEAN direpresentasikan TiDB sebagai `tinyint(1)` default 1. Semua tabel/relasi lain tetap future conceptual target. Sinkronisasi 2026-10-02 menambahkan frozen matrix storage; Editable Scenario → Immutable Benchmark Case tetap dipertahankan. Testing/Production deferred; final independent Phase 0C review pending, Gate 1 OPEN. [Live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md).
 
 ## 1. Design goals
 
@@ -36,20 +36,22 @@ depots
 ## 3. `depots`
 
 ```text
-id BIGINT PK
-name VARCHAR
+id BIGINT AUTO_INCREMENT PK NOT NULL
+name VARCHAR(255) NOT NULL
 address TEXT NULL
-latitude DECIMAL/DOUBLE
-longitude DECIMAL/DOUBLE
-is_active BOOLEAN
-created_at DATETIME
-updated_at DATETIME
+latitude DOUBLE NOT NULL
+longitude DOUBLE NOT NULL
+is_active BOOLEAN NOT NULL DEFAULT true
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 ```
 
-Constraints:
+Stage 1 actual contract:
 
-- valid coordinate range;
-- name non-empty.
+- ID server-side bigint; future client/API serializes decimal string, tanpa arbitrary Number conversion.
+- Timestamp UTC-by-convention, explicit future application values, tanpa DB timestamp default/on-update.
+- Hanya PK; tanpa seed, FK, extra index, unique/global active-depot constraint atau coordinate CHECK.
+- Coordinate range dan non-empty name adalah future mutation/Zod concern; belum ada CRUD.
 
 ## 4. `scenarios`
 

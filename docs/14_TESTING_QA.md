@@ -149,7 +149,7 @@ Bedakan:
 
 Jangan campur keduanya.
 
-## 10. Current testing foundation — Phase 0A + Phase 0B
+## 10. Current testing foundation — Phase 0A/0B closed + Phase 0C offline
 
 Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing Library, jest-dom dan jsdom tersedia sebagai dev dependencies. `tests/setup.ts` memuat jest-dom Vitest matchers dan explicit `afterEach(cleanup)` agar render antar test tetap independent tanpa global Vitest APIs. `next/link` diuji langsung tanpa mock.
 
@@ -157,7 +157,11 @@ Verifikasi lokal 2026-10-03: Vitest adalah unit/component runner; React Testing 
 
 Phase 0B menambah `tests/unit/env.test.ts` (18 tests) dan `tests/unit/health.test.ts` (19 tests), dengan `// @vitest-environment node` per file. Tests memeriksa exact APP_ENV enum/rejections, fixed safe error, pure parser, import safety, GET current-value validation, 200/503 exact minimal JSON, JSON/no-store headers, DATABASE_URL absent, dan unexpected exception propagation. Semua handler/parser diuji langsung; satu scoped parser spy mensimulasikan unexpected exception. Env stubs dipulihkan dengan afterEach; tidak ada HTTP server, DB atau Playwright.
 
-Current fresh suite: **4 files / 48 tests PASS**, termasuk 11 tests lama dan 37 tests baru. Coverage V8: statements 4.95% (22/444), branches 3.68% (13/353), functions 6% (9/150), lines 5.36% (22/410); tanpa threshold atau exclusion tambahan. [Phase 0B implementation evidence](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+Phase 0B CLOSED/merged via PR #8, [independent verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Historical baseline: **4 files / 48 tests PASS**; V8 statements 4.95%, branches 3.68%, functions 6%, lines 5.36%.
+
+Phase 0C Stage 1 offline suite: **9 files / 147 tests PASS**, seluruh 48 tests lama dipertahankan. Lima file baru: `db-env` (53), `db-schema` (1), `db-client` (7), `db-readiness` (27), `ready` (11). TDD RED/GREEN memeriksa pure Zod parser + safe errors + Dev guard/TLS, schema import safety, lazy real ORM/HTTP driver dengan fake transport, fresh 5000 ms signal, abort sebelum headers dan saat body pending, no retry, provider/malformed/unexpected result, serta exact 200/503 JSON/no-store. Route menggunakan real readiness logic dengan scoped acquisition boundary; unexpected acquisition bugs tidak dilaporkan sukses. Tidak ada real network/DB credential.
+
+Vitest membutuhkan test-only alias/fixture untuk Next `server-only` marker; production boundary tetap aktif. Coverage mencakup seluruh src TS/TSX termasuk DB, tanpa threshold/exclusion baru. Metrics aktual dan full/runtime audit delta tercatat pada [Stage 1 report](proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). `npm run db:check` memeriksa offline migration history, bukan live schema/status. Independent offline verification PASS. [Dev live read-only verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) mencatat health/readiness HTTP 200, application SELECT COUNT(*) FROM depots, migrator SELECT 1/TLS dan ledger/schema/PK/index checks PASS; initial migration diterapkan manusia sebelum verification. DB integration/CRUD tests tetap pending. Fresh quality suite memakai salinan source dengan lockfile yang sama dan tanpa env privat; final independent Phase 0C review pending.
 
 Scripts aktual: `npm run typecheck` menghasilkan Next route types sebelum `tsc --noEmit`; `npm run test`, `npm run test:watch` dan `npm run test:coverage` tersedia. Clean install lint/typecheck/test/coverage/build PASS. Coverage V8 menghasilkan text, HTML dan JSON summary untuk seluruh `src/**/*.{ts,tsx}`, termasuk modules yang belum diuji; **NO COVERAGE THRESHOLD**, angka hanya baseline informasi. Generated reports di `coverage/` ignored oleh Git dan ESLint. Vite memberi warning future native config loader pada config TypeScript yang ada; current runner PASS.
 
