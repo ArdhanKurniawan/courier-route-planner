@@ -205,3 +205,25 @@ Framing OSRM sebagai future untuk seluruh fungsi tidak lagi sesuai approved form
 ### Implementation follow-up
 
 Matrix foundation berada sebelum algorithm integration pada Phase 3. Conceptual storage ada di [database design](08_DATABASE_DESIGN.md); protocol di [docs/15](15_RESEARCH_BENCHMARK_PROTOCOL.md); specification di [docs/33](33_ALGORITHM_SPECIFICATION.md). Tidak ada actual DB migration dalam sinkronisasi dokumentasi ini.
+
+---
+
+## ADR-013 — mysql2 as Drizzle Kit Migration CLI Dev-Only Adapter
+
+Status: Accepted, keputusan manusia Phase 0C Stage 1, 2026-10-04.
+
+Context: stable Drizzle Kit `0.31.11` memakai driver MySQL CLI untuk migration; aplikasi tetap `Next.js → Drizzle ORM → @tidbcloud/serverless → TiDB Cloud`. Source/package terpasang dan baseline audit memverifikasi bahwa adapter runtime HTTP bukan selector CLI Kit yang didukung.
+
+Decision: `mysql2 3.24.5` diizinkan sebagai **dev dependency saja** untuk Drizzle Kit. Runtime dependencies yang disetujui: `drizzle-orm 0.45.3`, `@tidbcloud/serverless 0.3.0`, `zod 4.6.5`; dev tooling: `drizzle-kit 0.31.11`, `mysql2 3.24.5`.
+
+Rules:
+
+- Tidak ada application/Client Component import mysql2, runtime dependency langsung, atau TCP pool pada Next.js.
+- Dedicated migration credential memakai ignored `.env.migrations.local`, berbeda peran dari credential aplikasi; TLS certificate verification aktif.
+- Generate/check offline; apply Dev hanya sesudah review SQL dan explicit human approval. `db:push` dilarang.
+- Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel, atau production migration automation.
+- Kit lama membawa dua transitive loader deprecated dan empat temuan moderate tambahan pada full audit; runtime audit 0. Ini dicatat sebagai limitation tooling, tanpa audit fix/override.
+
+Alternative: custom HTTP migrator ditolak untuk foundation karena menambah runner dan beban pengujian khusus.
+
+Resource sequence yang disetujui: **Dev-first**; Dev telah diprovision manusia dan koneksi HTTP/TCP-TLS diverifikasi read-only, Testing sebelum integration/Preview Phase 0D, Production sebelum controlled rollout. Target ADR-008 tetap tiga independent Starter resources, tanpa shared fallback. Stage 1 hanya `depots`. Initial migration sudah diterapkan sekali oleh manusia pada Dev; ledger dan schema live cocok dengan artifact lokal. [Live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Final independent Phase 0C review pending; Gate 1 OPEN.

@@ -13,6 +13,8 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── tsconfig.json
 ├── eslint.config.*
 ├── drizzle.config.ts
+├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
+├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
 ├── src/
@@ -25,22 +27,24 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 │   │   │   └── results/
 │   │   ├── api/
 │   │   │   ├── health/
+│   │   │   ├── ready/    # actual connectivity readiness; Dev live verified
 │   │   │   └── ...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
 │   ├── config/
 │   │   ├── navigation.ts
-│   │   └── env.ts          # pure APP_ENV parser; server call-site pada health
+│   │   ├── env.ts          # pure APP_ENV parser; health call-site
+│   │   └── db-env.ts       # pure Zod DB URL parser + Dev CLI guard
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
 │   │   ├── tables/
 │   │   └── map/
 │   ├── db/
-│   │   ├── index.ts
-│   │   ├── schema.ts
-│   │   ├── repositories/
-│   │   └── migrations/
+│   │   ├── client.ts       # actual lazy server-only HTTP client
+│   │   ├── readiness.ts    # actual SELECT 1 connectivity service
+│   │   ├── schema.ts       # actual depots ONLY
+│   │   └── repositories/   # future CRUD; absent in Stage 1
 │   ├── domain/
 │   │   ├── routing/
 │   │   └── experiments/
@@ -65,6 +69,8 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ```
 
 ## Domain routing structure
+
+Phase 0C actual files marked di atas tersedia lokal; initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Final independent Phase 0C review pending. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/CI/E2E dalam target ini tetap belum diimplementasikan.
 
 ```text
 src/domain/routing/

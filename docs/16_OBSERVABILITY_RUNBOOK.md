@@ -64,7 +64,22 @@ Phase 0B menyediakan app-only `GET /api/health`; APP_ENV dibaca dan divalidasi s
 
 Keduanya application/json dan `Cache-Control: no-store`. Hanya AppEnvValidationError yang dipetakan ke 503; unexpected exception diteruskan ke framework. Route memakai native Response.json dan default request-time GET behavior Next 16.3.6, tanpa dynamic/revalidate/runtime exports atau custom HEAD/OPTIONS.
 
-Health menunjukkan app liveness + config validity lokal. Tidak mengecek DB, network/provider, filesystem, auth/session atau deployment. Tidak mengirim env, app name, timestamp/version, credential, host/path, error detail atau stack. DB readiness tetap pekerjaan Phase 0C; deployment/isolation evidence Phase 0D. Local env workflow: [setup Phase 0B](17_SETUP_FROM_ZERO.md#phase-0b--local-env--app-only-health).
+Health menunjukkan app liveness + config validity lokal. Tidak mengecek DB, network/provider, filesystem, auth/session atau deployment. Tidak mengirim env, app name, timestamp/version, credential, host/path, error detail atau stack. Phase 0B CLOSED/PR #8, independent verification PASS; source/behavior health tidak berubah pada Stage 1. Deployment/isolation evidence tetap Phase 0D. Local env workflow: [setup Phase 0B](17_SETUP_FROM_ZERO.md#phase-0b--local-env--app-only-health).
+
+### Separate DB readiness — Phase 0C Stage 1
+
+`GET /api/ready` diimplementasikan lokal dan unit verified, memakai lazy server-only Drizzle/TiDB HTTP client. Hanya satu `SELECT 1 AS ok`; tidak mengecek tabel, migration status, atau melakukan mutation. Fresh abort signal **5000 ms** setiap operation mencakup HTTP fetch + body sesuai driver; **no retry**.
+
+| Kondisi | HTTP | Exact JSON |
+|---|---:|---|
+| Satu row integer ok=1; INT numeric 1 atau BIGINT exact string "1" dari driver | 200 | `{"status":"ok"}` |
+| Missing/invalid DB URL, transport/abort/timeout/provider/malformed/empty/unexpected result | 503 | `{"status":"error"}` |
+
+Keduanya application/json dan `Cache-Control: no-store`, payload hanya status. Tidak ada URL/env/host/database/user/password/SQL/stack/timestamp/version/provider detail atau logging credential. Unexpected acquisition/programming error diteruskan ke framework dan tidak dianggap sukses. Import/typegen/build tidak membaca credential atau menjalankan query.
+
+Wire response divalidasi sebelum konversi driver: row width/field names tidak ambigu, INT text harus integer penuh. Readiness memeriksa integer type metadata dan exact value; string BIGINT dipertahankan tanpa Number conversion. Malformed seperti 1garbage/1.9/1e9, extra cells/duplicate fields atau FLOAT/VARCHAR result → 503.
+
+**Live Dev health/readiness diverifikasi 2026-10-04:** keduanya HTTP 200, exact `{"status":"ok"}`, application/json dan no-store. Application role HTTP read serta migrator TCP/TLS SELECT 1 PASS. Initial migration telah diterapkan manusia; schema dan ledger diverifikasi terpisah secara read-only pada [live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Readiness tetap bukan bukti applied schema. App-only health dapat bekerja tanpa DATABASE_URL. Tidak ada retry apply, mutation atau credential/grant change; final independent Phase 0C review pending.
 
 ## 5. Incident response
 

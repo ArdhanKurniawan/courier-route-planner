@@ -27,7 +27,11 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 - [x] build PASS;
 - [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
 
-Phase 0B implemented locally: strict APP_ENV parser, safe template, app-only GET health 200/503 JSON + no-store, dan current full suite 4 files / 48 tests PASS. [Implementation evidence](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md); independent Phase 0B verification masih pending. Checklist keseluruhan tetap OPEN: TiDB Dev, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
+Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md): strict APP_ENV parser, safe template, app-only health unchanged; baseline 4 files / 48 tests PASS.
+
+Phase 0C Stage 1 offline foundation implemented locally / verification PASS: pure DB parser, lazy server-only HTTP client, depots-only schema, separate readiness unit behavior, generated/reviewed SQL + db:check PASS (initial migration kini Dev-applied oleh manusia). Current suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical), +4 moderate dev-tooling delta. [Stage 1 evidence](proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md). [Independent offline verification PASS](proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md). Dev sudah diprovision manusia; [live read-only verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, migration TCP/TLS, ledger 1 entry dan depots schema/PK/index. Final independent Phase 0C review pending; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum rollout. Target tiga independent resources tetap ADR-008.
+
+Checklist keseluruhan tetap OPEN: final independent Phase 0C review, Vercel main/Preview, Preview DB isolation, CI dan reproduksi anggota kedua belum diverifikasi:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -36,8 +40,11 @@ Phase 0B implemented locally: strict APP_ENV parser, safe template, app-only GET
 - [ ] ApexCharts tidak menjadi approved core dependency / cleanup status terdokumentasi;
 - [ ] Next.js local works;
 - [ ] build pass;
-- [x] app-only health endpoint (Phase 0B local evidence; independent verification pending);
-- [ ] TiDB Dev connection;
+- [x] app-only health endpoint (Phase 0B CLOSED/PR #8, independent PASS);
+- [x] Phase 0C offline parser/client/depots/migration/readiness + unit evidence;
+- [x] human Dev provisioning/first migration apply selesai; account/settings approval adalah human evidence, tidak diaudit ulang oleh task read-only;
+- [x] TiDB Dev connection: HTTP application dan TCP/TLS migration roles verified;
+- [ ] final independent Phase 0C verification;
 - [ ] Vercel main deployment;
 - [ ] Vercel feature preview;
 - [ ] Preview DB != Production DB;

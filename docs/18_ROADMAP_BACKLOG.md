@@ -16,17 +16,30 @@
 
 ### Phase 0B — Environment + Health
 
-Implemented locally, fresh verification PASS 2026-10-03; **independent Phase 0B verification masih pending**. Evidence: [implementation report](proses/phase-0/0b/PHASE_0B_IMPLEMENTATION_REPORT.md).
+**CLOSED / merged via PR #8**, independent verification PASS. Evidence: [verification report](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md).
 
 - [x] strict runtime APP_ENV validation dan `.env.example` tanpa secret;
 - [x] app-only GET health, 200/503 minimal JSON + no-store, tanpa DB;
-- [x] env/health Node unit tests; current full suite 4 files / 48 tests PASS.
+- [x] env/health Node unit tests; Phase 0B baseline 4 files / 48 tests PASS.
 
 ### Phase 0C — Database Foundation
 
-- [ ] TiDB Dev/Test/Prod;
-- [ ] Drizzle connection, Zod validation dan migration foundation;
-- [ ] safe DB health verification.
+**Dev live foundation VERIFIED — final independent Phase 0C review pending.** Offline implementation dan [independent offline verification PASS](proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [read-only live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C belum closed.
+
+- [x] approved exact runtime Drizzle/TiDB HTTP/Zod + dev-only Kit/mysql2;
+- [x] pure DB URL parser/Dev CLI guard, lazy server-only client;
+- [x] depots-only schema; SQL generated/reviewed/check PASS, initial migration **APPLIED ONCE ON DEV** oleh manusia;
+- [x] separate GET /api/ready, 5000 ms/no retry/minimal JSON; offline unit behavior PASS;
+- [x] 9 files / 147 tests, coverage dan quality checks offline PASS;
+- [x] human Dev provisioning dan first migration apply selesai; dedicated roles/private env tersedia;
+- [x] independent offline verification PASS;
+- [x] live Dev health/readiness HTTP 200; application read dan migration TCP/TLS SELECT 1 PASS;
+- [x] ledger 1 entry + hash/journal match; live depots schema/PK/index sesuai source/SQL;
+- [ ] final independent Phase 0C verification;
+- [ ] Testing resource/evidence: deferred sebelum integration/Preview Phase 0D;
+- [ ] Production resource/evidence: deferred sebelum controlled rollout.
+
+Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa shared fallback.
 
 ### Phase 0D — CI + Vercel Integration
 

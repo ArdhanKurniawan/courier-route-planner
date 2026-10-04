@@ -44,8 +44,10 @@ Tambahkan:
 
 ## 4. Database DoD
 
-- [ ] schema migration documented;
-- [ ] dev applied;
+**Phase 0C Dev foundation: VERIFIED.** Offline foundation dan independent offline verification PASS; manusia memprovision Dev dan menerapkan initial depots migration sekali. Read-only live verification membuktikan application HTTP read/readiness, migration TCP/TLS SELECT 1, ledger 1 entry dan schema/PK/index sesuai source/SQL. [Live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). **Full multi-environment Database DoD: PENDING**, karena Testing migration/evidence belum tersedia; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum controlled rollout. Final independent Phase 0C review pending; Gate 1 OPEN. Tidak ada production migration automation. TiDB DDL dapat autocommit; migration berikutnya memerlukan review target/history, partial-failure mitigation dan explicit approval.
+
+- [x] initial depots schema migration documented;
+- [x] initial depots Dev applied; ledger/schema verified read-only;
 - [ ] testing applied;
 - [ ] no destructive prod action;
 - [ ] indexes justified;
