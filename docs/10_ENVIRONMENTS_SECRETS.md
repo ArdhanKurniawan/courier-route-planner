@@ -4,7 +4,7 @@
 
 Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
 
-Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C offline foundation + independent offline verification PASS; Dev diprovision manusia, initial migration applied sekali, application HTTP dan migrator TCP/TLS connectivity diverifikasi read-only. Final independent Phase 0C review pending; Gate 1 OPEN. **Dev-first**: Testing deferred sebelum integration/Preview Phase 0D, Production sebelum controlled rollout; target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
+Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C offline foundation + independent offline verification PASS; Dev diprovision manusia, initial migration applied sekali, application HTTP dan migrator TCP/TLS connectivity diverifikasi read-only. Phase 0C CLOSED/PR #9, final independent verification PASS; Gate 1 OPEN. **Dev-first**: Testing deferred sebelum integration/Preview Phase 0D, Production sebelum controlled rollout; target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
 
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
@@ -28,6 +28,7 @@ Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C offline foundatio
 
 - `.env.local` never commit.
 - `.env.migrations.local` never commit; dedicated Dev migration credential, tidak otomatis disalin dari application credential.
+- `.env.testing.local` dan `.env.migrations.testing.local` never commit; future Testing app/migrator credential terpisah, belum dibuat pada 0D-3A.
 - `.env.example` commit, **tanpa nilai secret**.
 - `DATABASE_URL` tidak pernah prefix `NEXT_PUBLIC_`.
 - production credential hanya Production scope.
@@ -53,6 +54,12 @@ Stage 1 tidak membuat real env file atau credential. Explicit Dev apply memakai 
 GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk konfigurasi invalid/missing; JSON dan `Cache-Control: no-store`. Payload tidak memuat env, version, timestamp atau detail error. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#4-health-endpoint).
 
 `GET /api/ready` terpisah: SELECT 1 connectivity-only, 5000 ms/no retry, exact 200/503 status JSON + no-store. Unit behavior tersedia; live Dev health/readiness HTTP 200 exact status JSON + no-store terverifikasi 2026-10-04. [Read-only live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Dedicated application/migration role berbeda dan target Dev sama; task tidak mencoba write privilege atau mengubah grants. Missing/invalid DB URL → 503, tanpa mempengaruhi app-only health.
+
+### Testing tooling contract — Phase 0D-3A
+
+Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Tidak ada Production apply path atau generic env switch.
+
+Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. 0D-3B meminta manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL pada `.env.migrations.testing.local` tanpa paste credential ke chat. Tidak ada file secret baru di 0D-3A. Inherited vars override env-file; clean shell wajib. Logical DB guard tidak memverifikasi physical resource atau grants: manusia/provider harus memastikan Testing terpisah dari Dev/Production dan kedua roles menunjuk target Testing yang sama. [Evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## 5. Secret rotation
 

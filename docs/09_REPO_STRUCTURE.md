@@ -14,6 +14,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── eslint.config.*
 ├── drizzle.config.ts
 ├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
+├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; not applied
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
@@ -34,7 +35,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 │   ├── config/
 │   │   ├── navigation.ts
 │   │   ├── env.ts          # pure APP_ENV parser; health call-site
-│   │   └── db-env.ts       # pure Zod DB URL parser + Dev CLI guard
+│   │   └── db-env.ts       # pure Zod DB URL parser + explicit Dev/Testing CLI guards
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
@@ -65,7 +66,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── docs/
 └── .github/
     ├── workflows/
-    │   └── quality.yml       # actual local Quality / Quality Gate; remote pending
+    │   └── quality.yml       # actual Quality / Quality Gate; remote testing verified
     └── pull_request_template.md
 ```
 
@@ -73,7 +74,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 
 Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md). Initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/E2E dalam target ini tetap belum diimplementasikan.
 
-Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](../.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Workflow IMPLEMENTED LOCALLY; remote run dan required-check enforcement PENDING. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](12_CI_CD_RELEASE.md).
+Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](../.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Remote CI dan required-check configuration VERIFIED; testing behavioral enforcement VERIFIED, main behavior DEFERRED. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](12_CI_CD_RELEASE.md).
 
 ```text
 src/domain/routing/
@@ -126,6 +127,10 @@ src/
 ```
 
 DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core. Table provider menghasilkan frozen directed road-network matrix dalam meter; geometry provider menangani visualisasi setelah sequence tersedia. Matrix validator dan route validator di domain adalah pure operations. Storage implementation boleh menggunakan repository `src/db/` melalui application; domain tidak import DB. Kontrak: [docs/33](33_ALGORITHM_SPECIFICATION.md), [docs/34](34_OSRM_DISTANCE_CONTRACT.md).
+
+## Testing migration tooling — Phase 0D-3A
+
+`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia lokal, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. File `.env.testing.local`/`.env.migrations.testing.local` tetap ignored, tidak dibuat atau ditampilkan pada struktur tracked. [Report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## Naming
 

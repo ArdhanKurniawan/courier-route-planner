@@ -7,7 +7,7 @@
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
-**Current Phase 0D-1:** [quality.yml](../.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**. Vercel, Testing/Production provisioning, migrations dan required-check configuration tidak dilakukan stage ini. Gate 1 tetap OPEN. Evidence: [implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+**Current Phase 0D:** [quality.yml](../.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main behavior DEFERRED ke real testing → main promotion. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. Vercel/isolation belum diverifikasi.
 
 ## 2. CI triggers
 
@@ -16,7 +16,7 @@ Actual triggers:
 - `pull_request` dengan base branches `testing` dan `main`, default opened/synchronize/reopened;
 - `push` ke `testing` dan `main`, untuk actual merge/branch SHA.
 
-Tidak ada feature push trigger, pull_request_target, schedule, workflow_dispatch, path filter atau matrix. Workflow **Quality**, job ID **quality**, display/check job **Quality Gate**. Exact remote check context dipilih setelah first successful actual Actions run pada Phase 0D-2; belum ada enforcement baru dari stage ini.
+Tidak ada feature push trigger, pull_request_target, schedule, workflow_dispatch, path filter atau matrix. Workflow **Quality**, job ID **quality**, display/check job **Quality Gate**. Exact required context yang verified adalah Quality Gate, GitHub Actions app15368; strict freshness aktif pada testing/main.
 
 ## 3. CI stages
 
@@ -83,6 +83,8 @@ Policy awal:
 - production migration sebagai release step terencana.
 
 Setelah tim matang, automation dapat ditambah dengan ADR.
+
+0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing apply belum dilakukan dan membutuhkan checkpoint 0D-3B + explicit human approval **YES APPLY TESTING MIGRATION**. Production helper/config/script belum tersedia. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## 7. Release checklist
 

@@ -126,7 +126,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live read-only verification PASS. Phase 0D-1 workflow IMPLEMENTED LOCALLY; remote verification PENDING. Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live read-only verification PASS. Phase 0D CI implemented dan remote verified; Quality Gate required pada testing/main, testing behavioral proof VERIFIED, main behavior DEFERRED. Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -143,16 +143,17 @@ npm audit --json
 
 Sembilan command pertama required quality gates; full audit terakhir informational untuk valid advisory JSON. Tool/transport/invalid JSON failure tetap harus diinvestigasi, bukan diabaikan. Workflow menyediakan handling ini tanpa dependency tambahan. Tidak ada numeric coverage threshold atau DB/cloud secret untuk quality.
 
-`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Vitest/RTL/jest-dom/jsdom/V8 tersedia. Current suite: 9 files / 147 tests, termasuk 48 tests lama dan 99 DB/schema/readiness tests tanpa real network; server tests memakai Node per file. Coverage hanya informasi tanpa threshold; output tidak masuk Git. Build/tests tetap PASS tanpa APP_ENV/DATABASE_URL atau real env file.
+`typecheck` menjalankan `next typegen && tsc --noEmit`, sehingga tidak membutuhkan dev/build lebih dahulu. Vitest/RTL/jest-dom/jsdom/V8 tersedia. Historical Phase 0C suite: 9 files / 147 tests, termasuk 48 tests lama dan 99 DB/schema/readiness tests tanpa real network; server tests memakai Node per file. Coverage hanya informasi tanpa threshold; output tidak masuk Git. Build/tests tetap PASS tanpa APP_ENV/DATABASE_URL atau real env file.
 
 Install dependency berikutnya hanya pada task phase terkait, setelah audit stack existing:
 
 - Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C Stage 1: Drizzle ORM `0.45.3`, TiDB HTTP driver `0.3.0`, Zod `4.6.5`; Drizzle Kit `0.31.11` + mysql2 `3.24.5` dev-only, pure parser/lazy client/depots/readiness dan offline migration tersedia. Dev live verified; Testing/Production deferred.
-- Phase 0D-1 — GitHub Actions quality workflow tersedia lokal; remote CI/required checks PENDING Phase 0D-2. Main/Preview deployment dan env/DB isolation tetap pekerjaan lanjutan.
+- Phase 0D CI/enforcement — remote verified, testing behavioral proof VERIFIED; main behavior DEFERRED. Main/Preview deployment dan env/DB isolation tetap pending.
+- Phase 0D-3A — Testing migration tooling prepared locally; dedicated Testing resource/apply pending 0D-3B.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
 
-Bagian F–Q di bawah adalah panduan phase terkait; Dev provisioning/first apply dan final Phase 0C verification sudah selesai. Cloud deployment, remote CI dan Gate 1 tetap pending/OPEN. Sebelum mengikuti panduan cloud lanjutan, gunakan [approved baseline/staging checkpoints](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#ad-proposed-phase-0d-staging-plan); stage 0D-1 tidak mengotorisasi cloud setup atau Git operations.
+Bagian F–Q di bawah adalah panduan phase terkait; Dev provisioning/first apply dan final Phase 0C verification sudah selesai. Cloud deployment dan Gate 1 tetap pending/OPEN; remote CI dan testing enforcement sudah verified. Sebelum mengikuti panduan cloud lanjutan, gunakan [approved baseline/staging checkpoints](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#ad-proposed-phase-0d-staging-plan); stage 0D-1 tidak mengotorisasi cloud setup atau Git operations.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -188,7 +189,7 @@ Current Dev sudah diprovision dan initial migration applied sekali oleh manusia.
 4. generate connection password masing-masing;
 5. jangan share screenshot credential.
 
-Testing resource deferred ke stage integration/Preview Phase 0D; Production ke controlled rollout preparation. Target tetap tiga independent Starter resources; tidak memakai shared fallback. Offline Stage 1 tidak provisioning; Dev kini live verified dan Phase 0C CLOSED dengan final independent PASS. Current 0D-1 tidak provision/apply resource apa pun.
+Testing resource deferred ke stage integration/Preview Phase 0D; Production ke controlled rollout preparation. Target tetap tiga independent Starter resources; tidak memakai shared fallback. Offline Stage 1 tidak provisioning; Dev kini live verified dan Phase 0C CLOSED dengan final independent PASS. 0D-3A tidak provision/apply resource apa pun; Testing/Production NOT YET PROVISIONED.
 
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
@@ -214,6 +215,14 @@ npm run db:check
 Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot sudah direview; **APPLIED ONCE ON DEV oleh manusia**. Live ledger berisi satu entry, hash SQL/timestamp journal dan live schema cocok. `db:check` hanya offline consistency. Jangan mengubah generated history sembarangan, atau menggunakan `drizzle-kit push`.
 
 `db:migrate` memakai installed Kit bin via Node 24 `--env-file=.env.migrations.local`, guarded Dev config: APP_ENV exact development, DB exact courier_route_planner_dev, TLS certificate verification aktif. Inherited shell vars override file; mulai dari clean/verified shell tanpa mencetak credential. Initial apply sudah dilakukan manusia; jangan rerun untuk menguji idempotence. Setiap migration berikutnya memerlukan task dan approval manusia tersendiri. Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel.
+
+### Testing migration tooling — Phase 0D-3A (offline only)
+
+Testing migration tooling prepared locally: `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, dan manual `npm run db:migrate:testing`. Exact APP_ENV=testing + parsed DB `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, hardened parser/no fallback. Dev `db:migrate` dan guard tetap unchanged. Same sole initial migration history; tidak membuat migration kedua.
+
+Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. `.env.testing.local` (application) dan `.env.migrations.testing.local` (migrator) belum dibuat. Pada 0D-3B, manusia menyimpannya lokal tanpa paste values ke chat; Node `--env-file` tidak mengalahkan inherited variables, sehingga clean shell/target review wajib.
+
+Future sequence: provision independent Testing resource → logical DB → app/migrator roles scoped Testing DB → human private files → safe structural checks → read-only app and migrator connectivity → target tables/ledger + SQL/history review → approval **YES APPLY TESTING MIGRATION** → apply once → verify ledger/schema/app read. Jangan jalankan command apply pada 0D-3A. DB name sendiri tidak membuktikan resource identity; verifikasi provider bahwa Testing terpisah dari Dev/Production dan kedua roles satu target Testing. DDL failure membutuhkan inspection ledger/information_schema/partial state dan separate remediation; no blind rerun. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## PHASE I — Health check
 
@@ -349,7 +358,7 @@ Ikuti DNS instruction Vercel. Jangan menebak record bila dashboard memberikan ta
 
 Sembilan required commands mengikuti PHASE E; full audit menjalankan parser valid-evidence agar advisories tetap visible/nonblocking dan tool/network failure gagal. Tidak ada secret, migration, deployment, DB network, coverage token/upload atau E2E command. Lihat [exact CI contract](12_CI_CD_RELEASE.md) dan [implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-**IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING.** Phase 0D-2 memerlukan explicit human task untuk remote Git/PR verification; setelah first actual successful run baru pilih exact check context dan minta approval required-check mutation. Vercel Git Integration tetap target deployment terpisah, belum dibuktikan pada stage ini.
+**REMOTE CI + TESTING BEHAVIOR VERIFIED.** Required Quality Gate/GitHub Actions app15368 dengan strict freshness aktif pada testing/main. Main behavior DEFERRED ke real testing → main promotion. [Evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Vercel Git Integration tetap target terpisah, belum dibuktikan.
 
 ## EXIT CRITERIA FOUNDATION
 

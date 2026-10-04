@@ -43,12 +43,17 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
-**0D-1 CI IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). D1–D8 implemented; D9–D20 remain later scopes.
+**CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). CI/enforcement stages completed; cloud/migration/isolation/reproduction remain later scopes.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
 - [x] existing required commands, coverage tanpa threshold, offline db:check, runtime hard audit/full informational parser;
-- [ ] real remote Linux Actions verification dan exact required-check enforcement (Phase 0D-2, explicit approval);
+- [x] real remote Linux Actions verification dan exact Quality Gate/GitHub Actions app15368 required pada testing/main; strict freshness;
+- [x] testing behavioral enforcement proof (PR #12); [report](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md);
+- [ ] main behavioral proof pada future real testing → main promotion;
+- [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
+- [ ] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing NOT YET PROVISIONED, migration NOT APPLIED;
+- [ ] Production NOT YET PROVISIONED; Production migration tooling separately deferred;
 - [ ] Vercel Production/Preview;
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.

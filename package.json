@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
-    "db:migrate": "node --env-file=.env.migrations.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.dev.config.ts"
+    "db:migrate": "node --env-file=.env.migrations.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.dev.config.ts",
+    "db:migrate:testing": "node --env-file=.env.migrations.testing.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.testing.config.ts"
   },
   "engines": {
     "node": "24.x"
