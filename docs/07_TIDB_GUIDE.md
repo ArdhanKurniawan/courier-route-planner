@@ -42,7 +42,7 @@ route-planner-testing
 route-planner-production
 ```
 
-**Dev-first:** offline foundation dan independent offline verification PASS. Manusia telah membuat Dev dan menerapkan initial migration sekali. Verifikasi read-only 2026-10-04: application HTTP read/readiness, migrator TCP/TLS SELECT 1, ledger 1 entry dan live depots schema PASS. [Live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Final independent Phase 0C review pending; Gate 1 OPEN. Testing deferred sebelum integration/Preview Phase 0D; Production sebelum controlled rollout. Target akhir tiga independent Starter resources tetap ADR-008, tanpa shared-instance fallback.
+**Dev-first:** offline foundation dan independent offline verification PASS. Manusia telah membuat Dev dan menerapkan initial migration sekali. Verifikasi read-only 2026-10-04: application HTTP read/readiness, migrator TCP/TLS SELECT 1, ledger 1 entry dan live depots schema PASS. [Live report](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9, final independent verification PASS; Gate 1 OPEN. Testing deferred sebelum integration/Preview Phase 0D; Production sebelum controlled rollout. Target akhir tiga independent Starter resources tetap ADR-008, tanpa shared-instance fallback.
 
 Alasan pemisahan:
 
@@ -94,6 +94,14 @@ Scripts tersedia: `npm run db:generate`, `npm run db:check`, serta guarded `db:m
 Future apply memakai Node 24 `--env-file=.env.migrations.local` dan installed Kit bin; inherited shell variables mengalahkan file. Operator harus mulai dari clean/verified shell tanpa mencetak secret. Stage 1 offline tidak menjalankan apply/provisioning. Sesudah independent offline PASS, manusia menerapkan SQL `drizzle/0000_dear_rictor.sql` pada Dev; read-only verification menemukan tepat satu ledger entry dengan hash SQL dan timestamp journal yang cocok. Task live verification tidak mengulang migration, menulis data atau mengubah credential/grants. `db:check` tetap hanya offline history check; live schema/ledger evidence diperiksa terpisah.
 
 `drizzle-kit push` dilarang. Migration tidak berjalan pada install/ci/build/start/dev/routes/CI/Vercel. TiDB DDL dapat autocommit; sebelum future apply, siapkan mitigation untuk partial failure, periksa history/schema aktual, dan jangan menganggap rollback transaksi atau rerun otomatis aman.
+
+### Testing migration tooling — Phase 0D-3A
+
+Testing migration tooling prepared locally. `drizzle.testing.config.ts` reuse offline config dan pure `getTestingMigrationCredentials`; exact APP_ENV=testing, parsed DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Parser hardened yang sama menolak invalid authority/path/encoding/query/fragment; error generic tanpa credential. Tidak ada trim/default/fallback. Dev helper/config/script tetap Dev-only.
+
+Manual command `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`. Future application credential terpisah pada `.env.testing.local`; kedua file ignored dan belum dibuat. Inherited shell variables mengalahkan env-file; verifikasi clean shell/physical Testing resource/role sebelum apply. DB name sendiri tidak membuktikan resource identity.
+
+Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. Same initial migration history akan dipakai; tidak perlu migration kedua untuk environment baru. 0D-3B harus mengikuti provisioning → scoped roles → private files → structural/read-only verification → SQL/ledger review → explicit human approval **YES APPLY TESTING MIGRATION** → apply once → read-only ledger/schema/app verification. Saat error, inspect ledger/information_schema/partial DDL dan tentukan remediation; jangan blind rerun. [Tooling evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## 8. Destructive changes
 
