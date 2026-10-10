@@ -56,9 +56,12 @@ Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED;
 - [ ] main behavior DEFERRED ke actual testing → main promotion;
 - [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
 - [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
-- [ ] Production live foundation/tooling separately authorized;
+- [x] Production TOOLING PREPARED ONLY: exact Production guard/TLS/config/manual script + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; live foundation needs separate provisioning and migration approvals;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
+
+Vercel preflight [NOT READY / blocked](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production tooling does not close Gate 1 or authorize cloud operations/main promotion. Dev established/live dan Testing live, migrated once, verified remain preserved.
 
 ## Gate 2 — CRUD baseline
 

@@ -53,8 +53,9 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [ ] main behavioral proof pada future real testing → main promotion;
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
-- [ ] Production NOT YET PROVISIONED; Production migration tooling separately deferred;
-- [ ] Vercel NOT CONNECTED; Preview integration tahap 0D-4, kemudian controlled Production scope;
+- [x] Production TOOLING PREPARED ONLY: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; independent live foundation memerlukan separate provisioning dan apply approvals;
+- [ ] Vercel preflight NOT READY / blocked; no project/deployment; Production live readiness dan first-deployment/bootstrap design pending; [preflight report](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md);
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 

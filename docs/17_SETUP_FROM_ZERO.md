@@ -224,6 +224,12 @@ Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `
 
 Urutan 0D-3B yang sudah dijalankan: approval **YES PROVISION TESTING RESOURCE** → independent Testing resource/logical DB → scoped app/migrator roles → human private files → structural/read-only connectivity → empty tables/ledger + exact SQL/history review → approval **YES APPLY TESTING MIGRATION** → apply once → read-only ledger/schema/app read/health/readiness PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Jangan mengulang initial apply untuk verifikasi. DB name sendiri tidak membuktikan resource identity; provider identity dan authenticated role fingerprints membuktikan Testing terpisah dari Dev serta kedua roles satu target. DDL failure pada apply berikutnya membutuhkan inspection ledger/information_schema/partial state dan separate remediation; no blind rerun. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
+### Production migration tooling — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. Manual `npm run db:migrate:production` tersedia dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB `courier_route_planner_production`, hardened parser dan TLS verification. Dev/Testing paths tetap terpisah. Jangan menjalankan command atau membuat `.env.production.local` / `.env.migrations.production.local` pada tahap offline ini.
+
+Task live kelak mulai provider preflight → **YES PROVISION PRODUCTION RESOURCE** → independent resource/DB/dedicated roles/private files → read-only connectivity/identity/grants/empty schema-ledger/exact byte review → **YES APPLY PRODUCTION MIGRATION** → apply once → ledger/schema/app read/health/readiness → STOP. Provisioning tidak memberi izin migration; partial failure membutuhkan inspection dan separate remediation, tanpa rerun otomatis. [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [full contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+
 ## PHASE I — Health check
 
 App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi; Testing live checks pada 0D-3B juga HTTP 200, exact status JSON + no-store memakai application credential. Final independent Phase 0C verification PASS dan Phase 0C CLOSED; Production deferred. CI hanya menjalankan offline tests/history/build, tanpa memanggil endpoint live. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
@@ -285,6 +291,8 @@ git config core.hooksPath .githooks
 Jangan onboarding anggota berikutnya sebelum gate ini lulus.
 
 ## PHASE L — Vercel import
+
+**Future reference only.** Current [Vercel Preview preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md); no project/deployment. Production tooling prepared only. Complete separately authorized Production live foundation, main promotion review dan provider bootstrap design sebelum mengikuti langkah cloud ini.
 
 1. login Vercel via GitHub;
 2. Add New → Project;

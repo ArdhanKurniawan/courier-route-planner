@@ -103,6 +103,30 @@ Manual command `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.mig
 
 0D-3A tooling sudah merged melalui PR #14. Pada 0D-3B, provider identity + authenticated role fingerprints membuktikan Testing berbeda dari Dev dan kedua roles menunjuk Testing yang sama. App mendapat SELECT/INSERT/UPDATE/DELETE; migrator CREATE/SELECT/INSERT, hanya pada exact Testing DB (underscore pada grant pattern di-escape), tanpa elevated global privileges atau GRANT OPTION. Human approvals **YES PROVISION TESTING RESOURCE** dan **YES APPLY TESTING MIGRATION** tercatat; database kosong diverifikasi sebelum satu kali apply. Ledger berisi satu raw SQL hash/timestamp journal; sole application table `depots` sesuai source/SQL/snapshot, read aplikasi dan health/readiness PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. Jangan menjalankan migration ulang untuk idempotence test. Saat error pada apply berikutnya, inspect ledger/information_schema/partial DDL dan tentukan remediation dengan approval terpisah. [Tooling evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
+### Production migration tooling — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md).
+
+Manual `npm run db:migrate:production` memakai Node 24, `.env.migrations.production.local`, installed Kit bin dan `drizzle.production.config.ts`. Pure `getProductionMigrationCredentials` hanya menerima exact `APP_ENV=production` dan parsed DB `courier_route_planner_production`, dengan TLS `rejectUnauthorized: true`. Shared hardened parser/error generic dipertahankan; tidak ada trim/default/fallback atau arbitrary environment switch. Dev dan Testing guards/configs/scripts tetap unchanged; `db:check` / `drizzle.config.ts` tetap tanpa credential. Command belum pernah dijalankan pada task ini.
+
+Future apply wajib memakai exact command/argv yang direview, tanpa appended arguments atau config override. npm dapat meneruskan extra arguments; installed Kit memakai nilai terakhir untuk duplicate `--config`. Nama script saja tidak membuktikan config/environment yang akhirnya dipilih. Verifikasi resolved argv/config bersama clean environment dan physical target sebelum approval; mengganti config pada Dev/Testing script bukan approved invocation.
+
+Future application file `.env.production.local` dan migrator file `.env.migrations.production.local` belum dibuat/diisi; keduanya ignored. Manusia menyimpan application dan migrator credential berbeda secara privat setelah approval. Inherited APP_ENV/DATABASE_URL mengalahkan Node env-file: gunakan clean, verified child environment dan hapus TLS bypass/preload variables sebelum memuat satu file yang dituju. Jangan mencetak URL/user/password atau memakai root/admin untuk app/migrator.
+
+Future Production resource wajib independent dari Dev dan Testing. Exact APP_ENV/logical DB tidak membuktikan physical resource atau SQL privilege. Provider identity dan authenticated role evidence kelak harus membuktikan Production berbeda dari keduanya, app/migrator menuju Production yang sama, dan tidak menuju Dev/Testing.
+
+Future roles: application hanya SELECT/INSERT/UPDATE/DELETE pada Production DB; migrator terpisah dengan minimum reviewed history/ledger privileges (current candidate CREATE/SELECT/INSERT, wajib direview lagi terhadap installed runner/exact history). Grant scope hanya exact Production DB, underscore grant patterns di-escape; tanpa global privileges/GRANT OPTION/schema administration untuk app. Root/admin human provisioning only; helper tidak dapat mengidentifikasi effective admin privileges dari URL syntax.
+
+Future sequence, **tidak dieksekusi sekarang**:
+
+1. Read-only provider/account/plan/quota/spending/region preflight, kemudian **YES PROVISION PRODUCTION RESOURCE** sebelum resource/database/users/grants.
+2. Independent Production resource → exact logical DB → dedicated app dan migrator → private env setup.
+3. Read-only app/migrator connectivity dan TLS/identity/grants; inspect empty schema/ledger; review dan freeze exact migration bytes/hash. History tetap satu initial migration; jangan membuat migration kedua hanya karena environment baru.
+4. Minta **YES APPLY PRODUCTION MIGRATION**. Provisioning approval tidak mencakup apply.
+5. Setelah approval, manual Production command **exactly ONCE** → ledger/schema → application read → health/readiness → STOP. Tidak ada automatic retry.
+
+Jika apply kelak gagal, STOP dan inspect read-only ledger, information_schema, tables dan partial DDL state; obtain separate remediation decision. TiDB DDL dapat autocommit; jangan mengasumsikan transaction rollback atau langsung rerun. Migration tetap dilarang pada install/build/dev/start/test/CI/Vercel. Production DB readiness merupakan prerequisite sebelum meninjau ulang Vercel first-deployment/bootstrap issue; tooling ini tidak mengotorisasi Vercel, provisioning atau main promotion.
+
 ## 8. Destructive changes
 
 Contoh berisiko:
