@@ -13,7 +13,7 @@ Derived from the source list below, in order. Regenerated 2026-10-10. Read sourc
 
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Phase 0D OPEN, CI/enforcement VERIFIED on testing; main behavior DEFERRED; 0D-3B Testing resource PROVISIONED, migration APPLIED ONCE, live verification PASS; Vercel NOT CONNECTED; Production NOT PROVISIONED; Gate 1 OPEN
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Phase 0D OPEN, CI/enforcement VERIFIED on testing; main behavior DEFERRED; 0D-3B Testing resource PROVISIONED, migration APPLIED ONCE, live verification PASS; Production TOOLING PREPARED ONLY, NOT PROVISIONED / NOT MIGRATED; Vercel preflight NOT READY, no project/deployment; Gate 1 OPEN
 **Tanggal sinkronisasi:** 2026-10-10
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -47,7 +47,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Baseline Phase 0D-3B pada `feature/phase-0d-tidb-testing-live`: `cccf724edbecec08c54c020a5e6b4da4e3b514b6`, sama dengan current testing/origin/testing setelah [PR #14](https://github.com/ArdhanKurniawan/courier-route-planner/pull/14) merged. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Baseline Production tooling pada `feature/phase-0d-tidb-production-foundation`: `9f4810cc2bed6210f9c4404ad4855b013174e5e6`, sama dengan testing/origin/testing setelah [PR #17](https://github.com/ArdhanKurniawan/courier-route-planner/pull/17) merged. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -72,7 +72,8 @@ Baseline Phase 0D-3B pada `feature/phase-0d-tidb-testing-live`: `cccf724edbecec0
 | Phase 0D-2C | [Testing behavioral enforcement proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md): pending required check/merge unavailable → success/Ready to merge → human merge → successful push Quality Gate; main behavior DEFERRED |
 | Phase 0D-3A merged/PR #14 | `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, `db:migrate:testing`; exact testing/database guard, TLS verification; [tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md) |
 | Phase 0D-3B live | Independent Starter `route-planner-testing`, AWS Tokyo, spending limit 0; separate app/migrator roles. Explicit human provisioning/apply approvals; migration APPLIED ONCE, ledger 1 record, schema/application read/health/readiness PASS; [live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md) |
-| Foundation gap | Production NOT PROVISIONED; Vercel NOT CONNECTED, Preview DB isolation, second-member reproduction dan Playwright/E2E pending; Phase 0D dan Gate 1 OPEN |
+| Production tooling only | `getProductionMigrationCredentials`, `drizzle.production.config.ts`, manual `db:migrate:production`; exact Production guard/TLS dan offline cross-env tests. Resource/DB/users/grants/migration belum dibuat atau dijalankan; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md) |
+| Foundation gap | Production NOT PROVISIONED / NOT MIGRATED; Vercel preflight NOT READY, no project/deployment; Preview DB isolation, second-member reproduction dan Playwright/E2E pending; Phase 0D dan Gate 1 OPEN |
 
 Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
@@ -101,7 +102,9 @@ Remote CI dan exact required Quality Gate configuration sudah verified; testing 
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
-Testing migration tooling merged melalui PR #14. `npm run db:migrate` tetap Dev-only (`.env.migrations.local`, APP_ENV=development, DB `courier_route_planner_dev`). Manual `npm run db:migrate:testing` memakai `.env.migrations.testing.local`, APP_ENV=testing dan exact DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Testing diprovision terpisah dari Dev pada 0D-3B; manusia menyimpan app/migrator credential berbeda pada dua ignored private env files. Setelah kedua approval eksplisit dan pre-apply database kosong, command Testing dijalankan tepat satu kali. Ledger hash raw, schema, application read dan kedua endpoints live PASS. Tidak ada Production apply path atau migration saat install/build/CI/deploy. Apply berikutnya memerlukan review target/history dan approval baru. [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+Testing migration tooling merged melalui PR #14. `npm run db:migrate` tetap Dev-only (`.env.migrations.local`, APP_ENV=development, DB `courier_route_planner_dev`). Manual `npm run db:migrate:testing` memakai `.env.migrations.testing.local`, APP_ENV=testing dan exact DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Testing diprovision terpisah dari Dev pada 0D-3B; manusia menyimpan app/migrator credential berbeda pada dua ignored private env files. Setelah kedua approval eksplisit dan pre-apply database kosong, command Testing dijalankan tepat satu kali. Ledger hash raw, schema, application read dan kedua endpoints live PASS. Production apply path disiapkan terpisah; tidak ada migration saat install/build/CI/deploy. Apply berikutnya memerlukan review target/history dan approval baru. [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+
+Production tooling memakai exact `APP_ENV=production` dan DB `courier_route_planner_production`, TLS `rejectUnauthorized: true`, config terpisah dan manual `npm run db:migrate:production`. Future private files `.env.production.local` / `.env.migrations.production.local` belum dibuat. Tooling bukan izin menjalankan command. Dua checkpoint kelak: **YES PROVISION PRODUCTION RESOURCE**, lalu **YES APPLY PRODUCTION MIGRATION** sesudah private setup/read-only verification/review exact bytes. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d). [Vercel preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) tetap berlaku; main belum dipromosikan.
 
 ## Urutan baca wajib
 
@@ -1916,6 +1919,30 @@ Manual command `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.mig
 
 0D-3A tooling sudah merged melalui PR #14. Pada 0D-3B, provider identity + authenticated role fingerprints membuktikan Testing berbeda dari Dev dan kedua roles menunjuk Testing yang sama. App mendapat SELECT/INSERT/UPDATE/DELETE; migrator CREATE/SELECT/INSERT, hanya pada exact Testing DB (underscore pada grant pattern di-escape), tanpa elevated global privileges atau GRANT OPTION. Human approvals **YES PROVISION TESTING RESOURCE** dan **YES APPLY TESTING MIGRATION** tercatat; database kosong diverifikasi sebelum satu kali apply. Ledger berisi satu raw SQL hash/timestamp journal; sole application table `depots` sesuai source/SQL/snapshot, read aplikasi dan health/readiness PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. Jangan menjalankan migration ulang untuk idempotence test. Saat error pada apply berikutnya, inspect ledger/information_schema/partial DDL dan tentukan remediation dengan approval terpisah. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
+### Production migration tooling — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md).
+
+Manual `npm run db:migrate:production` memakai Node 24, `.env.migrations.production.local`, installed Kit bin dan `drizzle.production.config.ts`. Pure `getProductionMigrationCredentials` hanya menerima exact `APP_ENV=production` dan parsed DB `courier_route_planner_production`, dengan TLS `rejectUnauthorized: true`. Shared hardened parser/error generic dipertahankan; tidak ada trim/default/fallback atau arbitrary environment switch. Dev dan Testing guards/configs/scripts tetap unchanged; `db:check` / `drizzle.config.ts` tetap tanpa credential. Command belum pernah dijalankan pada task ini.
+
+Future apply wajib memakai exact command/argv yang direview, tanpa appended arguments atau config override. npm dapat meneruskan extra arguments; installed Kit memakai nilai terakhir untuk duplicate `--config`. Nama script saja tidak membuktikan config/environment yang akhirnya dipilih. Verifikasi resolved argv/config bersama clean environment dan physical target sebelum approval; mengganti config pada Dev/Testing script bukan approved invocation.
+
+Future application file `.env.production.local` dan migrator file `.env.migrations.production.local` belum dibuat/diisi; keduanya ignored. Manusia menyimpan application dan migrator credential berbeda secara privat setelah approval. Inherited APP_ENV/DATABASE_URL mengalahkan Node env-file: gunakan clean, verified child environment dan hapus TLS bypass/preload variables sebelum memuat satu file yang dituju. Jangan mencetak URL/user/password atau memakai root/admin untuk app/migrator.
+
+Future Production resource wajib independent dari Dev dan Testing. Exact APP_ENV/logical DB tidak membuktikan physical resource atau SQL privilege. Provider identity dan authenticated role evidence kelak harus membuktikan Production berbeda dari keduanya, app/migrator menuju Production yang sama, dan tidak menuju Dev/Testing.
+
+Future roles: application hanya SELECT/INSERT/UPDATE/DELETE pada Production DB; migrator terpisah dengan minimum reviewed history/ledger privileges (current candidate CREATE/SELECT/INSERT, wajib direview lagi terhadap installed runner/exact history). Grant scope hanya exact Production DB, underscore grant patterns di-escape; tanpa global privileges/GRANT OPTION/schema administration untuk app. Root/admin human provisioning only; helper tidak dapat mengidentifikasi effective admin privileges dari URL syntax.
+
+Future sequence, **tidak dieksekusi sekarang**:
+
+1. Read-only provider/account/plan/quota/spending/region preflight, kemudian **YES PROVISION PRODUCTION RESOURCE** sebelum resource/database/users/grants.
+2. Independent Production resource → exact logical DB → dedicated app dan migrator → private env setup.
+3. Read-only app/migrator connectivity dan TLS/identity/grants; inspect empty schema/ledger; review dan freeze exact migration bytes/hash. History tetap satu initial migration; jangan membuat migration kedua hanya karena environment baru.
+4. Minta **YES APPLY PRODUCTION MIGRATION**. Provisioning approval tidak mencakup apply.
+5. Setelah approval, manual Production command **exactly ONCE** → ledger/schema → application read → health/readiness → STOP. Tidak ada automatic retry.
+
+Jika apply kelak gagal, STOP dan inspect read-only ledger, information_schema, tables dan partial DDL state; obtain separate remediation decision. TiDB DDL dapat autocommit; jangan mengasumsikan transaction rollback atau langsung rerun. Migration tetap dilarang pada install/build/dev/start/test/CI/Vercel. Production DB readiness merupakan prerequisite sebelum meninjau ulang Vercel first-deployment/bootstrap issue; tooling ini tidak mengotorisasi Vercel, provisioning atau main promotion.
+
 ## 8. Destructive changes
 
 Contoh berisiko:
@@ -2251,6 +2278,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 ├── drizzle.config.ts
 ├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
 ├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
+├── drizzle.production.config.ts  # explicit Production apply only; tooling prepared, NOT applied
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
@@ -2271,7 +2299,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 │   ├── config/
 │   │   ├── navigation.ts
 │   │   ├── env.ts          # pure APP_ENV parser; health call-site
-│   │   └── db-env.ts       # pure Zod DB URL parser + explicit Dev/Testing CLI guards
+│   │   └── db-env.ts       # pure Zod DB URL parser + explicit Dev/Testing/Production CLI guards
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
@@ -2368,6 +2396,10 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 `drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
+## Production migration tooling — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Dev/Testing/offline configs, runtime schema/client/readiness dan sole migration history dipertahankan. Future private Production app/migrator files tidak dibuat dan bukan tracked source. [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+
 ## Naming
 
 - file TS: `kebab-case.ts`;
@@ -2439,9 +2471,15 @@ GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"
 
 ### Testing tooling contract — Phase 0D-3A
 
-Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Tidak ada Production apply path atau generic env switch.
+Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Production menggunakan helper/config terpisah di bawah; tidak ada generic env switch.
 
 0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output; Production NOT PROVISIONED, Vercel NOT CONNECTED, Phase 0D/Gate 1 OPEN. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+
+### Production tooling contract — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. Manual `db:migrate:production` memakai `.env.migrations.production.local` dan `drizzle.production.config.ts`; guard exact APP_ENV=production + DB `courier_route_planner_production`, verified TLS dan fixed generic error. Runtime contract tetap APP_ENV/DATABASE_URL server-side; Dev/Testing guards tidak menerima Production.
+
+Future `.env.production.local` hanya application credential; `.env.migrations.production.local` hanya separate migrator credential. Kedua file belum dibuat/diisi; ignore `.env.*` tetap berlaku. Jangan meminta credential pada tahap tooling. Jangan menaruh migrator/admin credential pada runtime/Vercel. Bersihkan inherited APP_ENV/DATABASE_URL dan TLS bypass/preload env sebelum future authorized file load; label/DB name tidak membuktikan physical identity atau role privileges. Dua approvals terpisah: **YES PROVISION PRODUCTION RESOURCE**, lalu **YES APPLY PRODUCTION MIGRATION** setelah private setup dan read-only target/role/schema/ledger/byte verification. [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [future sequence](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Secret rotation
 
@@ -2749,7 +2787,13 @@ Policy awal:
 
 Setelah tim matang, automation dapat ditambah dengan ADR.
 
-0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing initial apply telah dijalankan tepat sekali pada 0D-3B setelah explicit human approval **YES APPLY TESTING MIGRATION**, dengan pre-empty-state dan post-ledger/schema/live checks PASS. Jangan rerun untuk idempotence test; migration berikutnya membutuhkan task/review/approval baru. Production helper/config/script belum tersedia. [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing initial apply telah dijalankan tepat sekali pada 0D-3B setelah explicit human approval **YES APPLY TESTING MIGRATION**, dengan pre-empty-state dan post-ledger/schema/live checks PASS. Jangan rerun untuk idempotence test; migration berikutnya membutuhkan task/review/approval baru. Production helper/config/script tersedia untuk explicit future apply saja; Production belum diprovision atau dimigrasi. [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+
+### Production tooling boundary — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. `db:migrate:production` adalah command manual terpisah, dengan exact Production environment/database guard dan TLS verification. Ia tidak dipanggil install/build/start/dev/test/CI/Vercel; workflow dan quality command order tetap unchanged. Provisioning dan migration memerlukan approvals berbeda; partial DDL failure memerlukan read-only inspection dan separate remediation, bukan retry. [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [migration contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+
+Vercel Preview preflight tetap [NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database readiness, main promotion review dan provider bootstrap contract harus diselesaikan pada task terpisah sebelum cloud release; keberadaan tooling tidak mengotorisasi deployment.
 
 ## 7. Release checklist
 
@@ -3094,6 +3138,14 @@ Coverage tanpa numeric threshold. Workflow tidak memakai secret, real DB, migrat
 `tests/unit/db-migration.test.ts` menguji pure Testing credential output, TLS verification, default/explicit port, exact APP_ENV dan database, safe malformed-URL rejection, explicit-input purity, serta Dev/Testing/Production cross-env matrix. Dev guard dan semua tests lama dipertahankan; no real network/URL/private env. TDD RED sebelum helper tersedia, GREEN setelah implementasi. Fresh count/coverage/quality ada pada [tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). Coverage tanpa threshold tetap berlaku.
 
 Fresh local quality 0D-3A memakai byte-identical candidate source di TEMP tanpa ignored private env dan tanpa inherited APP_ENV/DATABASE_URL. `db:check` hanya history consistency; tidak ada apply/config-migrate command dalam suite. Tooling merged melalui PR #14. Pada 0D-3B, Testing PROVISIONED terpisah, migration APPLIED ONCE setelah human approval; read-only ledger/schema/application read dan GET health/readiness (200, exact JSON, no-store) PASS. Tidak ada DML test, second migration/idempotence test atau live DB dalam CI. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN.
+
+## 13. Production migration guard — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. `tests/unit/db-production-migration.test.ts` menambah offline credential/TLS/default-port/encoding tests, exact env/database rejection, generic safe errors, explicit-input purity, 27 combinations untuk tiga helpers × tiga environments × tiga databases, serta actual config import/rejection. Fixtures hanya `.invalid`, tanpa real DB/DNS/private env; tidak menjalankan migration CLI. Existing tests dipertahankan. TDD RED/GREEN dan fresh full suite/coverage/audits dicatat pada [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md).
+
+Quality menggunakan salinan public source byte-identical dengan lockfile yang sama, tanpa ignored env atau inherited target/TLS bypass env. `db:check` tetap offline; live Production compatibility/grants/schema/ledger/smoke belum diverifikasi. Coverage tetap informational tanpa perubahan threshold/exclusion.
+
+Untuk verification task yang melarang private env reads, jalankan TDD juga dari public isolated copy: default Vite loader dapat membaca `.env` / `.env.local` / mode-specific env meskipun fixtures memakai explicit input. Initial root TDD pada task ini memiliki procedural deviation; RED/GREEN diulang tanpa private files dan dicatat transparan pada report. Existing Vitest config unchanged.
 
 ---
 
@@ -3616,6 +3668,12 @@ Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `
 
 Urutan 0D-3B yang sudah dijalankan: approval **YES PROVISION TESTING RESOURCE** → independent Testing resource/logical DB → scoped app/migrator roles → human private files → structural/read-only connectivity → empty tables/ledger + exact SQL/history review → approval **YES APPLY TESTING MIGRATION** → apply once → read-only ledger/schema/app read/health/readiness PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Jangan mengulang initial apply untuk verifikasi. DB name sendiri tidak membuktikan resource identity; provider identity dan authenticated role fingerprints membuktikan Testing terpisah dari Dev serta kedua roles satu target. DDL failure pada apply berikutnya membutuhkan inspection ledger/information_schema/partial state dan separate remediation; no blind rerun. [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
+### Production migration tooling — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. Manual `npm run db:migrate:production` tersedia dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB `courier_route_planner_production`, hardened parser dan TLS verification. Dev/Testing paths tetap terpisah. Jangan menjalankan command atau membuat `.env.production.local` / `.env.migrations.production.local` pada tahap offline ini.
+
+Task live kelak mulai provider preflight → **YES PROVISION PRODUCTION RESOURCE** → independent resource/DB/dedicated roles/private files → read-only connectivity/identity/grants/empty schema-ledger/exact byte review → **YES APPLY PRODUCTION MIGRATION** → apply once → ledger/schema/app read/health/readiness → STOP. Provisioning tidak memberi izin migration; partial failure membutuhkan inspection dan separate remediation, tanpa rerun otomatis. [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [full contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+
 ## PHASE I — Health check
 
 App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi; Testing live checks pada 0D-3B juga HTTP 200, exact status JSON + no-store memakai application credential. Final independent Phase 0C verification PASS dan Phase 0C CLOSED; Production deferred. CI hanya menjalankan offline tests/history/build, tanpa memanggil endpoint live. Lihat [runbook](docs/16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
@@ -3677,6 +3735,8 @@ git config core.hooksPath .githooks
 Jangan onboarding anggota berikutnya sebelum gate ini lulus.
 
 ## PHASE L — Vercel import
+
+**Future reference only.** Current [Vercel Preview preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md); no project/deployment. Production tooling prepared only. Complete separately authorized Production live foundation, main promotion review dan provider bootstrap design sebelum mengikuti langkah cloud ini.
 
 1. login Vercel via GitHub;
 2. Add New → Project;
@@ -3826,8 +3886,9 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [ ] main behavioral proof pada future real testing → main promotion;
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
-- [ ] Production NOT YET PROVISIONED; Production migration tooling separately deferred;
-- [ ] Vercel NOT CONNECTED; Preview integration tahap 0D-4, kemudian controlled Production scope;
+- [x] Production TOOLING PREPARED ONLY: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; independent live foundation memerlukan separate provisioning dan apply approvals;
+- [ ] Vercel preflight NOT READY / blocked; no project/deployment; Production live readiness dan first-deployment/bootstrap design pending; [preflight report](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md);
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
@@ -3989,10 +4050,13 @@ Tambahkan:
 - [x] initial depots Dev applied; ledger/schema verified read-only;
 - [x] Testing migration tooling prepared locally (0D-3A): explicit Testing guard/config/manual script, TLS verification and offline cross-env tests; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] Testing PROVISIONED / migration APPLIED ONCE; role separation, ledger/schema/application read/health/readiness verified pada approved 0D-3B;
-- [ ] Production NOT YET PROVISIONED; no Production apply tooling in 0D-3A;
+- [x] Production TOOLING PREPARED ONLY: exact environment/database guard, TLS, separate config/manual command, offline cross-env tests; [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; live identity/grants/connectivity/schema/ledger/app checks pending, dengan two separate human approvals;
 - [ ] no destructive prod action;
 - [ ] indexes justified;
 - [ ] rollback/mitigation known.
+
+Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Tooling verification bukan live Production atau full Database DoD. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Release DoD
 
@@ -4939,9 +5003,12 @@ Phase 0D [quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED; TE
 - [ ] main behavior DEFERRED ke actual testing → main promotion;
 - [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
 - [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
-- [ ] Production live foundation/tooling separately authorized;
+- [x] Production TOOLING PREPARED ONLY: exact Production guard/TLS/config/manual script + offline cross-env tests; [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; live foundation needs separate provisioning and migration approvals;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
+
+Vercel preflight [NOT READY / blocked](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production tooling does not close Gate 1 or authorize cloud operations/main promotion. Dev established/live dan Testing live, migrated once, verified remain preserved.
 
 ## Gate 2 — CRUD baseline
 

@@ -50,10 +50,13 @@ Tambahkan:
 - [x] initial depots Dev applied; ledger/schema verified read-only;
 - [x] Testing migration tooling prepared locally (0D-3A): explicit Testing guard/config/manual script, TLS verification and offline cross-env tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] Testing PROVISIONED / migration APPLIED ONCE; role separation, ledger/schema/application read/health/readiness verified pada approved 0D-3B;
-- [ ] Production NOT YET PROVISIONED; no Production apply tooling in 0D-3A;
+- [x] Production TOOLING PREPARED ONLY: exact environment/database guard, TLS, separate config/manual command, offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [ ] Production NOT PROVISIONED / NOT MIGRATED; live identity/grants/connectivity/schema/ledger/app checks pending, dengan two separate human approvals;
 - [ ] no destructive prod action;
 - [ ] indexes justified;
 - [ ] rollback/mitigation known.
+
+Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Tooling verification bukan live Production atau full Database DoD. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Release DoD
 

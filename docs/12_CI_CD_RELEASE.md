@@ -84,7 +84,13 @@ Policy awal:
 
 Setelah tim matang, automation dapat ditambah dengan ADR.
 
-0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing initial apply telah dijalankan tepat sekali pada 0D-3B setelah explicit human approval **YES APPLY TESTING MIGRATION**, dengan pre-empty-state dan post-ledger/schema/live checks PASS. Jangan rerun untuk idempotence test; migration berikutnya membutuhkan task/review/approval baru. Production helper/config/script belum tersedia. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing initial apply telah dijalankan tepat sekali pada 0D-3B setelah explicit human approval **YES APPLY TESTING MIGRATION**, dengan pre-empty-state dan post-ledger/schema/live checks PASS. Jangan rerun untuk idempotence test; migration berikutnya membutuhkan task/review/approval baru. Production helper/config/script tersedia untuk explicit future apply saja; Production belum diprovision atau dimigrasi. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+
+### Production tooling boundary — Phase 0D
+
+**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. `db:migrate:production` adalah command manual terpisah, dengan exact Production environment/database guard dan TLS verification. Ia tidak dipanggil install/build/start/dev/test/CI/Vercel; workflow dan quality command order tetap unchanged. Provisioning dan migration memerlukan approvals berbeda; partial DDL failure memerlukan read-only inspection dan separate remediation, bukan retry. [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [migration contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+
+Vercel Preview preflight tetap [NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database readiness, main promotion review dan provider bootstrap contract harus diselesaikan pada task terpisah sebelum cloud release; keberadaan tooling tidak mengotorisasi deployment.
 
 ## 7. Release checklist
 

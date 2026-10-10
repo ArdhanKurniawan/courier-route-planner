@@ -94,3 +94,22 @@ export function getTestingMigrationCredentials(
     ssl: { rejectUnauthorized: true },
   };
 }
+
+export function getProductionMigrationCredentials(
+  rawAppEnv: unknown,
+  rawUrl: unknown,
+) {
+  if (rawAppEnv !== "production") throw new DatabaseConfigError();
+  const parsed = new URL(parseDatabaseConfig(rawUrl).url);
+  const database = decodeURIComponent(parsed.pathname.slice(1));
+  if (database !== "courier_route_planner_production")
+    throw new DatabaseConfigError();
+  return {
+    host: parsed.hostname,
+    port: parsed.port === "" ? 3306 : Number(parsed.port),
+    user: decodeURIComponent(parsed.username),
+    password: decodeURIComponent(parsed.password),
+    database,
+    ssl: { rejectUnauthorized: true },
+  };
+}
