@@ -219,7 +219,7 @@ Decision: `mysql2 3.24.5` diizinkan sebagai **dev dependency saja** untuk Drizzl
 Rules:
 
 - Tidak ada application/Client Component import mysql2, runtime dependency langsung, atau TCP pool pada Next.js.
-- Dedicated Dev migration credential memakai ignored `.env.migrations.local`; Testing tooling 0D-3A memakai ignored `.env.migrations.testing.local` dan explicit Testing guard/config. Kedua migrator berbeda peran dari credential aplikasi; TLS certificate verification aktif. Testing secret/resource/apply belum dibuat/dijalankan.
+- Dedicated Dev migration credential memakai ignored `.env.migrations.local`; Testing tooling 0D-3A memakai ignored `.env.migrations.testing.local` dan explicit Testing guard/config. Migrator terpisah dari credential aplikasi; TLS certificate verification aktif. Current 0D-3B: independent Testing resource dan separate app/migrator private env sudah tersedia; initial apply dilakukan sekali setelah human approval, read-only live verification PASS. [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 - Generate/check offline; apply Dev atau Testing hanya sesudah review target/history/SQL dan explicit human approval. Testing apply memerlukan checkpoint 0D-3B dengan approval **YES APPLY TESTING MIGRATION**. `db:push` dilarang.
 - Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel, atau production migration automation.
 - Kit lama membawa dua transitive loader deprecated dan empat temuan moderate tambahan pada full audit; runtime audit 0. Ini dicatat sebagai limitation tooling, tanpa audit fix/override.

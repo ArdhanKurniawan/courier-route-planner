@@ -29,11 +29,11 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md): strict APP_ENV parser, safe template, app-only health unchanged; baseline 4 files / 48 tests PASS.
 
-Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [live verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing/Production tetap deferred ke later Phase 0D tasks; tiga independent resources, tanpa shared fallback.
+Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Historical suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [Dev live verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing live foundation PASS pada 0D-3B; Production tetap deferred. Target tiga independent resources, tanpa shared fallback.
 
 Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR DEFERRED**. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-0D-3A Testing migration tooling prepared locally; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). Testing resource NOT YET PROVISIONED, migration NOT APPLIED; Production NOT YET PROVISIONED. Checklist keseluruhan tetap OPEN: main behavioral proof, Testing/Production live foundation, Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
+0D-3A Testing migration tooling merged/PR #14; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED. Phase 0D/Gate 1 tetap OPEN: main behavioral proof, Production live foundation, Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -55,7 +55,7 @@ Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED;
 - [x] exact required Quality Gate/app15368 configured pada testing/main dengan strict freshness; testing behavioral proof VERIFIED;
 - [ ] main behavior DEFERRED ke actual testing → main promotion;
 - [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
-- [ ] dedicated Testing resource/roles/read-only evidence/explicit apply checkpoint (0D-3B);
+- [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
 - [ ] Production live foundation/tooling separately authorized;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.

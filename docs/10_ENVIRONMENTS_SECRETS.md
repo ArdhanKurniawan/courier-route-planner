@@ -4,7 +4,7 @@
 
 Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
 
-Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C offline foundation + independent offline verification PASS; Dev diprovision manusia, initial migration applied sekali, application HTTP dan migrator TCP/TLS connectivity diverifikasi read-only. Phase 0C CLOSED/PR #9, final independent verification PASS; Gate 1 OPEN. **Dev-first**: Testing deferred sebelum integration/Preview Phase 0D, Production sebelum controlled rollout; target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
+Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C CLOSED/PR #9, final independent verification PASS; Dev provisioning/initial apply dan HTTP/TCP-TLS read-only verification PASS. Pada 0D-3B, Testing PROVISIONED terpisah dari Dev, initial migration APPLIED ONCE dengan approval eksplisit, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. Target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
 
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
@@ -28,7 +28,7 @@ Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C offline foundatio
 
 - `.env.local` never commit.
 - `.env.migrations.local` never commit; dedicated Dev migration credential, tidak otomatis disalin dari application credential.
-- `.env.testing.local` dan `.env.migrations.testing.local` never commit; future Testing app/migrator credential terpisah, belum dibuat pada 0D-3A.
+- `.env.testing.local` dan `.env.migrations.testing.local` never commit; manusia telah menyimpan credential app/migrator Testing dengan usernames/passwords berbeda secara privat pada 0D-3B. Kedua file ignored; admin credential tidak dipakai app atau migrator.
 - `.env.example` commit, **tanpa nilai secret**.
 - `DATABASE_URL` tidak pernah prefix `NEXT_PUBLIC_`.
 - production credential hanya Production scope.
@@ -59,7 +59,7 @@ GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"
 
 Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Tidak ada Production apply path atau generic env switch.
 
-Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. 0D-3B meminta manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL pada `.env.migrations.testing.local` tanpa paste credential ke chat. Tidak ada file secret baru di 0D-3A. Inherited vars override env-file; clean shell wajib. Logical DB guard tidak memverifikasi physical resource atau grants: manusia/provider harus memastikan Testing terpisah dari Dev/Production dan kedua roles menunjuk target Testing yang sama. [Evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output; Production NOT PROVISIONED, Vercel NOT CONNECTED, Phase 0D/Gate 1 OPEN. [Tooling evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ## 5. Secret rotation
 
