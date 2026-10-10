@@ -7,7 +7,7 @@
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
-**Current Phase 0D:** [quality.yml](../.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main behavior DEFERRED ke real testing → main promotion. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. Vercel/isolation belum diverifikasi.
+**Current Phase 0D OPEN:** [quality.yml](../.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main behavior DEFERRED ke real testing → main promotion. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Tooling 0D-3A merged/PR #14; Testing pada 0D-3B PROVISIONED terpisah dari Dev, migration APPLIED ONCE dengan explicit approval, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production NOT PROVISIONED; Vercel NOT CONNECTED; Preview isolation pending; Gate 1 OPEN.
 
 ## 2. CI triggers
 
@@ -84,7 +84,7 @@ Policy awal:
 
 Setelah tim matang, automation dapat ditambah dengan ADR.
 
-0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing apply belum dilakukan dan membutuhkan checkpoint 0D-3B + explicit human approval **YES APPLY TESTING MIGRATION**. Production helper/config/script belum tersedia. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+0D-3A menyediakan manual guarded Dev `db:migrate` dan Testing `db:migrate:testing`; keduanya dilarang dijalankan dari install/build/dev/start/test/CI/Vercel. `db:check` tetap offline. Testing initial apply telah dijalankan tepat sekali pada 0D-3B setelah explicit human approval **YES APPLY TESTING MIGRATION**, dengan pre-empty-state dan post-ledger/schema/live checks PASS. Jangan rerun untuk idempotence test; migration berikutnya membutuhkan task/review/approval baru. Production helper/config/script belum tersedia. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
 ## 7. Release checklist
 

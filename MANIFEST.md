@@ -1,38 +1,38 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-10-04. Scope: existing documentation-pack sources plus docs/32-34; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. This is a documentation manifest, not a full application dependency inventory.
+Actual filesystem bytes and SHA-256, regenerated 2026-10-10. Scope: existing documentation-pack sources plus docs/32-34; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. This is a documentation manifest, not a full application dependency inventory.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 279314 | `2ce7ae6344ba1535d692024551c4c52e67cf9ca078c7db26ff0e94c930e68440` |
-| `README.md` | 15342 | `5ecdf902409f00c22fe63d790b308c1920a6847c2fefc5684cdf776e7fd3ca9d` |
+| `MASTER_GUIDE.md` | 284453 | `c72b5ae8b63cf21d49b25b10300dc1724fbbb1ccfd53c1af47c8a501fc687d31` |
+| `README.md` | 16159 | `2806e76e3213713a4682ecba5ac6156421c4adc997f301eee531ae998e7f637d` |
 | `THIRD_PARTY_NOTICES.md` | 2146 | `f58d1d9995cf9c8810bbfe56c360422c31a282f7bcb18b6e95fb2c54d34a93e3` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
 | `docs/02_PRODUCT_REQUIREMENTS.md` | 6010 | `2f8ac06618e2530897960c5ec7543783f9ccac5582873427e0fe77caace89b89` |
 | `docs/03_SYSTEM_ARCHITECTURE.md` | 5061 | `ea24394c452b721b42f011f8a677456b3c0302179fa0e69706639eedb3310e17` |
-| `docs/04_TECH_STACK_ADRS.md` | 9950 | `685a4d2e4b8f5adf5c748091efeae1c5b6cb04f1f86a1a3e14e882d7df78548b` |
+| `docs/04_TECH_STACK_ADRS.md` | 10163 | `b2b3199b1a30d992b232222d7bacca21dd14932c71c8d749a0ca5c536a39f370` |
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
-| `docs/07_TIDB_GUIDE.md` | 7412 | `15d0f1d2624ee3b0a8647551fb49256f6c99537fbf16fa8f237d54f95690c526` |
-| `docs/08_DATABASE_DESIGN.md` | 9758 | `d22252fbd66de78cd4b9c0b0329f526891b36510d12dec7ef1f701928be21af3` |
-| `docs/09_REPO_STRUCTURE.md` | 6171 | `3bdce6c02c1e99f8a65a18e1ac00f5b3c8a633fa68ce77e58a8f93d73849abd6` |
-| `docs/10_ENVIRONMENTS_SECRETS.md` | 7259 | `fc743bb8adeb840681807518c596402e4d1d04bb109c59ac4128fe516ce40133` |
+| `docs/07_TIDB_GUIDE.md` | 8120 | `44201e19e25cdecb4aa7bc9c17b1a02d5cbe2faf1cdbc0fd894b164d1474dbd3` |
+| `docs/08_DATABASE_DESIGN.md` | 10004 | `c86af5a5179092c8f2f7fe4ba20fe7a7ce1390f79b06c5b591a684a32b093d0a` |
+| `docs/09_REPO_STRUCTURE.md` | 6369 | `f9593015d4c7deb2e3e0d0adcba566d6d4bb5c9f73d75948fbcafa6e4485e57f` |
+| `docs/10_ENVIRONMENTS_SECRETS.md` | 7660 | `54bbbd788201c1e6ce5c9ad4492bec7982b2491d37f0648275e572c9799663ab` |
 | `docs/11_GIT_WORKFLOW.md` | 4154 | `dc27f55413e4c49746e851b88b5f0c85ce9e0891ca74cca5feaf7e370deac385` |
-| `docs/12_CI_CD_RELEASE.md` | 6099 | `336c71f553e4aafc4ea7da16e254cd78ba30e71e91caf50fb76d7da7f5233e73` |
+| `docs/12_CI_CD_RELEASE.md` | 6479 | `281f1da5c251862a6faa890fa7e2ac242cf8816e9c81290c9c7a11687059edae` |
 | `docs/13_SECURITY.md` | 2353 | `5ae03942b9f2a988ec38ab1b9cbd692043513798baba00deeb6ad8068da44105` |
-| `docs/14_TESTING_QA.md` | 10302 | `ac622ba8f9cbef3a51edaa4e1a0ef69239500dc73550a9e340095161ed7748b3` |
+| `docs/14_TESTING_QA.md` | 10588 | `3ac3653f92c11ef72d6288148d2f2e05a96a9409591a9a7357c67b92928aae2d` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
-| `docs/17_SETUP_FROM_ZERO.md` | 16275 | `0a2277ff2485889b59d08df3164832078e9f383742671a3fd8d272a55844da61` |
-| `docs/18_ROADMAP_BACKLOG.md` | 7514 | `f81a0193353a6484f2db3357c13cc44e26fe3de9fdbd35902deb5d54ddde62fd` |
-| `docs/19_DEFINITION_OF_DONE.md` | 4806 | `8c8f67d35b39812662eaee9e2fe732ceffe5d32fefa8715453ff1524768e4e46` |
+| `docs/17_SETUP_FROM_ZERO.md` | 17158 | `8e1783333fd07dbe7d35a1dd303e5d17143091de80c0d0b5113586b5fe0f9e56` |
+| `docs/18_ROADMAP_BACKLOG.md` | 7899 | `211cb0b4d6b7b2b57856c8310af45609becfd423df10551dbc58a39d21ecf0c7` |
+| `docs/19_DEFINITION_OF_DONE.md` | 5082 | `a07fc9b96a5c9e46a6512fc9072875d8f61f650c490237fc3588d063b481b191` |
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 7721 | `417343417d54a64345be25b961899a4cafa23f0ecf40228ae8376a4689fc8a19` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 7982 | `6f96cb4191cdc195978259925f4927a6271b45bb70e1311c27f8427a16405cd7` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

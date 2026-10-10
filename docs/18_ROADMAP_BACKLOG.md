@@ -36,14 +36,14 @@
 - [x] live Dev health/readiness HTTP 200; application read dan migration TCP/TLS SELECT 1 PASS;
 - [x] ledger 1 entry + hash/journal match; live depots schema/PK/index sesuai source/SQL;
 - [x] final independent Phase 0C verification PASS; PR #9 merged dan remote testing verified;
-- [ ] Testing resource/evidence: deferred sebelum integration/Preview Phase 0D;
+- [x] Testing resource/evidence: deferred dari Phase 0C, kini PROVISIONED, initial migration APPLIED ONCE dan live verification PASS pada 0D-3B; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
 - [ ] Production resource/evidence: deferred sebelum controlled rollout.
 
 Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa shared fallback.
 
 ### Phase 0D — CI + Vercel Integration
 
-**CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). CI/enforcement stages completed; cloud/migration/isolation/reproduction remain later scopes.
+**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Vercel integration/Preview isolation, Production foundation dan reproduction masih pending.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
@@ -52,9 +52,9 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [x] testing behavioral enforcement proof (PR #12); [report](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md);
 - [ ] main behavioral proof pada future real testing → main promotion;
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
-- [ ] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing NOT YET PROVISIONED, migration NOT APPLIED;
+- [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
 - [ ] Production NOT YET PROVISIONED; Production migration tooling separately deferred;
-- [ ] Vercel Production/Preview;
+- [ ] Vercel NOT CONNECTED; Preview integration tahap 0D-4, kemudian controlled Production scope;
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 

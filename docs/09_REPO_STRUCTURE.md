@@ -14,7 +14,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── eslint.config.*
 ├── drizzle.config.ts
 ├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
-├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; not applied
+├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
@@ -130,7 +130,7 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 ## Testing migration tooling — Phase 0D-3A
 
-`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia lokal, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Testing migration tooling prepared locally pada 0D-3A; resource Testing NOT YET PROVISIONED dan migration NOT APPLIED, pending 0D-3B. Production NOT YET PROVISIONED; Gate 1 OPEN. File `.env.testing.local`/`.env.migrations.testing.local` tetap ignored, tidak dibuat atau ditampilkan pada struktur tracked. [Report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
 ## Naming
 

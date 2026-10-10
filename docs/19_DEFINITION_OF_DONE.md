@@ -44,12 +44,12 @@ Tambahkan:
 
 ## 4. Database DoD
 
-**Phase 0C Dev foundation: VERIFIED.** Offline foundation dan independent offline verification PASS; manusia memprovision Dev dan menerapkan initial depots migration sekali. Read-only live verification membuktikan application HTTP read/readiness, migration TCP/TLS SELECT 1, ledger 1 entry dan schema/PK/index sesuai source/SQL. [Live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). **Full multi-environment Database DoD: PENDING**, karena Testing migration/evidence belum tersedia; Testing deferred sebelum integration/Preview Phase 0D, Production sebelum controlled rollout. Phase 0C CLOSED/PR #9, final independent verification PASS; Gate 1 OPEN. Tidak ada production migration automation. TiDB DDL dapat autocommit; migration berikutnya memerlukan review target/history, partial-failure mitigation dan explicit approval.
+**Phase 0C Dev foundation: VERIFIED.** Offline foundation dan independent offline verification PASS; manusia memprovision Dev dan menerapkan initial depots migration sekali. Read-only live verification membuktikan application HTTP read/readiness, migration TCP/TLS SELECT 1, ledger 1 entry dan schema/PK/index sesuai source/SQL. [Dev live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Testing pada 0D-3B PROVISIONED terpisah, migration APPLIED ONCE setelah approval eksplisit, ledger/schema/app read/health/readiness PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). **Full multi-environment Database DoD: PENDING**, karena Production belum diprovision dan future mutation/rollback requirements belum ditutup. Phase 0C CLOSED/PR #9, final independent verification PASS; Phase 0D/Gate 1 OPEN; Vercel NOT CONNECTED. Tidak ada production migration automation. TiDB DDL dapat autocommit; migration berikutnya memerlukan review target/history, partial-failure mitigation dan explicit approval.
 
 - [x] initial depots schema migration documented;
 - [x] initial depots Dev applied; ledger/schema verified read-only;
 - [x] Testing migration tooling prepared locally (0D-3A): explicit Testing guard/config/manual script, TLS verification and offline cross-env tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
-- [ ] Testing NOT YET PROVISIONED / migration NOT APPLIED; pending approved 0D-3B;
+- [x] Testing PROVISIONED / migration APPLIED ONCE; role separation, ledger/schema/application read/health/readiness verified pada approved 0D-3B;
 - [ ] Production NOT YET PROVISIONED; no Production apply tooling in 0D-3A;
 - [ ] no destructive prod action;
 - [ ] indexes justified;
