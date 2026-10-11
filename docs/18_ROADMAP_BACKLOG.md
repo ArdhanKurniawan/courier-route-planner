@@ -37,13 +37,13 @@
 - [x] ledger 1 entry + hash/journal match; live depots schema/PK/index sesuai source/SQL;
 - [x] final independent Phase 0C verification PASS; PR #9 merged dan remote testing verified;
 - [x] Testing resource/evidence: deferred dari Phase 0C, kini PROVISIONED, initial migration APPLIED ONCE dan live verification PASS pada 0D-3B; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
-- [ ] Production resource/evidence: deferred sebelum controlled rollout.
+- [x] Production resource/evidence: follow-up Checkpoint A/B selesai; independent Starter LIVE, initial migration exactly once dan verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
 
 Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa shared fallback.
 
 ### Phase 0D — CI + Vercel Integration
 
-**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Vercel integration/Preview isolation, Production foundation dan reproduction masih pending.
+**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Vercel integration/Preview isolation, main foundation promotion/main behavioral proof dan reproduction masih pending.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
@@ -53,13 +53,13 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [ ] main behavioral proof pada future real testing → main promotion;
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
-- [x] Production TOOLING PREPARED ONLY: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
-- [ ] Production NOT PROVISIONED / NOT MIGRATED; independent live foundation memerlukan separate provisioning dan apply approvals;
-- [ ] Vercel preflight NOT READY / blocked; no project/deployment; Production live readiness dan first-deployment/bootstrap design pending; [preflight report](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md);
+- [x] Production tooling verified: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
+- [x] Production LIVE independent Starter; separate provisioning/apply approvals selesai; migration exactly once, ledger/schema/ORM read/local handlers verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md);
+- [ ] Vercel preflight NOT READY / blocked; no project/deployment; first-deployment/bootstrap design pending; [preflight report](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md);
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
-Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+Main foundation promotion belum dilakukan; main required-check behavioral proof deferred. Recommendation closure **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 

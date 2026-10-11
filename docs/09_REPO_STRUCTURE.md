@@ -15,7 +15,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── drizzle.config.ts
 ├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
 ├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
-├── drizzle.production.config.ts  # explicit Production apply only; tooling prepared, NOT applied
+├── drizzle.production.config.ts  # explicit Production apply only, guarded; initial applied exactly once
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
@@ -29,7 +29,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 │   │   │   └── results/
 │   │   ├── api/
 │   │   │   ├── health/
-│   │   │   ├── ready/    # actual connectivity readiness; Dev live verified
+│   │   │   ├── ready/    # actual readiness; Dev/Testing HTTP and Production local handlers verified
 │   │   │   └── ...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
@@ -131,11 +131,11 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 ## Testing migration tooling — Phase 0D-3A
 
-`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production NOT PROVISIONED; Vercel NOT CONNECTED; Phase 0D/Gate 1 OPEN. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
 ## Production migration tooling — Phase 0D
 
-**Production TOOLING PREPARED ONLY; NOT PROVISIONED; NOT MIGRATED.** Dev established/live dan Testing live, migrated once, verified tetap dipertahankan. Vercel preflight **NOT READY**, no project/deployment; Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Dev/Testing/offline configs, runtime schema/client/readiness dan sole migration history dipertahankan. Future private Production app/migrator files tidak dibuat dan bukan tracked source. [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Runtime schema/client/readiness dan sole migration history unchanged. Private Production app/migrator files sudah disimpan manusia, ignored dan bukan tracked source. Approved initial apply invocation 1/retry 0/exit 0; ledger satu row dan depots parity PASS. Local unchanged handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## Naming
 
