@@ -117,6 +117,8 @@ Target:
 
 Keputusan manusia Phase 0D-3A mempertahankan tiga independent TiDB resources, tanpa shared Dev/Testing/Production fallback. Quota/spending akun wajib diverifikasi manusia sebelum provisioning. Perubahan isolation membutuhkan keputusan manusia dan ADR baru.
 
+Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main foundation promotion belum dilakukan, main behavioral proof deferred, Phase 0D/Gate 1 OPEN.
+
 ---
 
 ## ADR-009 — Auth sebelum public mutation
@@ -220,7 +222,7 @@ Rules:
 
 - Tidak ada application/Client Component import mysql2, runtime dependency langsung, atau TCP pool pada Next.js.
 - Dedicated Dev migration credential memakai ignored `.env.migrations.local`; Testing tooling 0D-3A memakai ignored `.env.migrations.testing.local` dan explicit Testing guard/config. Migrator terpisah dari credential aplikasi; TLS certificate verification aktif. Current 0D-3B: independent Testing resource dan separate app/migrator private env sudah tersedia; initial apply dilakukan sekali setelah human approval, read-only live verification PASS. [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
-- Generate/check offline; apply Dev atau Testing hanya sesudah review target/history/SQL dan explicit human approval. Testing apply memerlukan checkpoint 0D-3B dengan approval **YES APPLY TESTING MIGRATION**. `db:push` dilarang.
+- Generate/check offline; apply Dev, Testing atau Production hanya sesudah review target/history/SQL dan explicit human approval. Testing initial apply memakai **YES APPLY TESTING MIGRATION**; Production initial apply memakai approval terpisah **YES APPLY PRODUCTION MIGRATION**, exact command sekali, retry 0. Dedicated Production config/guard, separate private credentials dan verified TLS mengikuti [live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). `db:push` dilarang; jangan mengulang initial apply.
 - Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel, atau production migration automation.
 - Kit lama membawa dua transitive loader deprecated dan empat temuan moderate tambahan pada full audit; runtime audit 0. Ini dicatat sebagai limitation tooling, tanpa audit fix/override.
 
