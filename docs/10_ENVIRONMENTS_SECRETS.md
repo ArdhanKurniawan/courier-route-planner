@@ -2,51 +2,73 @@
 
 ## 1. Environment matrix
 
+Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
+
+Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C CLOSED/PR #9, final independent verification PASS; Dev provisioning/initial apply dan HTTP/TCP-TLS read-only verification PASS. Pada 0D-3B, Testing PROVISIONED terpisah dari Dev, initial migration APPLIED ONCE dengan approval eksplisit, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
+
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
 | Local | developer branch | TiDB Dev | coding |
 | Preview | feature/fix/testing | TiDB Testing | review/integration |
 | Production | main | TiDB Production | demo/live |
 
-## 2. Required environment variables
+## 2. Environment variables menurut phase
 
-Initial:
+**Phase 0B current:** hanya `APP_ENV`, required ketika server membaca runtime config. Exact values: `development`, `testing`, `production`. Missing, empty, whitespace-only, case variant, padded value dan nilai lain ditolak. Tidak ada implicit default, trimming atau normalisasi.
 
-```text
-DATABASE_URL=
-APP_ENV=development|testing|production
-```
+`src/config/env.ts` menyediakan typed pure `parseAppEnv(rawValue)` dan safe `AppEnvValidationError`. Parser tidak membaca process.env. Route health membaca `process.env.APP_ENV` ketika GET dipanggil; tidak ada validation saat import/typegen/build. APP_ENV server-side dan tidak dikirim ke health payload/client.
 
-Future auth:
+**Phase 0C Stage 1:** `DATABASE_URL` server-only untuk DB connection. Pure Zod `parseDatabaseConfig(raw)` menerima input eksplisit, tanpa ambient env/default/trim, dan menghasilkan fixed safe DatabaseConfigError. Lazy getter baru membaca URL saat dipanggil; import/typegen/build tidak memerlukan DB env. Parser menerima mysql scheme, explicit user/password, hostname DNS/IPv4, optional valid port dan satu nama database (letters/digits/underscore/hyphen); query/fragment, kontrol, malformed encoding dan ambiguous authority/path ditolak. Secret tidak dicetak atau dikirim ke response.
 
-```text
-AUTH_SECRET=
-GITHUB_ID=
-GITHUB_SECRET=
-```
+**Auth phase future:** `AUTH_SECRET`, `GITHUB_ID`, `GITHUB_SECRET`.
 
-Optional:
-
-```text
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
-```
+`NEXT_PUBLIC_APP_NAME` optional secara konsep, tidak diperkenalkan atau diperlukan saat ini. `NODE_ENV` dikelola framework (`development/test/production`), terpisah dari APP_ENV; jangan memakai NODE_ENV=testing.
 
 ## 3. Rules
 
 - `.env.local` never commit.
+- `.env.migrations.local` never commit; dedicated Dev migration credential, tidak otomatis disalin dari application credential.
+- `.env.testing.local` dan `.env.migrations.testing.local` never commit; manusia telah menyimpan credential app/migrator Testing dengan usernames/passwords berbeda secara privat pada 0D-3B. Kedua file ignored; admin credential tidak dipakai app atau migrator.
+- `.env.production.local` dan `.env.migrations.production.local` never commit; private human setup sudah selesai, app/migrator account dan password berbeda, admin excluded.
 - `.env.example` commit, **tanpa nilai secret**.
 - `DATABASE_URL` tidak pernah prefix `NEXT_PUBLIC_`.
 - production credential hanya Production scope.
 - Preview menggunakan testing DB credential.
 - dev laptop menggunakan dev DB credential.
 
-## 4. `.env.example`
+## 4. `.env.example` — Phase 0C Stage 1
+
+Exact current template, dengan trailing newline:
 
 ```dotenv
-DATABASE_URL=mysql://USER:PASSWORD@HOST/DATABASE
 APP_ENV=development
-NEXT_PUBLIC_APP_NAME=Courier Route Planner
+
+# Set a Dev-only TiDB connection URL in .env.local.
+# Never commit credentials. Migration credentials use .env.migrations.local.
+DATABASE_URL=
 ```
+
+Manusia dapat menyalin template ini ke `.env.local` untuk local runtime. `.env` dan `.env.*` ignored, dengan exception `!.env.example`; `.env.local` tidak boleh di-commit. Tests memakai scoped env fixtures, bukan file secret; build/tests tidak memerlukan DB credential.
+
+Stage 1 tidak membuat real env file atau credential. Explicit Dev apply memakai Node 24 `--env-file=.env.migrations.local`; inherited shell variables override file values. Operator wajib clean/verified shell tanpa mencetak secret. Guard membutuhkan APP_ENV exact development, DB exact `courier_route_planner_dev`, object credentials dengan TLS certificate verification aktif. Ini logical-name guard, bukan bukti resource identity; manusia tetap harus memverifikasi Dev resource sebelum apply. Tidak ada dotenv/env loader tambahan, atau migration otomatis pada aplikasi/CI/deployment.
+
+GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk konfigurasi invalid/missing; JSON dan `Cache-Control: no-store`. Payload tidak memuat env, version, timestamp atau detail error. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#4-health-endpoint).
+
+`GET /api/ready` terpisah: SELECT 1 connectivity-only, 5000 ms/no retry, exact 200/503 status JSON + no-store. Unit behavior tersedia; live Dev health/readiness HTTP 200 exact status JSON + no-store terverifikasi 2026-10-04. [Read-only live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Dedicated application/migration role berbeda dan target Dev sama; task tidak mencoba write privilege atau mengubah grants. Missing/invalid DB URL → 503, tanpa mempengaruhi app-only health.
+
+### Testing tooling contract — Phase 0D-3A
+
+Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Production menggunakan helper/config terpisah di bawah; tidak ada generic env switch.
+
+0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output. Production LIVE independent Starter, migrated exactly once/schema-ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Tooling evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+
+### Production tooling contract — Phase 0D
+
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memakai `.env.migrations.production.local` dan `drizzle.production.config.ts`; guard exact APP_ENV=production/exact Production DB, verified TLS dan fixed generic error. Runtime contract APP_ENV/DATABASE_URL tetap server-side; Dev/Testing guards tidak menerima Production.
+
+Private human handoff menyimpan `.env.production.local` untuk application dan `.env.migrations.production.local` untuk migrator; accounts/passwords berbeda, kedua file ignored. Tidak ada admin/migrator credential pada runtime/Vercel. Safe structural dan authenticated checks membuktikan exact logical DB, same Production instance, distinct role/password, reviewed scoped grants dan TLS. Full account/password/hostname/URL tidak dipublikasikan. Closure ini tidak membaca atau mengubah private env.
+
+Provisioning approval **YES PROVISION PRODUCTION RESOURCE** dan separate **YES APPLY PRODUCTION MIGRATION** sudah digunakan untuk initial foundation. Clean startup/target environment dan exact argv tanpa forwarded options diverifikasi sebelum satu kali apply; inherited env-file overrides, preloads, proxy dan TLS bypass dikeluarkan. Postapply schema/ledger/ORM read serta local unchanged health/readiness handlers PASS memakai hanya app credential. Public deployed HTTP belum diverifikasi. Future migration memerlukan approval baru; jangan rerun initial apply. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Secret rotation
 
@@ -69,7 +91,7 @@ Setelah rotate:
 
 ## 6. Prevent accidental production access
 
-Server startup/health diagnostics harus mengetahui `APP_ENV`.
+Phase 0B health memvalidasi APP_ENV pada invocation, bukan global startup. Nilai env dan raw validation input tidak diekspos dalam response. Deployment env scope/isolation masih Phase 0D; label APP_ENV sendiri tidak membuktikan DB isolation.
 
 Tambahkan guard pada script destructive seed/reset:
 

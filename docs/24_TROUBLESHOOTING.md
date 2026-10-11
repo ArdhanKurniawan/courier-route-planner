@@ -79,7 +79,7 @@ Check:
 
 - zero distance handling;
 - probability denominator;
-- pheromone minimum;
+- pheromone initialization/evaporation dan numerical validity sesuai Classical Ant System; jangan menambah clipping/minimum yang mengubah varian diam-diam;
 - invalid alpha/beta;
 - duplicate coordinates;
 - random selection edge cases.
@@ -98,6 +98,7 @@ Check:
 
 - seed;
 - input hash;
+- frozen matrix hash, stable node order, provider/profile provenance (jangan request ulang OSRM untuk mereproduksi run);
 - Node version;
 - machine load;
 - warm-up policy;

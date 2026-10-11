@@ -33,10 +33,10 @@ Fokus adalah **sequence of visits**, bukan shortest path satu pasangan node.
 - map marker depot/customer;
 - scenario dataset;
 - seeded dummy generation;
-- distance matrix;
+- frozen directed OSRM Table road-network distance matrix, meter, input/matrix hash;
 - Nearest Neighbor;
-- 2-Opt improvement;
-- ACO;
+- best-improvement 2-Opt dengan full directed route recomputation;
+- ACO / Classical Ant System tanpa post-ACO 2-Opt;
 - benchmark pada input yang sama;
 - total distance;
 - execution time;
@@ -98,6 +98,10 @@ MVP dianggap berhasil bila:
 - environment benchmark dicatat;
 - hasil ACO multi-run dapat dianalisis;
 - hasil route dapat direkonstruksi.
+
+Main design: 10/25/50 customer, masing-masing 10 independent random datasets. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan. ACO 30 independent seeded runs, NN+2-Opt satu quality result dan 30 timing repetitions, 5 warm-ups per algoritma/dataset. Calibration datasets terpisah dan satu global ACO configuration dibekukan. RQ/metrics mengikuti [research decisions](32_RESEARCH_DECISIONS.md) dan [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md).
+
+OSRM adalah input infrastructure, bukan algoritma penelitian. Geometry terpisah; timer formal hanya algorithm execution pada environment terkontrol, tanpa OSRM/DB/network/serialization/geometry/rendering.
 
 ## 9. Non-goals
 

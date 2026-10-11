@@ -4,29 +4,32 @@ Dokumen ini mencatat third-party source/template yang menjadi baseline atau depe
 
 ## TailAdmin Next.js Free
 
-- Purpose: planned baseline UI/admin template.
-- Upstream: https://github.com/TailAdmin/free-nextjs-admin-dashboard
-- Website: https://tailadmin.com/nextjs
-- License reported by upstream free repository: MIT.
-- Adoption status: **PLANNED — source code belum di-import ke repository project pada saat documentation baseline ini dibuat.**
-- Adoption date: TBD.
-- Adopted commit SHA: TBD — wajib diisi saat import.
+- Product: TailAdmin Next.js Free Admin Dashboard
+- Upstream repository: `https://github.com/TailAdmin/free-nextjs-admin-dashboard`
+- Upstream version: `2.4.0`
+- Upstream commit: `4fba02489c93171220c13cd2b44cc0161ff6d2a1`
+- Upstream commit date: `2026-09-13 15:49:09 +0600`
+- License: MIT
+- Local license copy: `licenses/TAILADMIN-MIT.txt`
+- Purpose: UI/admin dashboard baseline
+- Adoption status: Free edition only
 
-Rules:
+### Adoption notes
 
-- hanya Free/Open-source repository;
-- jangan mengambil Pro/paid assets;
-- preserve required copyright/license notices;
-- template adalah UI baseline, bukan source-of-truth domain architecture.
+The upstream template is used as a presentation/UI baseline only.
+
+Project architecture, domain model, routing algorithms, database design, Git workflow, and research methodology remain governed by this repository's own documentation.
+
+UI template cleanup was verified locally on 2026-10-02. The application retains the Free edition shell patterns and reusable UI primitives. Ecommerce, chart, demographic map, calendar, profile/auth and showcase demos, their mock data and unused public demo assets were removed. The original source revision and MIT notice above remain applicable to retained template source.
 
 ## ApexCharts
 
-TailAdmin upstream snapshot dapat membawa `apexcharts` / `react-apexcharts`.
+Historical provenance: the adopted TailAdmin snapshot included `apexcharts` / `react-apexcharts`. Both packages and their demo source usage were removed during UI template cleanup on 2026-10-02; `package.json`, `package-lock.json`, and `npm ls` confirm their absence from the current application.
 
 Project decision:
 
 - **NOT APPROVED sebagai core dependency**;
-- hapus pada template cleanup jika tidak dibutuhkan;
+- current application: removed, no replacement chart library installed;
 - jika penggunaan diusulkan, lakukan license review + ADR terlebih dahulu.
 
 Reason: current ApexCharts uses a revenue-based/community licensing model; project memilih dependency licensing yang lebih sederhana untuk baseline Rp0.

@@ -1,6 +1,6 @@
 # 09 — REPOSITORY STRUCTURE
 
-Target struktur:
+Target struktur (belum seluruhnya tersedia; lihat [current implementation](../README.md#current-implementation-status)). Ini panduan dokumentasi, bukan instruksi membuat folder/source pada task sync:
 
 ```text
 .
@@ -13,6 +13,10 @@ Target struktur:
 ├── tsconfig.json
 ├── eslint.config.*
 ├── drizzle.config.ts
+├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
+├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
+├── drizzle.production.config.ts  # explicit Production apply only, guarded; initial applied exactly once
+├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
 ├── src/
@@ -25,24 +29,28 @@ Target struktur:
 │   │   │   └── results/
 │   │   ├── api/
 │   │   │   ├── health/
+│   │   │   ├── ready/    # actual readiness; Dev/Testing HTTP and Production local handlers verified
 │   │   │   └── ...
 │   │   ├── layout.tsx
 │   │   └── page.tsx
+│   ├── config/
+│   │   ├── navigation.ts
+│   │   ├── env.ts          # pure APP_ENV parser; health call-site
+│   │   └── db-env.ts       # pure Zod DB URL parser + explicit Dev/Testing/Production CLI guards
 │   ├── components/
 │   │   ├── ui/
 │   │   ├── forms/
 │   │   ├── tables/
 │   │   └── map/
 │   ├── db/
-│   │   ├── index.ts
-│   │   ├── schema.ts
-│   │   ├── repositories/
-│   │   └── migrations/
+│   │   ├── client.ts       # actual lazy server-only HTTP client
+│   │   ├── readiness.ts    # actual SELECT 1 connectivity service
+│   │   ├── schema.ts       # actual depots ONLY
+│   │   └── repositories/   # future CRUD; absent in Stage 1
 │   ├── domain/
 │   │   ├── routing/
 │   │   └── experiments/
 │   ├── lib/
-│   │   ├── env/
 │   │   ├── validation/
 │   │   ├── security/
 │   │   └── utils/
@@ -59,10 +67,15 @@ Target struktur:
 ├── docs/
 └── .github/
     ├── workflows/
+    │   └── quality.yml       # actual Quality / Quality Gate; remote testing verified
     └── pull_request_template.md
 ```
 
 ## Domain routing structure
+
+Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md). Initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/E2E dalam target ini tetap belum diimplementasikan.
+
+Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](../.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Remote CI dan required-check configuration VERIFIED; testing behavioral enforcement VERIFIED, main behavior DEFERRED. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](12_CI_CD_RELEASE.md).
 
 ```text
 src/domain/routing/
@@ -70,8 +83,7 @@ src/domain/routing/
 ├── route-validator.ts
 ├── distance/
 │   ├── types.ts
-│   ├── matrix.ts
-│   └── research-euclidean.ts
+│   └── matrix-validator.ts
 ├── nn/
 │   └── nearest-neighbor.ts
 ├── two-opt/
@@ -85,7 +97,8 @@ src/domain/routing/
 ## Rule of dependency direction
 
 ```text
-UI/API → application/domain → db adapter
+UI/API → application → algorithm domain (DistanceMatrix + params/seed)
+             └→ infrastructure adapters / repositories
 ```
 
 Algorithm domain tidak boleh import dari:
@@ -95,7 +108,34 @@ next/*
 react
 leaflet
 @tidbcloud/*
+drizzle-orm
+OSRM HTTP client
 ```
+
+## Application and OSRM infrastructure target
+
+```text
+src/
+├── application/
+│   ├── scenarios/       # editable scenario → immutable benchmark case
+│   └── benchmark/       # matrix builder/storage orchestration, hash checks, runner
+└── infrastructure/
+    └── routing/
+        └── osrm/
+            ├── osrm-client.ts
+            ├── osrm-table-provider.ts
+            └── osrm-geometry-provider.ts
+```
+
+DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core. Table provider menghasilkan frozen directed road-network matrix dalam meter; geometry provider menangani visualisasi setelah sequence tersedia. Matrix validator dan route validator di domain adalah pure operations. Storage implementation boleh menggunakan repository `src/db/` melalui application; domain tidak import DB. Kontrak: [docs/33](33_ALGORITHM_SPECIFICATION.md), [docs/34](34_OSRM_DISTANCE_CONTRACT.md).
+
+## Testing migration tooling — Phase 0D-3A
+
+`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+
+## Production migration tooling — Phase 0D
+
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Runtime schema/client/readiness dan sole migration history unchanged. Private Production app/migrator files sudah disimpan manusia, ignored dan bukan tracked source. Approved initial apply invocation 1/retry 0/exit 0; ledger satu row dan depots parity PASS. Local unchanged handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## Naming
 

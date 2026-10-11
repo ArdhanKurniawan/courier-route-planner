@@ -44,7 +44,7 @@ Gunakan Vercel Git Integration.
 
 ### Important
 
-Jangan memakai Vercel runtime timing sebagai satu-satunya formal research benchmark.
+Formal research benchmark tidak boleh bergantung pada runtime Vercel; jalankan pada environment terkontrol yang dicatat. Vercel tetap untuk aplikasi/demo.
 
 ---
 
@@ -115,7 +115,9 @@ Target:
 - TiDB Testing;
 - TiDB Production.
 
-Saat current free quota memungkinkan, gunakan tiga instance terpisah. Jika free-tier berubah, fallback boleh menjadi satu instance dengan database terpisah, tetapi perlu ADR karena isolation menurun.
+Keputusan manusia Phase 0D-3A mempertahankan tiga independent TiDB resources, tanpa shared Dev/Testing/Production fallback. Quota/spending akun wajib diverifikasi manusia sebelum provisioning. Perubahan isolation membutuhkan keputusan manusia dan ADR baru.
+
+Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main foundation promotion belum dilakukan, main behavioral proof deferred, Phase 0D/Gate 1 OPEN.
 
 ---
 
@@ -131,7 +133,11 @@ Boleh defer saat local-only foundation. Wajib sebelum custom production domain d
 
 ## ADR-010 — OSRM bukan MVP core
 
-OSRM hanya future/supporting untuk road geometry atau road-network distance experiment bila penelitian membutuhkannya.
+**Status:** Superseded oleh [ADR-012](#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), 2026-10-02.
+
+**Historical decision (tidak berlaku sebagai instruksi aktif):** OSRM hanya future/supporting untuk road geometry atau road-network distance experiment bila penelitian membutuhkannya.
+
+Alasan supersession: keputusan manusia terbaru menetapkan OSRM Table sebagai core infrastructure input formal. Geometry tetap concern terpisah dan OSRM tetap bukan research algorithm. History ini dipertahankan untuk audit.
 
 
 ## ADR-011 — TailAdmin Next.js Free sebagai UI template baseline
@@ -163,3 +169,63 @@ TailAdmin upstream dapat membawa ApexCharts. Current ApexCharts menggunakan comm
 Jika chart diperlukan untuk hasil penelitian, kandidat awal adalah **Recharts (MIT)** melalui task/ADR terpisah.
 
 Detail: `docs/30_UI_TEMPLATE_GUIDE.md`.
+
+---
+
+## ADR-012 — OSRM Road-Network Distance Matrix for Formal Research Benchmark
+
+**Status:** Accepted
+**Date:** 2026-10-02
+**Authority:** Keputusan eksplisit manusia pada task corrective documentation + research contract sync.
+
+### Context
+
+ADR-010 menunda OSRM dan dokumen sebelumnya mengarahkan formal input pada distance methodology yang belum dikunci. Penelitian sekarang memerlukan identical road-network input untuk comparison NN+2-Opt vs ACO, serta input yang bisa diaudit ulang meski layanan jalan berubah.
+
+### Decision
+
+Gunakan OSRM Table Service sebagai approved core input infrastructure untuk membuat **frozen directed/asymmetric distance matrix dalam meter**. Validate routability, stable node order, values dan no unreachable pair; simpan input hash serta matrix hash sebelum formal run. Kedua algoritma harus menerima exact matrix snapshot yang sama.
+
+### Scope and distinctions
+
+- OSRM Table adapter + matrix builder/storage adalah infrastructure, bukan research algorithm.
+- Algorithm domain menerima matrix + params/seed saja: deterministic NN → best-improvement asymmetric-safe 2-Opt vs Classical Ant System.
+- OSRM Route/geometry menerima optimizer sequence untuk Leaflet; visualisasi tidak mengubah matrix/cost penelitian dan boleh dikerjakan kemudian.
+- Formal timer hanya algoritma pada environment terkontrol; mengecualikan OSRM request, DB, HTTP/network, serialization, geometry, dan rendering.
+- ADR ini tidak memilih public vs local/self-hosted endpoint, final numeric ACO parameters, atau mengimplementasikan adapter/migration.
+
+### Consequences
+
+Directed costs mengharuskan full route recomputation untuk reversal 2-Opt dan directed pheromone ACO. Matrix harus disimpan immutable; koordinat saja tidak cukup untuk mereproduksi input jika road network/profile berubah. Storage/provenance dan provider failure handling bertambah. Null/unreachable tidak boleh diganti metric lain.
+
+OSRM distance bukan otomatis mathematical shortest-distance path. Provider/profile/version harus dicatat beserta keterbatasan endpoint. Lihat [OSRM contract](34_OSRM_DISTANCE_CONTRACT.md).
+
+### Why ADR-010 was superseded
+
+Framing OSRM sebagai future untuk seluruh fungsi tidak lagi sesuai approved formal research input. Pemisahan input infrastructure, optimization algorithm, dan geometry membuat peran baru ini jelas tanpa mengganti core TSP-like problem.
+
+### Implementation follow-up
+
+Matrix foundation berada sebelum algorithm integration pada Phase 3. Conceptual storage ada di [database design](08_DATABASE_DESIGN.md); protocol di [docs/15](15_RESEARCH_BENCHMARK_PROTOCOL.md); specification di [docs/33](33_ALGORITHM_SPECIFICATION.md). Tidak ada actual DB migration dalam sinkronisasi dokumentasi ini.
+
+---
+
+## ADR-013 — mysql2 as Drizzle Kit Migration CLI Dev-Only Adapter
+
+Status: Accepted, keputusan manusia Phase 0C Stage 1, 2026-10-04.
+
+Context: stable Drizzle Kit `0.31.11` memakai driver MySQL CLI untuk migration; aplikasi tetap `Next.js → Drizzle ORM → @tidbcloud/serverless → TiDB Cloud`. Source/package terpasang dan baseline audit memverifikasi bahwa adapter runtime HTTP bukan selector CLI Kit yang didukung.
+
+Decision: `mysql2 3.24.5` diizinkan sebagai **dev dependency saja** untuk Drizzle Kit. Runtime dependencies yang disetujui: `drizzle-orm 0.45.3`, `@tidbcloud/serverless 0.3.0`, `zod 4.6.5`; dev tooling: `drizzle-kit 0.31.11`, `mysql2 3.24.5`.
+
+Rules:
+
+- Tidak ada application/Client Component import mysql2, runtime dependency langsung, atau TCP pool pada Next.js.
+- Dedicated Dev migration credential memakai ignored `.env.migrations.local`; Testing tooling 0D-3A memakai ignored `.env.migrations.testing.local` dan explicit Testing guard/config. Migrator terpisah dari credential aplikasi; TLS certificate verification aktif. Current 0D-3B: independent Testing resource dan separate app/migrator private env sudah tersedia; initial apply dilakukan sekali setelah human approval, read-only live verification PASS. [Testing live evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+- Generate/check offline; apply Dev, Testing atau Production hanya sesudah review target/history/SQL dan explicit human approval. Testing initial apply memakai **YES APPLY TESTING MIGRATION**; Production initial apply memakai approval terpisah **YES APPLY PRODUCTION MIGRATION**, exact command sekali, retry 0. Dedicated Production config/guard, separate private credentials dan verified TLS mengikuti [live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). `db:push` dilarang; jangan mengulang initial apply.
+- Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel, atau production migration automation.
+- Kit lama membawa dua transitive loader deprecated dan empat temuan moderate tambahan pada full audit; runtime audit 0. Ini dicatat sebagai limitation tooling, tanpa audit fix/override.
+
+Alternative: custom HTTP migrator ditolak untuk foundation karena menambah runner dan beban pengujian khusus.
+
+Resource sequence yang disetujui: **Dev-first**; Dev telah diprovision manusia dan koneksi HTTP/TCP-TLS diverifikasi read-only, Testing sebelum integration/Preview Phase 0D, Production sebelum controlled rollout. Target ADR-008 tetap tiga independent Starter resources, tanpa shared fallback. Stage 1 hanya `depots`. Initial migration sudah diterapkan sekali oleh manusia pada Dev; ledger dan schema live cocok dengan artifact lokal. [Live evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9, final independent verification PASS; Gate 1 OPEN.

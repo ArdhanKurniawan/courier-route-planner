@@ -15,7 +15,7 @@ Pahami konsep
 → TiDB dev/testing/prod
 → CRUD kecil end-to-end
 → map
-→ distance engine
+→ freeze snapshot + road validation + OSRM Table matrix + hash/freeze
 → NN
 → 2-Opt
 → ACO
@@ -118,18 +118,16 @@ Lihat:
 10. review;
 11. merge bila gate lulus.
 
-## Hal yang belum boleh dianggap final
+## Research contract yang wajib dibaca
 
-Walaupun engineering stack sudah dikunci, keputusan penelitian berikut tetap harus didukung literatur/dosen:
+- [32 — Research Decisions](32_RESEARCH_DECISIONS.md): working RQ, main experiment dan OPEN decisions.
+- [33 — Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN deterministic, 2-Opt asymmetric-safe, ACO Classical Ant System.
+- [34 — OSRM Distance Contract](34_OSRM_DISTANCE_CONTRACT.md): formal input memakai frozen directed OSRM road-network matrix dalam meter.
+- [15 — Protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 customer × 10 random datasets; 30 ACO seeded runs; 30 NN+2-Opt timing repetitions; 5 warm-ups.
 
-- rumus/transformasi koordinat untuk formal Euclidean distance;
-- parameter ACO final;
-- jumlah run ACO final;
-- jumlah scenario final;
-- research question/judul final;
-- apakah OSRM masuk MVP atau future work.
+Calibration/evaluation wajib terpisah dan satu ACO configuration global dibekukan. N=100 serta clustered/circular/directional optional setelah review/pilot. OPEN: nilai numerik ACO, depot/study area, endpoint public/local OSRM, dan eksperimen tambahan; jumlah run/main datasets serta peran OSRM bukan keputusan yang masih pending.
 
-Engineering harus memungkinkan perubahan parameter tersebut tanpa rewrite besar.
+Status implementasi aktual ada di [README](../README.md#current-implementation-status). Target arsitektur dan checklist bukan evidence implementasi selesai.
 
 
 ## UI template baseline

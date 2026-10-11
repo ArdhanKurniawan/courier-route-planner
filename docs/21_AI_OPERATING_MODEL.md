@@ -42,6 +42,7 @@ Contoh:
 Setiap implementation prompt sebaiknya berisi:
 
 - inspect `AGENTS.md` dulu;
+- untuk research: baca docs/32, docs/33, docs/34 dan protocol v1 docs/15; gunakan README untuk membedakan approved target dari implemented state;
 - audit existing state dulu;
 - scope dan out-of-scope;
 - acceptance criteria;

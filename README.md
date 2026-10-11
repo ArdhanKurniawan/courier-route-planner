@@ -1,12 +1,14 @@
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Baseline v1.2  
-**Tanggal baseline:** 2026-09-26  
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Dev LIVE/established; Testing LIVE, migrated once, verified; Production LIVE, independent Starter, migrated exactly once, schema/ledger verified; Vercel NOT integrated, Preview preflight NOT READY; main foundation promotion NOT YET performed, main behavior DEFERRED; Phase 0D OPEN; Gate 1 OPEN
+**Tanggal sinkronisasi:** 2026-10-11
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
 
-## Keputusan utama yang sudah dikunci
+## Approved Target Architecture
+
+Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelaskan terpisah di bawah.
 
 - Scope: **Web Admin Route Planner**, bukan aplikasi kurir realtime.
 - Arsitektur: full-stack **Next.js App Router + TypeScript**.
@@ -22,9 +24,74 @@
 - Deploy: **Vercel Git Integration**.
 - Algoritma penelitian:
   - Hybrid **Nearest Neighbor + 2-Opt**.
-  - **Ant Colony Optimization (ACO)**.
+  - **Ant Colony Optimization (ACO) / Classical Ant System**, tanpa 2-Opt sesudah ACO pada main comparison.
 - Fokus pengujian: total distance, execution time, scalability, consistency/stability.
-- OSRM: supporting/future layer, **bukan core MVP**.
+- OSRM Table Service: **approved core infrastructure** untuk frozen road-network distance matrix formal, unit meter, directed/asymmetric. OSRM bukan algoritma penelitian; Route/geometry terpisah untuk visualisasi.
+- NN deterministic: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt best improvement memakai full directed route recomputation.
+- Main experiment: **10/25/50 customer × 10 independent random datasets = 30 datasets**. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
+- Calibration terpisah dari evaluation; satu global ACO configuration dibekukan. ACO 30 independent seeded runs per dataset; NN+2-Opt satu quality result dan 30 timing repetitions; 5 warm-ups per algoritma/dataset.
+- Kedua metode memakai input dan matrix hash identik. Timer hanya algoritma, tanpa OSRM/DB/network/serialization/geometry/rendering, pada environment terkontrol di luar runtime Vercel.
+
+## Current Implementation Status
+
+Baseline closure Production pada `feature/phase-0d-tidb-production-live`: HEAD/testing/origin/testing dan merge-base `48dc28c64d25a58ffbef92095694e0484d369895`. [Production live foundation report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md) mencatat Checkpoint A/B yang selesai; closure hanya dokumentasi dan tidak mengulang koneksi atau migration. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
+
+| Status | Evidence / kondisi aktual |
+|---|---|
+| Tersedia | Repository documentation dan local branch guard files `.githooks/pre-commit`, `.githooks/pre-push`; ini bukan bukti GitHub protections sudah aktif |
+| Tersedia | Shell dan reusable UI primitives dari TailAdmin Free 2.4.0 di `src/`; provenance SHA tercatat di `THIRD_PARTY_NOTICES.md`, license di `licenses/TAILADMIN-MIT.txt` |
+| Tersedia | Next.js App Router, React, TypeScript strict, Tailwind; Node `24.x` dalam `engines.node` dan `.nvmrc` berisi `24` |
+| Current | UI Template Cleanup terverifikasi lokal; branding Courier Route Planner, dashboard status kesiapan fitur tanpa data palsu, sidebar sesuai mapping project, header dan tema light/dark |
+| Tersedia | Routing sederhana tanpa locale: `/`, `/about`, dan 10 route modul dengan status **Belum diimplementasikan**; seluruh link sidebar dan refresh route diuji melalui browser |
+| Dibersihkan | Demo e-commerce, charts, demographic map, calendar, profile/auth, showcase, mock data dan assets; `apexcharts`, `react-apexcharts`, `next-intl`, JVectorMap, FullCalendar, Swiper, DnD, Dropzone dan SimpleBar dihapus setelah audit usage |
+| Dipertahankan | Form controls, date picker (`flatpickr`), table primitives, modal, badge, alert, dropdown, pagination, cards, breadcrumbs dan generic icons |
+| Belum | Leaflet, OSRM adapter, domain algorithms, immutable matrix storage, benchmark engine, CRUD domain |
+| Belum | Auth/authorization aktual; halaman sign-in/sign-up demo telah dihapus |
+| Phase 0A CLOSED | Scripts lint/typecheck/test/test:watch/test:coverage/build; typecheck menjalankan `next typegen && tsc --noEmit` untuk generated route types |
+| Phase 0A CLOSED | Vitest, V8 coverage, React Testing Library, jest-dom dan jsdom sebagai dev dependencies; navigation/dashboard regression tests: 2 files, 11 tests PASS |
+| Historical Stage 1 security audit | Next.js/eslint-config-next saat Stage 1 `16.3.6`; Stage 1 audit: runtime 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Delta +4 moderate pada dev tooling Drizzle Kit; detail pada laporan Stage 1 |
+| Phase 0B CLOSED | Pure typed APP_ENV parser, exact `development/testing/production`, required saat runtime read, tanpa default/trim/import-time validation; independent verification PASS |
+| Phase 0B CLOSED | `GET /api/health`: app-only, 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk missing/invalid APP_ENV; `Cache-Control: no-store`, tanpa env disclosure atau DB; behavior tetap |
+| Phase 0C CLOSED | Drizzle + TiDB HTTP driver + Zod; pure DB URL parser, lazy server-only client, `depots` saja. Initial migration sudah diterapkan manusia pada Dev; ledger 1 entry, hash/journal dan live schema cocok |
+| Phase 0C CLOSED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
+| Historical Phase 0C tests | 9 files / 147 tests PASS: 48 tests lama + 99 DB/schema/readiness tests; server tests memakai Node dan transport palsu |
+| Phase 0D CI verified | [Quality workflow](.github/workflows/quality.yml): PR dan push ke testing/main; job Quality Gate, Node 24/npm cache, read-only contents, sembilan required commands, runtime audit hard gate dan full audit informational dengan tool-error handling |
+| Phase 0D-2C | [Testing behavioral enforcement proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md): pending required check/merge unavailable → success/Ready to merge → human merge → successful push Quality Gate; main behavior DEFERRED |
+| Phase 0D-3A merged/PR #14 | `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, `db:migrate:testing`; exact testing/database guard, TLS verification; [tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md) |
+| Phase 0D-3B live | Independent Starter `route-planner-testing`, AWS Tokyo, spending limit 0; separate app/migrator roles. Explicit human provisioning/apply approvals; migration APPLIED ONCE, ledger 1 record, schema/application read/health/readiness PASS; [live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md) |
+| Production live foundation verified | Independent Starter `route-planner-production`, AWS Tokyo, submitted spending limit 0; dedicated app/migrator, scoped grants dan TLS PASS. Migration invocation **1**, retry **0**, exit **0**; ledger **1** row, depots schema/ORM read PASS. Local unchanged health/readiness handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md) |
+| Foundation gap | Vercel NOT integrated, Preview preflight NOT READY, no project/deployment; main foundation promotion NOT YET performed, main required-check behavior DEFERRED; Preview DB isolation, second-member reproduction dan Playwright/E2E pending; Phase 0D dan Gate 1 OPEN |
+
+Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+
+Phase 0A independent verification: [report](docs/proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0B CLOSED/PR #8: [independent verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C Stage 1: [implementation report](docs/proses/phase-0/0c/PHASE_0C_IMPLEMENTATION_REPORT.md); [independent offline PASS](docs/proses/phase-0/0c/PHASE_0C_OFFLINE_INDEPENDENT_VERIFICATION_REPORT.md); [Dev live verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Build/typegen/tests tetap tidak memerlukan APP_ENV, DATABASE_URL atau real env file. `.env.example` kini memuat APP_ENV dan DATABASE_URL kosong; credential Dev diisi manusia pada ignored file privat dan tidak disalin ke Git. NEXT_PUBLIC_APP_NAME tidak diperlukan.
+
+Jalankan quality gates lokal setelah clone/pull:
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test
+npm run test:coverage
+npm run db:check
+npm run build
+npm run typecheck
+npm audit --omit=dev --json
+npm audit --json
+```
+
+Sembilan command pertama adalah required CI gates; typecheck kedua dijalankan setelah build. Full audit terakhir informational untuk advisories valid; malformed/transport/command failure tetap gagal. Coverage tanpa numeric threshold. CI tidak mendefinisikan APP_ENV/DATABASE_URL, tidak menghubungi TiDB, tidak migrate dan tidak deploy. Detail: [CI contract](docs/12_CI_CD_RELEASE.md), [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+
+`npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
+
+Remote CI dan exact required Quality Gate configuration sudah verified; testing behavioral enforcement verified pada PR #12, main behavior deferred. Deployment/env isolation belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev, Testing dan Production kini tiga independent TiDB Starter resources, tanpa shared-instance fallback. Kontrak penelitian tetap sama.
+
+Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
+
+Testing migration tooling merged melalui PR #14. `npm run db:migrate` tetap Dev-only (`.env.migrations.local`, APP_ENV=development, DB `courier_route_planner_dev`). Manual `npm run db:migrate:testing` memakai `.env.migrations.testing.local`, APP_ENV=testing dan exact DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Testing diprovision terpisah dari Dev pada 0D-3B; manusia menyimpan app/migrator credential berbeda pada dua ignored private env files. Setelah kedua approval eksplisit dan pre-apply database kosong, command Testing dijalankan tepat satu kali. Ledger hash raw, schema, application read dan kedua endpoints live PASS. Production apply path disiapkan terpisah; tidak ada migration saat install/build/CI/deploy. Apply berikutnya memerlukan review target/history dan approval baru. [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+
+Production tooling memakai exact `APP_ENV=production` dan DB `courier_route_planner_production`, TLS `rejectUnauthorized: true`, config terpisah dan manual `npm run db:migrate:production`. Dua approval terpisah **YES PROVISION PRODUCTION RESOURCE** dan **YES APPLY PRODUCTION MIGRATION** sudah digunakan untuk initial foundation. Manusia menyimpan credential app/migrator berbeda pada ignored `.env.production.local` / `.env.migrations.production.local`. Exact command dijalankan sekali, ledger hash/journal dan delapan kolom depots cocok; jangan mengulang initial apply. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d). [Vercel preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) tetap berlaku; main belum dipromosikan. Recommendation closure: **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**, tanpa izin promosi/deployment.
 
 ## Urutan baca wajib
 
@@ -80,6 +147,9 @@ Setelah itu baca dokumen spesifik sesuai pekerjaan.
 | `29_HUMAN_REVIEW_GUIDE.md` | Cara manusia mengecek output AI |
 | `30_UI_TEMPLATE_GUIDE.md` | Keputusan TailAdmin, download, cleanup, license & UI adoption |
 | `31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | Pencegahan commit/push tidak sengaja ke main/testing, GitHub protection, local hooks & recovery |
+| [32_RESEARCH_DECISIONS.md](docs/32_RESEARCH_DECISIONS.md) | RQ, scope, design eksperimen, metrics, dan keputusan OPEN |
+| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, Classical Ant System, validator dan fixtures |
+| [34_OSRM_DISTANCE_CONTRACT.md](docs/34_OSRM_DISTANCE_CONTRACT.md) | OSRM Table matrix, hashing/freeze, fairness dan reproducibility |
 | `THIRD_PARTY_NOTICES.md` | Provenance/license third-party penting |
 
 ## Template tim

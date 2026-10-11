@@ -1,15 +1,38 @@
 # 27 — SOURCE REFERENCES & VERIFICATION BASELINE
 
-**Last web verification:** 2026-09-26.
+**Platform baseline web verification:** 2026-09-26 (historical, tidak diperiksa ulang oleh documentation sync).
+**OSRM API contract verification:** 2026-10-02, versioned official API v5.24.0; ini bukan klaim versi server yang nanti dipakai.
 
 Dokumen project harus diperbarui bila platform mengubah plan/feature/runtime.
 
 ## Internal project sources
 
+Current source-of-truth:
+
+- [Research Decisions](32_RESEARCH_DECISIONS.md): accepted human decisions 2026-10-02, working RQ/gap dan OPEN decisions.
+- [Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN, directed 2-Opt, Classical Ant System.
+- [OSRM Distance Contract](34_OSRM_DISTANCE_CONTRACT.md): frozen directed matrix dan infrastructure boundary.
+- [Benchmark Protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): experiment procedure.
+- [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark): supersedes historical ADR-010.
+
+Legacy external/workspace source names (tidak ditemukan sebagai file tracked pada audit branch 2026-10-02; jangan menganggap isinya tersedia atau sudah diverifikasi):
+
 - `HANDOFF_RISET_WEB_KURIR_ROUTE_PLANNER(1).md`
 - `PROMPT_PENCARIAN_20_JURNAL_ROUTE_PLANNER_4_TAHUN_BAHASA_INDONESIA(1).md`
 - `Proyek Informatika.pdf` (RPS)
 - materi metodologi/literature review project USM yang tersedia di workspace.
+
+### Research literature TODO
+
+TODO-LIT-01: tambahkan bibliografi studi NN/NN+2-Opt vs ACO yang benar-benar diperiksa, dengan evidence untuk wording gap “masih terbatas”. TODO-LIT-02: simpan sumber nilai parameter Classical Ant System atau laporan calibration terpisah. Tidak ada numerical final ACO defaults atau referensi jurnal baru yang dibuat pada task ini. Official platform/API docs di bawah bukan pengganti literature evidence penelitian.
+
+## OSRM technical sources
+
+- [Versioned Table Service API](https://project-osrm.org/docs/v5.24.0/api/#table-service): distance annotation, meter units dan semantics jarak pada fastest routes, bukan otomatis shortest-distance path.
+- [Route Service API](https://project-osrm.org/docs/v5.24.0/api/#route-service): geometry sesuai supplied coordinate order.
+- [General request format](https://project-osrm.org/docs/v5.24.0/api/#general-options): longitude,latitude dan profile/options.
+
+Endpoint capabilities, usage policy, network extract/profile/version dan public vs local/self-hosted choice tetap perlu diverifikasi sebelum final generation. Referensi API ini membatasi engineering claims, tidak menetapkan scientific ACO parameters.
 
 ## Official Next.js sources
 
