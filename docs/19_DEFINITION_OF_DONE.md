@@ -1,5 +1,7 @@
 # 19 — DEFINITION OF DONE
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## 1. Task DoD
 
 Task selesai bila:
@@ -56,7 +58,7 @@ Tambahkan:
 - [ ] indexes justified;
 - [ ] rollback/mitigation known.
 
-Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Production initial live foundation verified; local unchanged health/readiness handlers PASS memakai app credential, public deployed HTTP belum verified. Full Database DoD tetap pending. Main foundation promotion belum dilakukan/main behavior deferred; Phase 0D OPEN. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Production initial live foundation verified; local unchanged health/readiness handlers PASS memakai app credential, public deployed HTTP belum verified. Full Database DoD tetap pending. main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D OPEN. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Release DoD
 

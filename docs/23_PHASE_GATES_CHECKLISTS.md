@@ -1,5 +1,7 @@
 # 23 — PHASE GATES & CHECKLISTS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 0 — Team readiness
@@ -31,9 +33,9 @@ Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](proses/pha
 
 Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Historical suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [Dev live verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing live foundation PASS pada 0D-3B; Production LIVE independent Starter, migration exactly once dan schema/ledger verified. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target tiga independent resources, tanpa shared fallback.
 
-Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR DEFERRED**. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR CLOSED/VERIFIED**. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-0D-3A Testing migration tooling merged/PR #14; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE independent Starter/migrated exactly once/verified; Vercel NOT integrated/Preview preflight NOT READY. Phase 0D/Gate 1 tetap OPEN: main foundation promotion belum dilakukan, main behavioral proof deferred; Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
+0D-3A Testing migration tooling merged/PR #14; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE independent Starter/migrated exactly once/verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY. Phase 0D/Gate 1 tetap OPEN: main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -53,7 +55,7 @@ Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED;
 - [ ] Preview DB != Production DB;
 - [x] CI basic green pada real GitHub Linux runner;
 - [x] exact required Quality Gate/app15368 configured pada testing/main dengan strict freshness; testing behavioral proof VERIFIED;
-- [ ] main behavior DEFERRED ke actual testing → main promotion;
+- [x] main FOUNDATION PROMOTED via PR #20; latest-head approval, strict freshness dan main behavioral proof CLOSED/VERIFIED; main push Quality Gate PASS; [Main promotion closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md);
 - [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
 - [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
 - [x] Production tooling verified: exact Production guard/TLS/config/manual script + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
@@ -61,7 +63,7 @@ Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED;
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 
-Vercel preflight [NOT READY / blocked](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production database foundation VERIFIED; Gate 1 tetap OPEN. Dev LIVE/established, Testing LIVE/migrated once/verified, Production LIVE/migrated exactly once/schema-ledger verified. Recommendation **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**; cloud operation/main promotion belum diotorisasi atau dilakukan.
+Vercel preflight [NOT READY / blocked](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production database foundation VERIFIED; Gate 1 tetap OPEN. Dev LIVE/established, Testing LIVE/migrated once/verified, Production LIVE/migrated exactly once/schema-ledger verified. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; fresh Vercel bootstrap preflight menjadi next task; cloud integration/deployment tetap belum dilakukan dan membutuhkan authorization terpisah.
 
 ## Gate 2 — CRUD baseline
 
