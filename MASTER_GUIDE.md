@@ -13,7 +13,9 @@ Derived from the source list below, in order. Regenerated 2026-10-11. Read sourc
 
 # Courier Route Planner — Engineering & Research Documentation Pack
 
-**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Dev LIVE/established; Testing LIVE, migrated once, verified; Production LIVE, independent Starter, migrated exactly once, schema/ledger verified; Vercel NOT integrated, Preview preflight NOT READY; main foundation promotion NOT YET performed, main behavior DEFERRED; Phase 0D OPEN; Gate 1 OPEN
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
+**Status:** Route Planner application shell; Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8; Phase 0C CLOSED/PR #9, final independent verification PASS; Dev LIVE/established; Testing LIVE, migrated once, verified; Production LIVE, independent Starter, migrated exactly once, schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D OPEN; Gate 1 OPEN
 **Tanggal sinkronisasi:** 2026-10-11
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
@@ -47,7 +49,7 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 
 ## Current Implementation Status
 
-Baseline closure Production pada `feature/phase-0d-tidb-production-live`: HEAD/testing/origin/testing dan merge-base `48dc28c64d25a58ffbef92095694e0484d369895`. [Production live foundation report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md) mencatat Checkpoint A/B yang selesai; closure hanya dokumentasi dan tidak mengulang koneksi atau migration. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
+Current Foundation promotion: [PR #20](https://github.com/ArdhanKurniawan/courier-route-planner/pull/20) merged melalui Merge Commit; main `a0a9c291fb980d2ff32b32f2b0fd9c2b3dfc429b`, remote testing `d70543da5734b36cd737590024582dab758718bd`. Latest-head human approval dan fresh PR/main Quality Gate PASS; main ahead 1 merge commit, content delta testing → main 0 files. Baseline closure Production sebelumnya tetap historical evidence. [Production live foundation report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md) mencatat Checkpoint A/B yang selesai; closure hanya dokumentasi dan tidak mengulang koneksi atau migration. Phase 0C CLOSED setelah [PR #9](https://github.com/ArdhanKurniawan/courier-route-planner/pull/9) merged ke `testing`, dengan [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure/tree evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Phase 0A CLOSED/PR #7; Phase 0B CLOSED/PR #8. Shell UI berasal dari cleanup terverifikasi 2026-10-02:
 
 | Status | Evidence / kondisi aktual |
 |---|---|
@@ -69,11 +71,11 @@ Baseline closure Production pada `feature/phase-0d-tidb-production-live`: HEAD/t
 | Phase 0C CLOSED | `GET /api/ready`: connectivity-only `SELECT 1 AS ok`, 5000 ms/no retry, minimal JSON + no-store; live health/readiness HTTP 200, application HTTP read dan migration TCP/TLS SELECT 1 PASS |
 | Historical Phase 0C tests | 9 files / 147 tests PASS: 48 tests lama + 99 DB/schema/readiness tests; server tests memakai Node dan transport palsu |
 | Phase 0D CI verified | [Quality workflow](.github/workflows/quality.yml): PR dan push ke testing/main; job Quality Gate, Node 24/npm cache, read-only contents, sembilan required commands, runtime audit hard gate dan full audit informational dengan tool-error handling |
-| Phase 0D-2C | [Testing behavioral enforcement proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md): pending required check/merge unavailable → success/Ready to merge → human merge → successful push Quality Gate; main behavior DEFERRED |
+| Phase 0D-2C / 0D-6C | [Testing behavioral enforcement proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md): pending check/merge unavailable → success/Ready to merge → human merge → successful push Quality. Main proof kini CLOSED/VERIFIED pada PR #20; [promotion closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md) |
 | Phase 0D-3A merged/PR #14 | `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, `db:migrate:testing`; exact testing/database guard, TLS verification; [tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md) |
 | Phase 0D-3B live | Independent Starter `route-planner-testing`, AWS Tokyo, spending limit 0; separate app/migrator roles. Explicit human provisioning/apply approvals; migration APPLIED ONCE, ledger 1 record, schema/application read/health/readiness PASS; [live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md) |
 | Production live foundation verified | Independent Starter `route-planner-production`, AWS Tokyo, submitted spending limit 0; dedicated app/migrator, scoped grants dan TLS PASS. Migration invocation **1**, retry **0**, exit **0**; ledger **1** row, depots schema/ORM read PASS. Local unchanged health/readiness handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md) |
-| Foundation gap | Vercel NOT integrated, Preview preflight NOT READY, no project/deployment; main foundation promotion NOT YET performed, main required-check behavior DEFERRED; Preview DB isolation, second-member reproduction dan Playwright/E2E pending; Phase 0D dan Gate 1 OPEN |
+| Remaining Foundation gap | Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Preview DB isolation, second-member reproduction dan Playwright/E2E pending; Phase 0D dan Gate 1 OPEN |
 
 Validasi Phase 0A pada Node `24.19.0`, npm `11.6.0`: `npm ci`, lint, typecheck dari generated state bersih, test, test:coverage dan build PASS. Coverage mencakup seluruh source TypeScript/TSX sebagai baseline informasi, tanpa threshold. Vite mengeluarkan warning tentang config loader pada future major; tests saat ini PASS. Evidence dan audit delta: [Phase 0A Quality Foundation Report](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
@@ -98,13 +100,13 @@ Sembilan command pertama adalah required CI gates; typecheck kedua dijalankan se
 
 `npm run test:watch` tersedia untuk development. Browser checks pada cleanup 2026-10-02 mencakup desktop/mobile/tablet, keyboard drawer, route refresh, tema light/dark dan persistensi refresh; console tanpa error/warning pada flow shell yang diuji saat itu.
 
-Remote CI dan exact required Quality Gate configuration sudah verified; testing behavioral enforcement verified pada PR #12, main behavior deferred. Deployment/env isolation belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev, Testing dan Production kini tiga independent TiDB Starter resources, tanpa shared-instance fallback. Kontrak penelitian tetap sama.
+Remote CI dan exact required Quality Gate configuration sudah verified; testing behavioral enforcement verified pada PR #12, main required-check behavioral proof CLOSED/VERIFIED. Deployment/env isolation belum diverifikasi. Phase 0 Foundation dan seluruh gate adopsi template belum selesai; Phase 0D, Vercel Preview dan reproduksi anggota kedua masih diperlukan. Dev, Testing dan Production kini tiga independent TiDB Starter resources, tanpa shared-instance fallback. Kontrak penelitian tetap sama.
 
 Kontrak utama: [research decisions](docs/32_RESEARCH_DECISIONS.md), [algorithm specification](docs/33_ALGORITHM_SPECIFICATION.md), [OSRM distance contract](docs/34_OSRM_DISTANCE_CONTRACT.md), dan [benchmark protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
 Testing migration tooling merged melalui PR #14. `npm run db:migrate` tetap Dev-only (`.env.migrations.local`, APP_ENV=development, DB `courier_route_planner_dev`). Manual `npm run db:migrate:testing` memakai `.env.migrations.testing.local`, APP_ENV=testing dan exact DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Testing diprovision terpisah dari Dev pada 0D-3B; manusia menyimpan app/migrator credential berbeda pada dua ignored private env files. Setelah kedua approval eksplisit dan pre-apply database kosong, command Testing dijalankan tepat satu kali. Ledger hash raw, schema, application read dan kedua endpoints live PASS. Production apply path disiapkan terpisah; tidak ada migration saat install/build/CI/deploy. Apply berikutnya memerlukan review target/history dan approval baru. [Testing live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
-Production tooling memakai exact `APP_ENV=production` dan DB `courier_route_planner_production`, TLS `rejectUnauthorized: true`, config terpisah dan manual `npm run db:migrate:production`. Dua approval terpisah **YES PROVISION PRODUCTION RESOURCE** dan **YES APPLY PRODUCTION MIGRATION** sudah digunakan untuk initial foundation. Manusia menyimpan credential app/migrator berbeda pada ignored `.env.production.local` / `.env.migrations.production.local`. Exact command dijalankan sekali, ledger hash/journal dan delapan kolom depots cocok; jangan mengulang initial apply. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d). [Vercel preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) tetap berlaku; main belum dipromosikan. Recommendation closure: **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**, tanpa izin promosi/deployment.
+Production tooling memakai exact `APP_ENV=production` dan DB `courier_route_planner_production`, TLS `rejectUnauthorized: true`, config terpisah dan manual `npm run db:migrate:production`. Dua approval terpisah **YES PROVISION PRODUCTION RESOURCE** dan **YES APPLY PRODUCTION MIGRATION** sudah digunakan untuk initial foundation. Manusia menyimpan credential app/migrator berbeda pada ignored `.env.production.local` / `.env.migrations.production.local`. Exact command dijalankan sekali, ledger hash/journal dan delapan kolom depots cocok; jangan mengulang initial apply. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d). [Vercel preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) tetap berlaku; main FOUNDATION PROMOTED melalui PR #20. Recommendation closure: **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**, tanpa izin promosi/deployment.
 
 ## Urutan baca wajib
 
@@ -1306,6 +1308,8 @@ Bukan prioritas:
 
 # 04 — TECH STACK & ARCHITECTURE DECISION RECORDS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## ADR-001 — Next.js App Router + TypeScript
 
 **Status:** Accepted
@@ -1423,7 +1427,7 @@ Target:
 
 Keputusan manusia Phase 0D-3A mempertahankan tiga independent TiDB resources, tanpa shared Dev/Testing/Production fallback. Quota/spending akun wajib diverifikasi manusia sebelum provisioning. Perubahan isolation membutuhkan keputusan manusia dan ADR baru.
 
-Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main foundation promotion belum dilakukan, main behavioral proof deferred, Phase 0D/Gate 1 OPEN.
+Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED, Phase 0D/Gate 1 OPEN.
 
 ---
 
@@ -1818,6 +1822,8 @@ Setelah setup:
 
 # 07 — TiDB GUIDE FOR A MYSQL-FAMILIAR TEAM
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## 1. Cara berpikir
 
 TiDB adalah relational distributed SQL database yang kompatibel dengan banyak pola/protokol MySQL, tetapi **bukan MySQL 100% identik**.
@@ -1860,7 +1866,7 @@ route-planner-testing
 route-planner-production
 ```
 
-**Dev-first:** offline foundation dan independent offline verification PASS. Manusia telah membuat Dev dan menerapkan initial migration sekali. Verifikasi read-only 2026-10-04: application HTTP read/readiness, migrator TCP/TLS SELECT 1, ledger 1 entry dan live depots schema PASS. [Dev live report](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9, final independent verification PASS. Pada 0D-3B (2026-10-10), independent Testing Starter `route-planner-testing` di AWS Tokyo diprovision dengan spending limit 0; migration APPLIED ONCE dan live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target akhir tiga independent Starter resources tetap ADR-008, tanpa shared-instance fallback.
+**Dev-first:** offline foundation dan independent offline verification PASS. Manusia telah membuat Dev dan menerapkan initial migration sekali. Verifikasi read-only 2026-10-04: application HTTP read/readiness, migrator TCP/TLS SELECT 1, ledger 1 entry dan live depots schema PASS. [Dev live report](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9, final independent verification PASS. Pada 0D-3B (2026-10-10), independent Testing Starter `route-planner-testing` di AWS Tokyo diprovision dengan spending limit 0; migration APPLIED ONCE dan live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target akhir tiga independent Starter resources tetap ADR-008, tanpa shared-instance fallback.
 
 Alasan pemisahan:
 
@@ -1919,11 +1925,11 @@ Testing migration tooling prepared locally. `drizzle.testing.config.ts` reuse of
 
 Manual command `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`; application credential terpisah pada `.env.testing.local`. Kedua file sudah disimpan manusia secara privat pada 0D-3B dan tetap ignored. Inherited shell variables mengalahkan env-file; hapus inherited APP_ENV/DATABASE_URL pada child environment sebelum memuat satu file yang dituju. DB name sendiri tidak membuktikan resource identity.
 
-0D-3A tooling sudah merged melalui PR #14. Pada 0D-3B, provider identity + authenticated role fingerprints membuktikan Testing berbeda dari Dev dan kedua roles menunjuk Testing yang sama. App mendapat SELECT/INSERT/UPDATE/DELETE; migrator CREATE/SELECT/INSERT, hanya pada exact Testing DB (underscore pada grant pattern di-escape), tanpa elevated global privileges atau GRANT OPTION. Human approvals **YES PROVISION TESTING RESOURCE** dan **YES APPLY TESTING MIGRATION** tercatat; database kosong diverifikasi sebelum satu kali apply. Ledger berisi satu raw SQL hash/timestamp journal; sole application table `depots` sesuai source/SQL/snapshot, read aplikasi dan health/readiness PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Jangan menjalankan migration ulang untuk idempotence test. Saat error pada apply berikutnya, inspect ledger/information_schema/partial DDL dan tentukan remediation dengan approval terpisah. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+0D-3A tooling sudah merged melalui PR #14. Pada 0D-3B, provider identity + authenticated role fingerprints membuktikan Testing berbeda dari Dev dan kedua roles menunjuk Testing yang sama. App mendapat SELECT/INSERT/UPDATE/DELETE; migrator CREATE/SELECT/INSERT, hanya pada exact Testing DB (underscore pada grant pattern di-escape), tanpa elevated global privileges atau GRANT OPTION. Human approvals **YES PROVISION TESTING RESOURCE** dan **YES APPLY TESTING MIGRATION** tercatat; database kosong diverifikasi sebelum satu kali apply. Ledger berisi satu raw SQL hash/timestamp journal; sole application table `depots` sesuai source/SQL/snapshot, read aplikasi dan health/readiness PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Jangan menjalankan migration ulang untuk idempotence test. Saat error pada apply berikutnya, inspect ledger/information_schema/partial DDL dan tentukan remediation dengan approval terpisah. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ### Production migration tooling — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling history](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md) dan [preflight](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_PREFLIGHT_REPORT.md) tetap dated evidence.
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling history](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md) dan [preflight](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_PREFLIGHT_REPORT.md) tetap dated evidence.
 
 Manual `npm run db:migrate:production` memakai Node 24, `.env.migrations.production.local`, installed Kit bin dan `drizzle.production.config.ts`. Pure `getProductionMigrationCredentials` hanya menerima exact `APP_ENV=production` dan parsed DB `courier_route_planner_production`, TLS `rejectUnauthorized: true`. Shared hardened parser/error generic, Dev/Testing guards dan offline config dipertahankan.
 
@@ -1937,7 +1943,7 @@ Local unchanged `/api/health` dan `/api/ready` handlers dipanggil sukses memakai
 
 Jangan mengulang initial migration untuk verification/idempotence. Future migration membutuhkan task/review/approval baru. Exact argv/config, trusted runtime dan clean child environment wajib: inherited APP_ENV/DATABASE_URL mengalahkan env-file, preload/TLS overrides ditolak; script name saja tidak membuktikan physical target dan duplicate config argument dapat override.
 
-Jika future apply gagal/ambigu, STOP tanpa automatic retry; inspect read-only ledger/information_schema/partial DDL dan minta separate remediation. TiDB DDL dapat autocommit; jangan mengasumsikan transaction rollback. Migration tetap dilarang pada install/build/dev/start/test/CI/Vercel. Recommendation closure **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**; tidak mengotorisasi promosi atau deployment.
+Jika future apply gagal/ambigu, STOP tanpa automatic retry; inspect read-only ledger/information_schema/partial DDL dan minta separate remediation. TiDB DDL dapat autocommit; jangan mengasumsikan transaction rollback. Migration tetap dilarang pada install/build/dev/start/test/CI/Vercel. Recommendation closure **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; tidak mengotorisasi promosi atau deployment.
 
 ## 8. Destructive changes
 
@@ -2259,6 +2265,8 @@ Dev/testing boleh reset. Production research history jangan dihapus tanpa backup
 
 # 09 — REPOSITORY STRUCTURE
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 Target struktur (belum seluruhnya tersedia; lihat [current implementation](README.md#current-implementation-status)). Ini panduan dokumentasi, bukan instruksi membuat folder/source pada task sync:
 
 ```text
@@ -2334,7 +2342,7 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 
 Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md). Initial migration sudah Dev-applied oleh manusia, ledger/live schema dan connectivity diverifikasi read-only. Test-only `server-only` fixture/alias mempertahankan production marker. Real `.env.local` dan dedicated `.env.migrations.local` sudah dibuat manusia, keduanya ignored dan tidak menjadi source artifact. Folder domain/application/E2E dalam target ini tetap belum diimplementasikan.
 
-Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Remote CI dan required-check configuration VERIFIED; testing behavioral enforcement VERIFIED, main behavior DEFERRED. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](docs/12_CI_CD_RELEASE.md).
+Phase 0D-1 menyediakan tepat satu actual workflow [`.github/workflows/quality.yml`](.github/workflows/quality.yml). CI quality-only untuk PR/push testing/main; tidak deploy, query DB, atau migrate. Remote CI dan required-check configuration VERIFIED; testing behavioral enforcement VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. `.github/pull_request_template.md` pada diagram tetap target, bukan file yang dibuat stage ini. Lihat [CI contract](docs/12_CI_CD_RELEASE.md).
 
 ```text
 src/domain/routing/
@@ -2390,11 +2398,11 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 ## Testing migration tooling — Phase 0D-3A
 
-`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
+`drizzle.testing.config.ts` dan manual `db:migrate:testing` tersedia, memakai pure Testing guard dan existing offline history. `tests/unit/db-migration.test.ts` memeriksa exact guard/TLS/parser rejection dan cross-env isolation; tests lama dipertahankan. Tooling 0D-3A merged/PR #14; pada 0D-3B Testing PROVISIONED, migration APPLIED ONCE setelah checkpoint approval, live ledger/schema/app read/health/readiness PASS. Manusia telah menyimpan `.env.testing.local`/`.env.migrations.testing.local` dengan credential berbeda; keduanya ignored dan tidak ditampilkan pada struktur tracked. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md); [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md).
 
 ## Production migration tooling — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Runtime schema/client/readiness dan sole migration history unchanged. Private Production app/migrator files sudah disimpan manusia, ignored dan bukan tracked source. Approved initial apply invocation 1/retry 0/exit 0; ledger satu row dan depots parity PASS. Local unchanged handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Separate `drizzle.production.config.ts`, pure `getProductionMigrationCredentials`, manual `db:migrate:production` dan offline `tests/unit/db-production-migration.test.ts` tersedia. Runtime schema/client/readiness dan sole migration history unchanged. Private Production app/migrator files sudah disimpan manusia, ignored dan bukan tracked source. Approved initial apply invocation 1/retry 0/exit 0; ledger satu row dan depots parity PASS. Local unchanged handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [guard/approval contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## Naming
 
@@ -2410,11 +2418,13 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 
 # 10 — ENVIRONMENTS & SECRETS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## 1. Environment matrix
 
 Target DB/deployment matrix untuk Phase 0C/0D; belum menjadi requirement atau provisioning Phase 0B.
 
-Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C CLOSED/PR #9, final independent verification PASS; Dev provisioning/initial apply dan HTTP/TCP-TLS read-only verification PASS. Pada 0D-3B, Testing PROVISIONED terpisah dari Dev, initial migration APPLIED ONCE dengan approval eksplisit, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
+Phase 0B CLOSED/PR #8, independent verification PASS. Phase 0C CLOSED/PR #9, final independent verification PASS; Dev provisioning/initial apply dan HTTP/TCP-TLS read-only verification PASS. Pada 0D-3B, Testing PROVISIONED terpisah dari Dev, initial migration APPLIED ONCE dengan approval eksplisit, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target akhir ADR-008 tetap tiga independent resources, tanpa shared fallback.
 
 | Environment | Code | DB | Tujuan |
 |---|---|---|---|
@@ -2470,11 +2480,11 @@ GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"
 
 Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Production menggunakan helper/config terpisah di bawah; tidak ada generic env switch.
 
-0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output. Production LIVE independent Starter, migrated exactly once/schema-ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
+0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output. Production LIVE independent Starter, migrated exactly once/schema-ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ### Production tooling contract — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memakai `.env.migrations.production.local` dan `drizzle.production.config.ts`; guard exact APP_ENV=production/exact Production DB, verified TLS dan fixed generic error. Runtime contract APP_ENV/DATABASE_URL tetap server-side; Dev/Testing guards tidak menerima Production.
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memakai `.env.migrations.production.local` dan `drizzle.production.config.ts`; guard exact APP_ENV=production/exact Production DB, verified TLS dan fixed generic error. Runtime contract APP_ENV/DATABASE_URL tetap server-side; Dev/Testing guards tidak menerima Production.
 
 Private human handoff menyimpan `.env.production.local` untuk application dan `.env.migrations.production.local` untuk migrator; accounts/passwords berbeda, kedua file ignored. Tidak ada admin/migrator credential pada runtime/Vercel. Safe structural dan authenticated checks membuktikan exact logical DB, same Production instance, distinct role/password, reviewed scoped grants dan TLS. Full account/password/hostname/URL tidak dipublikasikan. Closure ini tidak membaca atau mengubah private env.
 
@@ -2525,6 +2535,16 @@ Semua feature Preview memakai TiDB Testing secara default. Untuk menghindari col
 # SOURCE: docs/11_GIT_WORKFLOW.md
 
 # 11 — GIT WORKFLOW
+
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
+## Current Foundation promotion — Phase 0D-6C
+
+**main FOUNDATION PROMOTED; main Quality Gate VERIFIED; main required-check behavioral proof CLOSED/VERIFIED.** PR #21 membawa main ancestry ke testing tanpa file delta. PR #20 mendapat fresh current-candidate Quality, latest-head human approval dari annisabara1810, lalu human Merge Commit pada 2026-10-11T08:41:14Z.
+
+Main `a0a9c291fb980d2ff32b32f2b0fd9c2b3dfc429b`; remote testing `d70543da5734b36cd737590024582dab758718bd`. Main ahead 1 merge commit/file delta 0; main push Quality run 38125682617 PASS. Active rulesets/check/strict/review/bypass settings tetap dipertahankan. [Main promotion closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md).
+
+Dev LIVE; Testing LIVE/migrated once; Production TiDB LIVE/migrated exactly once. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN. Next: fresh Vercel bootstrap preflight. Branch/deployment flows di bawah adalah policy/target; Vercel integration belum dijalankan. Closure ini tidak menyinkronkan refs.
 
 ## 1. Branch model
 
@@ -2702,6 +2722,8 @@ Tambahan khusus PR menuju `main`:
 
 # 12 — CI/CD & RELEASE
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## 1. Separation of responsibility
 
 **GitHub Actions:** quality gate.  
@@ -2709,7 +2731,7 @@ Tambahan khusus PR menuju `main`:
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
-**Current Phase 0D OPEN:** [quality.yml](.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main behavior DEFERRED ke real testing → main promotion. [Behavioral evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Tooling 0D-3A merged/PR #14; Testing pada 0D-3B PROVISIONED terpisah dari Dev, migration APPLIED ONCE dengan explicit approval, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Preview isolation pending.
+**Current Phase 0D OPEN:** [quality.yml](.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Behavioral evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Tooling 0D-3A merged/PR #14; Testing pada 0D-3B PROVISIONED terpisah dari Dev, migration APPLIED ONCE dengan explicit approval, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Preview isolation pending.
 
 ## 2. CI triggers
 
@@ -2790,11 +2812,11 @@ Setelah tim matang, automation dapat ditambah dengan ADR.
 
 ### Production tooling boundary — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memiliki exact environment/database guard dan TLS. Checkpoint A provisioning/private handoff dan separate Checkpoint B apply selesai: invocation 1/retry 0/exit 0; ledger satu row, schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [migration contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memiliki exact environment/database guard dan TLS. Checkpoint A provisioning/private handoff dan separate Checkpoint B apply selesai: invocation 1/retry 0/exit 0; ledger satu row, schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [migration contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 Migration tidak dipanggil install/build/start/dev/test/CI/Vercel; quality workflow/order unchanged. Future apply butuh task/review/approval baru, dan partial failure butuh read-only inspection/separate remediation tanpa automatic retry.
 
-Vercel Preview preflight tetap [NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database foundation VERIFIED; main foundation promotion preflight dan provider bootstrap design masih diperlukan sebelum cloud integration/release. Main promotion belum dilakukan, main behavioral proof deferred. Recommendation **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT** bukan authorization merge/deploy.
+Vercel Preview preflight tetap [NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database foundation VERIFIED; fresh Vercel bootstrap preflight, account/connection checks dan first-deployment design masih diperlukan sebelum cloud integration/release. main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT** bukan authorization merge/deploy.
 
 ## 7. Release checklist
 
@@ -2960,6 +2982,8 @@ Jangan auto-upgrade major dependency tanpa test. Dependabot/Renovate boleh ditam
 # SOURCE: docs/14_TESTING_QA.md
 
 # 14 — TESTING & QA STRATEGY
+
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 ## 1. Testing pyramid
 
@@ -3130,7 +3154,7 @@ Playwright/E2E, DB integration tests dan domain algorithm/matrix tests di atas m
 
 ## 11. Phase 0D-1 quality-only CI
 
-[Quality workflow](.github/workflows/quality.yml) implemented dan remote Linux verified; required Quality Gate configuration verified pada testing/main. Testing behavioral enforcement VERIFIED, main behavior DEFERRED. [Behavioral proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Required order: npm ci → lint → typecheck → test → test:coverage → db:check → build → typecheck → runtime audit. Full audit terakhir informational untuk valid advisories; invalid/tool/transport result gagal, tanpa blanket ignore. [Exact CI contract](docs/12_CI_CD_RELEASE.md) dan [fresh local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+[Quality workflow](.github/workflows/quality.yml) implemented dan remote Linux verified; required Quality Gate configuration verified pada testing/main. Testing behavioral enforcement VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. [Behavioral proof](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Required order: npm ci → lint → typecheck → test → test:coverage → db:check → build → typecheck → runtime audit. Full audit terakhir informational untuk valid advisories; invalid/tool/transport result gagal, tanpa blanket ignore. [Exact CI contract](docs/12_CI_CD_RELEASE.md) dan [fresh local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
 Coverage tanpa numeric threshold. Workflow tidak memakai secret, real DB, migration, deploy atau live readiness check. YAML/static review dan probe perilaku audit memakai tooling existing/TEMP; tidak menambah dependency atau mengubah application tests. Local reproduction tidak membuktikan GitHub remotely green. Gate 1 tetap OPEN.
 
@@ -3138,11 +3162,11 @@ Coverage tanpa numeric threshold. Workflow tidak memakai secret, real DB, migrat
 
 `tests/unit/db-migration.test.ts` menguji pure Testing credential output, TLS verification, default/explicit port, exact APP_ENV dan database, safe malformed-URL rejection, explicit-input purity, serta Dev/Testing/Production cross-env matrix. Dev guard dan semua tests lama dipertahankan; no real network/URL/private env. TDD RED sebelum helper tersedia, GREEN setelah implementasi. Fresh count/coverage/quality ada pada [tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). Coverage tanpa threshold tetap berlaku.
 
-Fresh local quality 0D-3A memakai byte-identical candidate source di TEMP tanpa ignored private env dan tanpa inherited APP_ENV/DATABASE_URL. `db:check` hanya history consistency; tidak ada apply/config-migrate command dalam suite. Tooling merged melalui PR #14. Pada 0D-3B, Testing PROVISIONED terpisah, migration APPLIED ONCE setelah human approval; read-only ledger/schema/application read dan GET health/readiness (200, exact JSON, no-store) PASS. Tidak ada DML test, second migration/idempotence test atau live DB dalam CI. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
+Fresh local quality 0D-3A memakai byte-identical candidate source di TEMP tanpa ignored private env dan tanpa inherited APP_ENV/DATABASE_URL. `db:check` hanya history consistency; tidak ada apply/config-migrate command dalam suite. Tooling merged melalui PR #14. Pada 0D-3B, Testing PROVISIONED terpisah, migration APPLIED ONCE setelah human approval; read-only ledger/schema/application read dan GET health/readiness (200, exact JSON, no-store) PASS. Tidak ada DML test, second migration/idempotence test atau live DB dalam CI. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
 
 ## 13. Production migration guard — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. `tests/unit/db-production-migration.test.ts` menambah offline credential/TLS/default-port/encoding tests, exact env/database rejection, generic safe errors, explicit-input purity, 27 combinations untuk tiga helpers × tiga environments × tiga databases, serta actual config import/rejection. Fixtures hanya `.invalid`, tanpa real DB/DNS/private env; tidak menjalankan migration CLI. Existing tests dipertahankan. TDD RED/GREEN dan fresh full suite/coverage/audits dicatat pada [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md).
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. `tests/unit/db-production-migration.test.ts` menambah offline credential/TLS/default-port/encoding tests, exact env/database rejection, generic safe errors, explicit-input purity, 27 combinations untuk tiga helpers × tiga environments × tiga databases, serta actual config import/rejection. Fixtures hanya `.invalid`, tanpa real DB/DNS/private env; tidak menjalankan migration CLI. Existing tests dipertahankan. TDD RED/GREEN dan fresh full suite/coverage/audits dicatat pada [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md).
 
 Quality menggunakan salinan public source byte-identical dengan lockfile yang sama, tanpa ignored env atau inherited target/TLS bypass env. `db:check` tetap offline. Production live Checkpoint B sudah verified: invocation 1/retry 0/exit 0, exact scoped grants/TLS, ledger satu row, delapan kolom depots/PK parity dan source ORM read PASS. Local unchanged health/readiness handlers PASS memakai app credential; public deployed HTTP belum diverifikasi. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Coverage tetap informational tanpa perubahan threshold/exclusion.
 
@@ -3447,6 +3471,8 @@ Immediately fail request/run and keep evidence. Do not “repair” silently unl
 
 # 17 — SETUP FROM ZERO: GitHub → Next.js → TiDB → Vercel
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 Dokumen ini ditulis untuk tim yang belum pernah memakai stack ini.
 
 ## PHASE A — Persiapan akun
@@ -3573,7 +3599,7 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
-Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live verification PASS. Phase 0D CI/required Quality Gate pada testing/main remote verified; testing behavioral proof VERIFIED, main behavior DEFERRED. Tooling 0D-3A merged/PR #14; 0D-3B Testing PROVISIONED, migration APPLIED ONCE, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Setelah clone/pull, gunakan lockfile yang tersedia:
+Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](docs/proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live verification PASS. Phase 0D CI/required Quality Gate pada testing/main remote verified; testing behavioral proof VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Tooling 0D-3A merged/PR #14; 0D-3B Testing PROVISIONED, migration APPLIED ONCE, live verification PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
 npm ci
@@ -3596,7 +3622,7 @@ Install dependency berikutnya hanya pada task phase terkait, setelah audit stack
 
 - Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C Stage 1: Drizzle ORM `0.45.3`, TiDB HTTP driver `0.3.0`, Zod `4.6.5`; Drizzle Kit `0.31.11` + mysql2 `3.24.5` dev-only, pure parser/lazy client/depots/readiness dan offline migration tersedia. Dev live verified; Testing live verified pada 0D-3B; Production live foundation verified pada Checkpoint B.
-- Phase 0D CI/enforcement — remote verified, testing behavioral proof VERIFIED; main behavior DEFERRED. Main/Preview deployment dan env/DB isolation tetap pending.
+- Phase 0D CI/enforcement — remote verified, testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED. Main/Preview deployment dan env/DB isolation tetap pending.
 - Phase 0D-3A merged/PR #14 — Testing migration guard/config/manual script; 0D-3B independent Testing resource, dedicated roles/private env, approved one-time initial apply dan read-only live verification PASS.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
 
@@ -3667,17 +3693,17 @@ Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot suda
 
 Testing migration tooling prepared locally: `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, dan manual `npm run db:migrate:testing`. Exact APP_ENV=testing + parsed DB `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, hardened parser/no fallback. Dev `db:migrate` dan guard tetap unchanged. Same sole initial migration history; tidak membuat migration kedua.
 
-Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `.env.testing.local` (application) dan `.env.migrations.testing.local` (migrator) secara privat dengan credential berbeda, tanpa paste values ke chat. Kedua file ignored. Node `--env-file` tidak mengalahkan inherited variables; live commands memakai clean child environment yang menghapus inherited APP_ENV/DATABASE_URL sebelum satu file yang dituju dimuat. Migration APPLIED ONCE; live verification PASS. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
+Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `.env.testing.local` (application) dan `.env.migrations.testing.local` (migrator) secara privat dengan credential berbeda, tanpa paste values ke chat. Kedua file ignored. Node `--env-file` tidak mengalahkan inherited variables; live commands memakai clean child environment yang menghapus inherited APP_ENV/DATABASE_URL sebelum satu file yang dituju dimuat. Migration APPLIED ONCE; live verification PASS. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
 
 Urutan 0D-3B yang sudah dijalankan: approval **YES PROVISION TESTING RESOURCE** → independent Testing resource/logical DB → scoped app/migrator roles → human private files → structural/read-only connectivity → empty tables/ledger + exact SQL/history review → approval **YES APPLY TESTING MIGRATION** → apply once → read-only ledger/schema/app read/health/readiness PASS. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Jangan mengulang initial apply untuk verifikasi. DB name sendiri tidak membuktikan resource identity; provider identity dan authenticated role fingerprints membuktikan Testing terpisah dari Dev serta kedua roles satu target. DDL failure pada apply berikutnya membutuhkan inspection ledger/information_schema/partial state dan separate remediation; no blind rerun. [Tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ### Production migration tooling — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated, Preview preflight **NOT READY**, no project/deployment; main foundation promotion belum dilakukan, main required-check behavior DEFERRED; Phase 0D/Gate 1 **OPEN**. Manual `npm run db:migrate:production` dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB, hardened parser dan TLS. Dev/Testing paths tetap terpisah.
+**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `npm run db:migrate:production` dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB, hardened parser dan TLS. Dev/Testing paths tetap terpisah.
 
 Urutan yang sudah selesai: provider preflight → **YES PROVISION PRODUCTION RESOURCE** → independent resource/DB/dedicated roles → private human files → read-only connectivity/identity/grants/empty schema-ledger/exact bytes → separate **YES APPLY PRODUCTION MIGRATION** → apply invocation 1/retry 0/exit 0 → ledger/schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. Private files sudah ada dan ignored; onboarding tidak boleh mengulang provisioning, credential work atau initial migration. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [full contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
-Future migration memerlukan task/review/approval baru; partial failure membutuhkan read-only inspection/separate remediation, tanpa automatic retry. Closure hanya dokumentasi, tanpa private env read atau DB query. Recommendation **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**; main promotion belum dilakukan.
+Future migration memerlukan task/review/approval baru; partial failure membutuhkan read-only inspection/separate remediation, tanpa automatic retry. Closure hanya dokumentasi, tanpa private env read atau DB query. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; main FOUNDATION PROMOTED melalui PR #20.
 
 ## PHASE I — Health check
 
@@ -3741,7 +3767,7 @@ Jangan onboarding anggota berikutnya sebelum gate ini lulus.
 
 ## PHASE L — Vercel import
 
-**Future reference only.** Current [Vercel Preview preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md); no project/deployment. Production database foundation VERIFIED. Complete separately scoped main foundation promotion preflight dan provider bootstrap design sebelum mengikuti langkah cloud ini; current main belum dipromosikan.
+**Future reference only.** Current [Vercel Preview preflight NOT READY](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md); no project/deployment. Production database foundation VERIFIED. Current main FOUNDATION PROMOTED melalui PR #20; lakukan fresh Vercel bootstrap preflight dan provider/bootstrap design dengan authorization terpisah sebelum mengikuti langkah cloud ini.
 
 1. login Vercel via GitHub;
 2. Add New → Project;
@@ -3815,7 +3841,7 @@ Ikuti DNS instruction Vercel. Jangan menebak record bila dashboard memberikan ta
 
 Sembilan required commands mengikuti PHASE E; full audit menjalankan parser valid-evidence agar advisories tetap visible/nonblocking dan tool/network failure gagal. Tidak ada secret, migration, deployment, DB network, coverage token/upload atau E2E command. Lihat [exact CI contract](docs/12_CI_CD_RELEASE.md) dan [implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-**REMOTE CI + TESTING BEHAVIOR VERIFIED.** Required Quality Gate/GitHub Actions app15368 dengan strict freshness aktif pada testing/main. Main behavior DEFERRED ke real testing → main promotion. [Evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Vercel Git Integration tetap target terpisah, belum dibuktikan.
+**REMOTE CI + TESTING/MAIN BEHAVIOR VERIFIED.** Required Quality Gate/GitHub Actions app15368 dengan strict freshness aktif pada testing/main. Main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Vercel Git Integration tetap target terpisah, belum dibuktikan.
 
 ## EXIT CRITERIA FOUNDATION
 
@@ -3837,6 +3863,8 @@ Sembilan required commands mengikuti PHASE E; full audit menjalankan parser vali
 # SOURCE: docs/18_ROADMAP_BACKLOG.md
 
 # 18 — ROADMAP & BACKLOG
+
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 ## Phase 0 — Foundation
 
@@ -3881,14 +3909,14 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
-**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Vercel integration/Preview isolation, main foundation promotion/main behavioral proof dan reproduction masih pending.
+**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR CLOSED/VERIFIED.** [Implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Foundation promotion/main Quality dan main behavioral proof VERIFIED pada PR #20. Vercel integration/Preview isolation dan reproduction masih pending.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
 - [x] existing required commands, coverage tanpa threshold, offline db:check, runtime hard audit/full informational parser;
 - [x] real remote Linux Actions verification dan exact Quality Gate/GitHub Actions app15368 required pada testing/main; strict freshness;
 - [x] testing behavioral enforcement proof (PR #12); [report](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md);
-- [ ] main behavioral proof pada future real testing → main promotion;
+- [x] main FOUNDATION PROMOTED via PR #20; latest-head human approval dan strict freshness PASS setelah ancestry sync PR #21; main Quality Gate VERIFIED, main behavioral proof CLOSED/VERIFIED; [Main promotion closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md);
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
 - [x] Production tooling verified: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
@@ -3897,7 +3925,7 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
-Main foundation promotion belum dilakukan; main required-check behavioral proof deferred. Recommendation closure **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation closure **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](docs/proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 
@@ -4005,6 +4033,8 @@ OSRM **Table matrix** ada di Phase 3 dan merupakan core formal research input. I
 
 # 19 — DEFINITION OF DONE
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## 1. Task DoD
 
 Task selesai bila:
@@ -4061,7 +4091,7 @@ Tambahkan:
 - [ ] indexes justified;
 - [ ] rollback/mitigation known.
 
-Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Production initial live foundation verified; local unchanged health/readiness handlers PASS memakai app credential, public deployed HTTP belum verified. Full Database DoD tetap pending. Main foundation promotion belum dilakukan/main behavior deferred; Phase 0D OPEN. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+Vercel preflight tetap NOT READY, no project/deployment; Gate 1 OPEN. Production initial live foundation verified; local unchanged health/readiness handlers PASS memakai app credential, public deployed HTTP belum verified. Full Database DoD tetap pending. main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D OPEN. Future partial failure: inspect read-only ledger/information_schema/tables/partial DDL, obtain separate remediation decision; no automatic retry. [Production contract](docs/07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 ## 5. Release DoD
 
@@ -4952,6 +4982,8 @@ Do not rotate/delete/redeploy production resources without asking.
 
 # 23 — PHASE GATES & CHECKLISTS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 0 — Team readiness
@@ -4983,9 +5015,9 @@ Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](docs/prose
 
 Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](docs/proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Historical suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [Dev live verification](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing live foundation PASS pada 0D-3B; Production LIVE independent Starter, migration exactly once dan schema/ledger verified. [Production live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target tiga independent resources, tanpa shared fallback.
 
-Phase 0D [quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR DEFERRED**. [Behavioral evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+Phase 0D [quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR CLOSED/VERIFIED**. [Behavioral evidence](docs/proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-0D-3A Testing migration tooling merged/PR #14; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE independent Starter/migrated exactly once/verified; Vercel NOT integrated/Preview preflight NOT READY. Phase 0D/Gate 1 tetap OPEN: main foundation promotion belum dilakukan, main behavioral proof deferred; Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
+0D-3A Testing migration tooling merged/PR #14; [report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE independent Starter/migrated exactly once/verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY. Phase 0D/Gate 1 tetap OPEN: main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
 
 - [ ] TailAdmin Free provenance + adopted SHA tercatat;
 - [ ] no TailAdmin Pro/paid asset;
@@ -5005,7 +5037,7 @@ Phase 0D [quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED; TE
 - [ ] Preview DB != Production DB;
 - [x] CI basic green pada real GitHub Linux runner;
 - [x] exact required Quality Gate/app15368 configured pada testing/main dengan strict freshness; testing behavioral proof VERIFIED;
-- [ ] main behavior DEFERRED ke actual testing → main promotion;
+- [x] main FOUNDATION PROMOTED via PR #20; latest-head approval, strict freshness dan main behavioral proof CLOSED/VERIFIED; main push Quality Gate PASS; [Main promotion closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md);
 - [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
 - [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
 - [x] Production tooling verified: exact Production guard/TLS/config/manual script + offline cross-env tests; [Production tooling report](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
@@ -5013,7 +5045,7 @@ Phase 0D [quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED; TE
 - [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
 - [ ] second team member can reproduce setup.
 
-Vercel preflight [NOT READY / blocked](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production database foundation VERIFIED; Gate 1 tetap OPEN. Dev LIVE/established, Testing LIVE/migrated once/verified, Production LIVE/migrated exactly once/schema-ledger verified. Recommendation **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**; cloud operation/main promotion belum diotorisasi atau dilakukan.
+Vercel preflight [NOT READY / blocked](docs/proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production database foundation VERIFIED; Gate 1 tetap OPEN. Dev LIVE/established, Testing LIVE/migrated once/verified, Production LIVE/migrated exactly once/schema-ledger verified. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; fresh Vercel bootstrap preflight menjadi next task; cloud integration/deployment tetap belum dilakukan dan membutuhkan authorization terpisah.
 
 ## Gate 2 — CRUD baseline
 
@@ -6323,6 +6355,8 @@ Jangan mengganti template hanya karena menemukan desain yang “lebih keren”.
 
 # 31 — BRANCH PROTECTION & ACCIDENTAL PUSH GUARDS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 **Status:** Required baseline control  
 **Goal:** mencegah anggota tim, maintainer, atau AI agent tidak sengaja mengubah dan mendorong perubahan langsung ke `main` atau `testing`.
 
@@ -6369,13 +6403,15 @@ Tidak ada direct code change ke `main` atau `testing`.
 
 Kita memakai minimum lima lapisan.
 
-### Current Phase 0D-1 CI state
+### Current Phase 0D-6C CI / enforcement state
 
-[Quality workflow](.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**: workflow Quality, job ID quality, display/check job Quality Gate. Triggers PR dan push testing/main. Read-only contents, no project/cloud/DB secrets, no deploy/migration. [CI contract](docs/12_CI_CD_RELEASE.md), [implementation report](docs/proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+[Quality workflow](.github/workflows/quality.yml) **REMOTE VERIFIED**; main FOUNDATION PROMOTED melalui PR #20. Testing behavioral proof VERIFIED pada PR #12; **main required-check behavioral proof CLOSED/VERIFIED** pada PR #20 setelah ancestry sync PR #21, latest-head human approval, dan successful post-merge main Quality run 38125682617. [Main promotion closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md).
 
-Stage ini tidak push/create PR atau mengubah protections. Baseline read-only audit mengamati protect-main/protect-testing active dengan PR/force/delete rules; tidak ada required-status-check rule pada dua rulesets yang terbaca, sedangkan classic/bypass state belum terverifikasi. Lihat [bounded baseline evidence](docs/proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#g-current-github-actions-state).
+Fresh protect-main 24061641/protect-testing 24061672 tetap active, exact branch targets, deletion/non-fast-forward/PR required. Keduanya require **Quality Gate / GitHub Actions integration15368**, strict freshness=true, creation exemption=false, bypass actors=[]; connector caller bypass=never. Main approval1, dismiss stale=true, last-push approval=true, review-thread resolution=true. Testing approval0, stale/last-push/thread=false. Tidak ada rule yang dilemahkan atau diubah.
 
-Phase 0D-2 harus terlebih dahulu menjalankan real Linux Actions, membaca exact check name/app/context untuk current SHA, lalu meminta explicit human approval sebelum mengatur required checks testing/main. Jangan menyatakan enforcement sudah aktif dari file YAML lokal. Pending/cancelled/failed quality run belum memenuhi merge gate. Local hooks tetap control terpisah dan tidak diganti oleh workflow.
+PR #20 sempat blocked meski check green karena strict freshness dan review belum satisfied. Sync mempertahankan testing file tree dan menghasilkan fresh current-candidate PR check; annisabara1810 APPROVED pada latest head sebelum human merge. Unresolved threads 0. Pending/disabled observation memiliki simultaneous check/review/freshness blocks; tidak membuktikan check sebagai satu-satunya penyebab atau setiap administrator mechanism. Historical CI/configuration reports tetap dated snapshots.
+
+Workflow quality-only: PR/push testing/main, contents read, no project/cloud/DB secrets, no deploy/migration. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN. Local hook activation/acceptance per clone dan Vercel isolation tetap checks terpisah. [CI contract](docs/12_CI_CD_RELEASE.md).
 
 ### Layer A — GitHub server-side branch protection (authoritative)
 
