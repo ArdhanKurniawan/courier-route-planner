@@ -109,12 +109,18 @@ Keputusan owner 18 Oktober 2026, **YES APPROVE GATE 1 PROPORTIONATE EVIDENCE REV
 
 Ed25519 verifier, diagnostic endpoint, real keys/tickets, dedicated Windows custody/ACL dan checkpoint terkait ditunda. Historical implementation/review reports serta seluruh 11 source/test files WIP tetap dipertahankan. Review dokumentasi ini tidak merilis, men-disable deployment, menghapus, memindahkan atau mengubah source tersebut.
 
-### Prosedur penyimpanan WIP — belum diotorisasi untuk dieksekusi
+### Prosedur penyimpanan WIP — referensi untuk operasi yang diotorisasi terpisah
 
-1. Inventarisasi 9 file baru dan 2 modified existing files sesuai bagian 2 [local implementation report](proses/phase-0/0d/PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md#2-exact-changed-files). Keduanya mencakup perubahan database client dan tests, sehingga mengecualikan file baru saja tidak cukup.
+Inventory historis berasal dari executor report Phase 0D-8B, 18 Oktober 2026, bagian 2. Referensi audit lokal: `PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md` — **NOT PUBLISHED**, disimpan di docs/proses/phase-0/0d/. Ringkasannya berikut membuat inventory dapat dibaca tanpa laporan lokal tersebut:
+
+- 9 file baru dalam arsip WIP: `scripts/foundation-sign-ticket.mjs`, `src/app/api/internal/foundation-verify/route.ts`, `src/config/foundation-verifier.ts`, `src/db/foundation-verify.ts`, `src/security/foundation-ticket.ts`, `tests/unit/foundation-ticket.test.ts`, `tests/unit/foundation-verifier-config.test.ts`, `tests/unit/foundation-verify-route.test.ts`, `tests/unit/foundation-verify.test.ts`.
+- 2 existing files yang dimodifikasi: `src/db/client.ts` dan `tests/unit/db-client.test.ts`.
+- Setelah owner mengotorisasi local preservation, executor memverifikasi arsip lokal pada branch `wip/phase-0d-runtime-isolation-verifier`, commit verifier `f783612ac4f733c6a40e537fef5ff2ee80db4596`. Metadata Git lokal ini bukan bukti publikasi, release atau runtime isolation. Verifier tidak disertakan pada kandidat dokumentasi Gate 1.
+
+1. Inventarisasi tepat 11 file di atas. Perubahan database client dan tests termasuk dalam scope, sehingga mengecualikan file baru saja tidak cukup.
 2. Setelah separate explicit Git authorization, buat branch WIP khusus dari exact current base dan commit hanya 11 file tersebut dengan explicit allowlist. Jangan memasukkan normative revision ini, historical untracked reports, skills atau private values secara otomatis. Tidak broad staging, stash/reset atau discard.
 3. Verifikasi WIP commit mencakup seluruh intended changes dan hash/diff sesuai snapshot; pertahankan working tree/dokumen lain. Gunakan clean checkout/worktree dari accepted foundation ref untuk pekerjaan aplikasi berikutnya, tanpa menyalin WIP verifier.
-4. Publikasi revision normatif dilakukan terpisah setelah scope Git/PR disetujui. Perubahan verifier masuk release hanya melalui keputusan dan review khusus di masa depan. Tidak menjalankan langkah Git apa pun pada task revisi ini.
+4. Publikasi revision normatif dilakukan terpisah setelah scope Git/PR disetujui. Perubahan verifier masuk release hanya melalui keputusan dan review khusus di masa depan. Prosedur ini tidak memberikan izin Git atau cloud; setiap operasi memerlukan otorisasi scope tersendiri.
 
 ### Final acceptance
 

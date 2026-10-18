@@ -298,7 +298,7 @@ Jangan onboarding anggota berikutnya sebelum gate ini lulus.
 
 ## PHASE L — Vercel import
 
-**Initial setup reference only.** [Preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) adalah snapshot historis sebelum bootstrap. Existing project dan initial [Production](proses/phase-0/0d/PHASE_0D_VERCEL_PRODUCTION_INITIAL_DEPLOYMENT_REPORT.md)/[Preview deployment](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_INITIAL_DEPLOYMENT_REPORT.md) sudah memiliki evidence yang diterima dalam [Gate 1 terkini](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation). Langkah berikut hanya untuk setup baru yang memperoleh authorization terpisah; jangan import/link ulang existing project.
+**Initial setup reference only.** [Preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) adalah snapshot historis sebelum bootstrap. Existing project courier-route-planner pada workspace ardhankurniawans-projects sudah mempunyai accepted Production/main READY (17 Oktober 2026) dan Preview/testing READY (18 Oktober 2026). [Ringkasan evidence Gate 1](23_PHASE_GATES_CHECKLISTS.md#ringkasan-evidence-lokal-yang-belum-dipublikasikan) mencatat deployment ID, exact source, provenance dan batas smoke; laporan eksekusi lengkap tetap lokal, NOT PUBLISHED. Langkah berikut hanya untuk setup baru yang memperoleh authorization terpisah; jangan import/link ulang existing project.
 
 1. login Vercel via GitHub;
 2. Add New → Project;
