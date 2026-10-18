@@ -1,5 +1,7 @@
 # 23 — PHASE GATES & CHECKLISTS
 
+**Current normative decision — 2026-10-18:** Gate 1 mengikuti revised evidence contract di bawah dan tetap OPEN. Snapshot promotion 11 Oktober berikut dipertahankan sebagai sejarah; tidak membatalkan evidence deployment sesudahnya.
+
 **Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 Jangan pindah phase hanya karena “kelihatannya jalan”.
@@ -18,52 +20,51 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 1 — Foundation
 
-**Status: OPEN.** Phase 0A CLOSED/merged via PR #7; evidence pada [quality foundation report](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md) dan [independent verification](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md):
+**Status: OPEN.** Keputusan owner **2026-10-18 — YES APPROVE GATE 1 PROPORTIONATE EVIDENCE REVISION** memperbarui metode acceptance di bawah. [ADR-002 dan ADR-008](04_TECH_STACK_ADRS.md) tetap berlaku: main → Production, testing sebagai stable Preview, serta tiga independent TiDB resources tanpa shared fallback.
 
-- [x] Node 24 contract dalam `package.json` dan `.nvmrc`;
-- [x] clean `npm ci` PASS;
-- [x] lint PASS;
-- [x] typecheck dari generated state bersih PASS;
-- [x] unit/component testing foundation PASS (2 files, 11 tests);
-- [x] V8 coverage command/report PASS, tanpa threshold;
-- [x] build PASS;
-- [x] audit runtime-only 0 findings; 15 dev-only findings terdokumentasi.
+### Kontrak acceptance yang berlaku
 
-Phase 0B **CLOSED/merged via PR #8**, [independent verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md): strict APP_ENV parser, safe template, app-only health unchanged; baseline 4 files / 48 tests PASS.
+Runtime TiDB Isolation Verifier Ed25519, endpoint diagnostik, private key, signed ticket, window/replay checkpoint, serta custody/Windows ACL khusus **ditunda dan bukan prerequisite Gate 1**. Implementasi lokal dipertahankan; tidak otomatis menjadi release candidate. Keputusan ini menggantikan persyaratan verifier pada rencana evidence terdahulu untuk Gate 1, tanpa mengubah historical reports, ADR, atau hasil checkpoint lama.
 
-Phase 0C **CLOSED/PR #9 merged** ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`; [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md) dan [remote closure evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#c-phase-0c-closure-evidence). Pure DB parser, lazy server-only HTTP client, depots-only schema, readiness unit behavior, generated/reviewed SQL + db:check PASS. Historical suite 9 files / 147 tests; runtime audit 0, full 19 (1 low, 6 moderate, 12 high, 0 critical). Dev diprovision dan initial migration applied sekali oleh manusia; [Dev live verification](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md) PASS untuk health/readiness HTTP 200, application read, TCP/TLS, ledger dan depots schema/PK/index. Testing live foundation PASS pada 0D-3B; Production LIVE independent Starter, migration exactly once dan schema/ledger verified. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target tiga independent resources, tanpa shared fallback.
+- **PASS:** evidence cukup untuk criterion dan candidate/environment yang dinyatakan, dengan source/provenance/waktu serta keterbatasannya; hasil historis disebut historis.
+- **PENDING:** evidence wajib belum tersedia, candidate belum dapat diikat ke evidence, atau ada UNKNOWN material. UNKNOWN bukan bukti kegagalan.
+- **FAIL:** mismatch atau kegagalan teramati, misalnya Preview memakai Production credential/database, required Quality Gate gagal, atau secret terekspos dalam candidate.
+- Gate 1 hanya CLOSED setelah seluruh criterion wajib PASS dan final human acceptance eksplisit. Task review dokumentasi bukan acceptance tersebut.
 
-Phase 0D [quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED; TESTING BEHAVIOR VERIFIED, MAIN BEHAVIOR CLOSED/VERIFIED**. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). PR/push testing/main, Quality Gate, sembilan required commands, no secrets/DB/deploy/migrate; full audit informational dengan invalid/tool-error gate. [Local implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+| Criterion wajib | Evidence minimum / kondisi PASS | Status yang telah diterima |
+| --- | --- | --- |
+| Foundation dan quality | Node 24, TailAdmin Free/provenance/cleanup, local application, scripts quality sesuai docs/12, runtime audit sesuai kebijakan existing, dan required Quality Gate untuk exact accepted commit. | PASS historis: 0A–0C serta remote CI/main-promotion evidence. Tidak mengeklaim working tree verifier telah menjadi accepted candidate. |
+| Database foundation | Dev/Testing/Production independent; schema/ledger initial coherent; dedicated application/migration roles dan credential sesuai environment, tanpa runtime admin/migrator atau shared fallback. | PASS historis: Dev/Testing/Production live foundation. Tidak mengulang initial migration atau provisioning. |
+| Pemisahan environment aplikasi | Seluruh rantai evidence gabungan pada bagian berikut lengkap untuk accepted Production/Preview deployments; tidak ada known relevant drift atau conflict. | PASS untuk gabungan evidence historis dan human attestations yang diterima owner; direct physical runtime SQL identity tetap NOT VERIFIED. |
+| Deployment dan minimum smoke | main Production dan stable testing Preview READY pada accepted source; shell/root serta health/readiness berhasil sesuai kontrak minimal, APIs no-store. Build/deploy tidak menjalankan migration. | PASS untuk scope minimum foundation berdasarkan laporan deployment dan accepted limited Preview HTTP evidence. Formal HTTP PARTIAL tetap PARTIAL. |
+| Reproduksi anggota kedua | Anggota bernama pada mesin kedua, clean accepted checkout, actual quality results dan Dev-only local application/connectivity smoke yang diotorisasi, tanpa secret exposure. | PENDING: hasil reproduksi belum tersedia. |
+| Final acceptance | Final review atas candidate/evidence matrix, keterbatasan dan konsistensi dokumen; tidak ada unresolved blocking mismatch; owner memberikan final Gate 1 acceptance. | PENDING: belum diberikan. |
 
-0D-3A Testing migration tooling merged/PR #14; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md). 0D-3B Testing PROVISIONED terpisah dari Dev, migration APPLIED ONCE setelah human approvals, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE independent Starter/migrated exactly once/verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY. Phase 0D/Gate 1 tetap OPEN: main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Vercel main/Preview, Preview DB isolation dan reproduksi anggota kedua pending:
+Accepted deployed foundation references tetap Production/main dan Preview/testing pada [Production deployment report](proses/phase-0/0d/PHASE_0D_VERCEL_PRODUCTION_INITIAL_DEPLOYMENT_REPORT.md) serta [Preview deployment report](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_INITIAL_DEPLOYMENT_REPORT.md). Local verifier working tree bukan pengganti kedua source tersebut.
 
-- [ ] TailAdmin Free provenance + adopted SHA tercatat;
-- [ ] no TailAdmin Pro/paid asset;
-- [ ] template baseline build pass sebelum cleanup;
-- [ ] route-planner menu/branding baseline;
-- [ ] ApexCharts tidak menjadi approved core dependency / cleanup status terdokumentasi;
-- [ ] Next.js local works;
-- [ ] build pass;
-- [x] app-only health endpoint (Phase 0B CLOSED/PR #8, independent PASS);
-- [x] Phase 0C offline parser/client/depots/migration/readiness + unit evidence;
-- [x] human Dev provisioning/first migration apply selesai; account/settings approval adalah human evidence, tidak diaudit ulang oleh task read-only;
-- [x] TiDB Dev connection: HTTP application dan TCP/TLS migration roles verified;
-- [x] final independent Phase 0C verification PASS dan PR #9 merged/remote testing verified;
-- [x] quality-only CI workflow implemented locally;
-- [ ] Vercel main deployment;
-- [ ] Vercel feature preview;
-- [ ] Preview DB != Production DB;
-- [x] CI basic green pada real GitHub Linux runner;
-- [x] exact required Quality Gate/app15368 configured pada testing/main dengan strict freshness; testing behavioral proof VERIFIED;
-- [x] main FOUNDATION PROMOTED via PR #20; latest-head approval, strict freshness dan main behavioral proof CLOSED/VERIFIED; main push Quality Gate PASS; [Main promotion closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md);
-- [x] local Testing migration tooling: explicit APP_ENV/testing DB/TLS/config/script + offline guard tests;
-- [x] dedicated Testing resource/roles/private env/empty-state proof + explicit apply checkpoint; migration APPLIED ONCE, ledger/schema/app read/health/readiness PASS (0D-3B);
-- [x] Production tooling verified: exact Production guard/TLS/config/manual script + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
-- [x] Production LIVE independent Starter, separate approvals/private handoff selesai; migration invocation 1/retry 0/exit 0; ledger/schema/ORM read dan local unchanged handlers verified; public deployed HTTP belum verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md);
-- [x] `.env.local` ignored; `.env.example` exception verified (Phase 0B);
-- [ ] second team member can reproduce setup.
+### Batas pembuktian isolasi
 
-Vercel preflight [NOT READY / blocked](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md), no project/deployment. Production database foundation VERIFIED; Gate 1 tetap OPEN. Dev LIVE/established, Testing LIVE/migrated once/verified, Production LIVE/migrated exactly once/schema-ledger verified. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; fresh Vercel bootstrap preflight menjadi next task; cloud integration/deployment tetap belum dilakukan dan membutuhkan authorization terpisah.
+Evidence gabungan yang disetujui terdiri dari **semua** komponen berikut:
+
+1. Independent provider resource/provisioning mapping dan complete application principal/account-host → logical database, dengan provenance tersendiri dari URL yang diuji. A1–A3 historis telah diterima; A2 dilengkapi human-attested provider readback 18 Oktober sekitar 18.55–18.57 WIB, bukan verifikasi agent baru.
+2. Private source/role attestation dan scoped assignment: Production menggunakan Production application credential; Preview menggunakan Testing application credential. Metadata key/type/target/override tidak membuktikan bytes secret.
+3. Keterkaitan assignment/configuration records dengan actual deployment ID, commit SHA, environment dan waktu deployment yang diterima. Setting project saat ini saja tidak membuktikan snapshot deployment lama.
+4. Review application database factory pada accepted source: memakai application DATABASE_URL, tanpa admin/migrator atau alternate caller target. Parser URL runtime memvalidasi format; exact APP_ENV/database guards migrator tidak boleh diklaim sebagai runtime enforcement.
+5. Health/readiness smoke pada deployment relevan. Health app-only dan readiness SELECT 1 membuktikan liveness/connectivity; **keduanya sendiri tidak membuktikan identity/resource isolation**.
+
+Label acceptance ini adalah **pemisahan environment berdasarkan evidence gabungan konfigurasi/provisioning dan konektivitas**, bukan direct physical runtime SQL identity VERIFIED. Rantai tidak lengkap → PENDING; cross-environment mismatch teramati → FAIL. Tidak mengarang actual SQL identity dari metadata atau boolean connectivity.
+
+### Evidence yang dipakai kembali dan gap minimum
+
+[0A](proses/phase-0/0a/PHASE_0A_INDEPENDENT_VERIFICATION_REPORT.md), [0B](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md), [0C](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md), [main promotion/Quality Gate](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md), [Testing](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md), [Production](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md), [env metadata/private handoff](proses/phase-0/0d/PHASE_0D_VERCEL_PRIVATE_ENV_CONFIGURATION_REPORT.md), dan deployment reports adalah evidence bertanggal, bukan fresh executions pada revisi ini. Preview metadata composite dan human attestations yang diterima dicatat sesuai provenance; raw private values tidak diperlukan dalam dokumen.
+
+Minimum smoke dan stable testing Preview sudah diterima melalui YES APPROVE GATE1 MINIMUM EVIDENCE PLAN. [HTTP assessment PARTIAL](proses/phase-0/0d/PHASE_0D_PREVIEW_HTTP_PARTIAL_EVIDENCE_ASSESSMENT_REPORT.md) dan historical process deviations dipertahankan. Password replacement HUMAN-ATTESTED dan reuse UNKNOWN tetap residual uncertainty yang diterima owner; exposure tidak diubah menjadi CLOSED dan tidak memicu triage ulang tanpa risiko baru konkret.
+
+Gap saat ini adalah reproduksi anggota kedua dan final candidate/evidence acceptance. Lengkapi hanya hubungan konfigurasi–deployment yang terbukti belum tercatat atau berubah; jangan mengulang accepted mapping, SQL, screenshot, HTTP atau credential triage demi administrasi. Source/dependency/workflow/configuration/deployment drift membatalkan reuse hanya pada evidence terkait; exact new commit tetap memerlukan applicable required Quality Gate. Perubahan dokumen saja tidak otomatis membutuhkan deployment atau application probe.
+
+Custody/ACL, system variables untuk ticket binding, dan collector checks khusus verifier tidak memblokir metode baru. Explicit saved spending-limit-0 yang belum terbukti tetap keterbatasan cost metadata, bukan bukti isolation gagal; jangan mengklaim angka fresh atau menjadikan billing edit sebagai syarat Gate 1 baru. Kebijakan resource/cost existing tetap berlaku untuk tindakan cloud berikutnya.
+
+Ikuti [reproduksi anggota kedua](17_SETUP_FROM_ZERO.md#reproduksi-anggota-kedua--gate-1) dan [DoD Gate 1/pemisahan WIP](19_DEFINITION_OF_DONE.md#8-gate-1--proportionate-evidence-and-deferred-verifier). Final review dilakukan sekali setelah evidence minimum lengkap. Tidak perlu endpoint, key, release atau SQL baru hanya untuk menjalankan metode evidence ini; tindakan live/Git berikutnya tetap membutuhkan otorisasi scope tersendiri.
 
 ## Gate 2 — CRUD baseline
 
