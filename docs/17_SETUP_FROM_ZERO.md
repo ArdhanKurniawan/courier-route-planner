@@ -1,5 +1,7 @@
 # 17 — SETUP FROM ZERO: GitHub → Next.js → TiDB → Vercel
 
+**Current Gate 1 decision — 2026-10-18:** gunakan [revised acceptance](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) dan petunjuk reproduksi di akhir dokumen. Provisioning/deployment yang sudah memiliki accepted evidence tidak diulang. Snapshot 11 Oktober di bawah tetap historis; verifier, key/ticket dan custody/ACL khusus ditunda.
+
 **Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 Dokumen ini ditulis untuk tim yang belum pernah memakai stack ini.
@@ -296,7 +298,7 @@ Jangan onboarding anggota berikutnya sebelum gate ini lulus.
 
 ## PHASE L — Vercel import
 
-**Future reference only.** Current [Vercel Preview preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md); no project/deployment. Production database foundation VERIFIED. Current main FOUNDATION PROMOTED melalui PR #20; lakukan fresh Vercel bootstrap preflight dan provider/bootstrap design dengan authorization terpisah sebelum mengikuti langkah cloud ini.
+**Initial setup reference only.** [Preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) adalah snapshot historis sebelum bootstrap. Existing project courier-route-planner pada workspace ardhankurniawans-projects sudah mempunyai accepted Production/main READY (17 Oktober 2026) dan Preview/testing READY (18 Oktober 2026). [Ringkasan evidence Gate 1](23_PHASE_GATES_CHECKLISTS.md#ringkasan-evidence-lokal-yang-belum-dipublikasikan) mencatat deployment ID, exact source, provenance dan batas smoke; laporan eksekusi lengkap tetap lokal, NOT PUBLISHED. Langkah berikut hanya untuk setup baru yang memperoleh authorization terpisah; jangan import/link ulang existing project.
 
 1. login Vercel via GitHub;
 2. Add New → Project;
@@ -336,17 +338,9 @@ Verify:
 
 ## PHASE O — Test Preview
 
-Dari `testing`:
+Gunakan existing stable Preview dari `testing` yang source/deployment-nya telah diterima. Pastikan Production memakai Production application credential/database dan Preview memakai Testing melalui seluruh rantai [evidence gabungan Gate 1](23_PHASE_GATES_CHECKLISTS.md#batas-pembuktian-isolasi): independent provisioning/account mapping, private source attestation, scoped assignments yang terikat deployment ID/SHA/environment, source factory review, serta health/readiness smoke yang relevan.
 
-```bash
-git checkout testing
-```
-
-buat perubahan kecil, push, lalu cek Vercel Preview.
-
-Pastikan Preview DB adalah Testing, bukan Production.
-
-Cara verifikasi aman: endpoint debug internal sementara hanya menampilkan `APP_ENV` dan DB logical label yang non-secret, kemudian hapus atau restrict endpoint tersebut.
+Metadata atau SELECT 1 sendiri tidak membuktikan physical runtime SQL identity. Endpoint debug maupun verifier Ed25519 tidak diwajibkan. Tidak perlu membuat commit/push/deployment contoh hanya untuk mengulang foundation Preview yang telah diterima. Jika source/configuration/deployment berubah atau evidence terkait tidak lagi valid, periksa hanya gap itu dengan separate approval untuk tindakan live yang diperlukan.
 
 ## PHASE P — Custom domain
 
@@ -370,9 +364,21 @@ Ikuti DNS instruction Vercel. Jangan menebak record bila dashboard memberikan ta
 
 Sembilan required commands mengikuti PHASE E; full audit menjalankan parser valid-evidence agar advisories tetap visible/nonblocking dan tool/network failure gagal. Tidak ada secret, migration, deployment, DB network, coverage token/upload atau E2E command. Lihat [exact CI contract](12_CI_CD_RELEASE.md) dan [implementation evidence](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
 
-**REMOTE CI + TESTING/MAIN BEHAVIOR VERIFIED.** Required Quality Gate/GitHub Actions app15368 dengan strict freshness aktif pada testing/main. Main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Vercel Git Integration tetap target terpisah, belum dibuktikan.
+**REMOTE CI + TESTING/MAIN BEHAVIOR VERIFIED.** Required Quality Gate/GitHub Actions app15368 dengan strict freshness aktif pada testing/main. Main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Evidence existing Vercel Git Integration dan initial deployments dinilai dalam [Gate 1 terkini](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation). CI proof ini tidak memberi izin push/deployment baru atau membuktikan otomatisasi setiap future feature push.
+
+## Reproduksi anggota kedua — Gate 1
+
+1. Owner menetapkan anggota dan exact accepted foundation ref/SHA. Gunakan mesin kedua serta clean checkout yang tidak membawa 11 file perubahan verifier atau private files dari workstation pertama; jangan memakai dirty working tree sebagai release baseline.
+2. Catat OS, Node 24/npm, commit SHA dan lockfile. Sebelum private env tersedia, jalankan actual quality commands PHASE E dan [docs/12](12_CI_CD_RELEASE.md#3-ci-stages): clean install, lint/typecheck/tests/coverage/db:check/build/post-build typecheck dan audit sesuai kebijakan existing. Full audit advisory berbeda dari tool/network error; catat exit/results aktual termasuk failure.
+3. Dengan separate owner authorization untuk local runtime/Dev application access, lakukan private handoff Dev application configuration kepada anggota. Jangan mengirim secret ke chat/report atau memakai Production/Testing/migrator/admin credential. Jangan menjalankan provisioning, db:generate, db:push atau migration sebagai onboarding.
+4. Jalankan local application dan bounded root/health/readiness smoke dengan existing Dev application credential. Readiness memakai existing SELECT 1; akses ini harus tercakup dalam izin langkah 3, bukan izin SQL/manual query tambahan. Catat source/waktu, actual status/body predicate dan command exits tanpa private values.
+5. Hasil minimum: nama anggota, konfirmasi mesin kedua/clean checkout, versions/SHA, actual checks dan local smoke, limitations serta provenance. Reviewer/owner menilai sekali pada final Gate 1 acceptance; jangan membuat replay capture baru bila evidence yang sama telah diterima.
+
+Tidak ada langkah di atas yang dijalankan oleh task revisi dokumentasi. Setelah hasil reproduksi dan evidence wajib lengkap, lakukan final independent review dan explicit human Gate 1 acceptance. Baru kemudian mulai Gate 2 sesuai [checklist resmi](23_PHASE_GATES_CHECKLISTS.md#gate-2--crud-baseline), termasuk server validation, DB integration tests, no Production test data dan auth sebelum public mutation menurut ADR-009.
 
 ## EXIT CRITERIA FOUNDATION
+
+Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation); bukan requirement endpoint/debug/key tambahan.
 
 - [ ] local Next.js works;
 - [ ] TiDB Dev works;
