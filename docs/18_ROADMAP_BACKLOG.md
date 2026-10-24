@@ -1,5 +1,7 @@
 # 18 — ROADMAP & BACKLOG
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## Phase 0 — Foundation
 
 ### Phase 0A — Quality Foundation
@@ -43,14 +45,14 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
-**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR DEFERRED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Vercel integration/Preview isolation, main foundation promotion/main behavioral proof dan reproduction masih pending.
+**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR CLOSED/VERIFIED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Foundation promotion/main Quality dan main behavioral proof VERIFIED pada PR #20. Vercel integration/Preview isolation dan reproduction masih pending.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
 - [x] existing required commands, coverage tanpa threshold, offline db:check, runtime hard audit/full informational parser;
 - [x] real remote Linux Actions verification dan exact Quality Gate/GitHub Actions app15368 required pada testing/main; strict freshness;
 - [x] testing behavioral enforcement proof (PR #12); [report](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md);
-- [ ] main behavioral proof pada future real testing → main promotion;
+- [x] main FOUNDATION PROMOTED via PR #20; latest-head human approval dan strict freshness PASS setelah ancestry sync PR #21; main Quality Gate VERIFIED, main behavioral proof CLOSED/VERIFIED; [Main promotion closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md);
 - [x] 0D-3A Testing migration tooling prepared locally: exact guard/TLS/config/script + offline tests; [report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md);
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
 - [x] Production tooling verified: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
@@ -59,7 +61,7 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [ ] env isolation dan Preview DB != Production DB;
 - [ ] second-member setup reproduction dan Gate 1 review.
 
-Main foundation promotion belum dilakukan; main required-check behavioral proof deferred. Recommendation closure **READY FOR MAIN FOUNDATION PROMOTION PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation closure **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
 
 ## Phase 1 — Admin baseline
 

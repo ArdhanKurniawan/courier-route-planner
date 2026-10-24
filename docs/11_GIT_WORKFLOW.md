@@ -1,5 +1,15 @@
 # 11 — GIT WORKFLOW
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
+## Current Foundation promotion — Phase 0D-6C
+
+**main FOUNDATION PROMOTED; main Quality Gate VERIFIED; main required-check behavioral proof CLOSED/VERIFIED.** PR #21 membawa main ancestry ke testing tanpa file delta. PR #20 mendapat fresh current-candidate Quality, latest-head human approval dari annisabara1810, lalu human Merge Commit pada 2026-10-11T08:41:14Z.
+
+Main `a0a9c291fb980d2ff32b32f2b0fd9c2b3dfc429b`; remote testing `d70543da5734b36cd737590024582dab758718bd`. Main ahead 1 merge commit/file delta 0; main push Quality run 38125682617 PASS. Active rulesets/check/strict/review/bypass settings tetap dipertahankan. [Main promotion closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md).
+
+Dev LIVE; Testing LIVE/migrated once; Production TiDB LIVE/migrated exactly once. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN. Next: fresh Vercel bootstrap preflight. Branch/deployment flows di bawah adalah policy/target; Vercel integration belum dijalankan. Closure ini tidak menyinkronkan refs.
+
 ## 1. Branch model
 
 ```text
