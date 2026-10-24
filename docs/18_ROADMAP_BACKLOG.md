@@ -1,6 +1,8 @@
 # 18 — ROADMAP & BACKLOG
 
-**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+**Current status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
+
+**Historical promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 ## Phase 0 — Foundation
 
@@ -45,7 +47,7 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 
 ### Phase 0D — CI + Vercel Integration
 
-**Phase 0D OPEN — CI + TESTING QUALITY GATE BEHAVIOR VERIFIED; MAIN BEHAVIOR CLOSED/VERIFIED.** [Implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md); [approved baseline](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md). Testing live foundation PASS pada 0D-3B; Production live foundation VERIFIED, invocation 1/retry 0. Foundation promotion/main Quality dan main behavioral proof VERIFIED pada PR #20. Vercel integration/Preview isolation dan reproduction masih pending.
+**Phase 0D CLOSED — 2026-10-24.** CI/required Quality Gate, tiga environment database, accepted Vercel deployments/minimum smoke dan composite environment separation telah diterima; reproduksi Chacha dan final human acceptance PASS. [Closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) memuat SHA/CI/provenance dan accepted limitations. Historical preflight/HTTP verdicts dipertahankan; physical runtime SQL identity tetap NOT VERIFIED.
 
 - [x] satu quality-only workflow Quality / quality / Quality Gate, PR dan push testing/main;
 - [x] Node 24/npm cache, read-only permissions, approved concurrency, timeout 10 menit;
@@ -57,13 +59,15 @@ Dev-first tetap menargetkan tiga independent Starter resources (ADR-008), tanpa 
 - [x] 0D-3B dedicated Testing resource/roles/private env/read-only verification + separately approved one-time apply; Testing PROVISIONED, migration APPLIED ONCE, live verification PASS; [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md);
 - [x] Production tooling verified: explicit exact guard/TLS/config/manual command + offline cross-env tests; [Production tooling report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md);
 - [x] Production LIVE independent Starter; separate provisioning/apply approvals selesai; migration exactly once, ledger/schema/ORM read/local handlers verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md);
-- [ ] Vercel preflight NOT READY / blocked; no project/deployment; first-deployment/bootstrap design pending; [preflight report](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md);
-- [ ] env isolation dan Preview DB != Production DB;
-- [ ] second-member setup reproduction dan Gate 1 review.
+- [x] Vercel Git Integration dan Production/Preview minimum foundation diterima; historical [preflight NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md) tetap snapshot, bukan blocker terkini; lihat closure report.
+- [x] Production/Preview memakai respective APPLICATION environment berdasarkan accepted composite evidence; bukan direct physical runtime SQL identity proof.
+- [x] Chacha pada mesin kedua: reproduction PASS, final independent assessment PASS dan final owner acceptance 24 Oktober 2026.
 
-main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation closure **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**. Phase 0D, Phase 0 dan Gate 1 tetap OPEN. Playwright/E2E foundation mengikuti implementation target pada phase berikutnya; [Phase 0A evidence](proses/phase-0/0a/PHASE_0A_QUALITY_FOUNDATION_REPORT.md).
+Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/required-check proof tetap dipertahankan; PR #26 mempromosikan foundation/security kandidat yang diterima. Playwright/E2E dan full future Release DoD berada pada scope lanjutan, bukan blocker Gate 1 baru.
 
 ## Phase 1 — Admin baseline
+
+Backlog berikut belum dimulai; implementasi Gate 2 memerlukan task/approval terpisah.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;

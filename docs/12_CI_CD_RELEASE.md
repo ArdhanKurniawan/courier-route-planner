@@ -1,6 +1,8 @@
 # 12 — CI/CD & RELEASE
 
-**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+**Current status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, setelah final owner acceptance; [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). PR #26 membawa accepted testing ke main; Quality Gate main/testing PASS dan Production minimum smoke diterima. Bagian status 11 Oktober di bawah adalah historical snapshots; kebijakan CI/release tetap berlaku. Publikasi dokumentasi dan setiap release berikutnya memerlukan scope/approval tersendiri.
+
+**Historical promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 ## 1. Separation of responsibility
 
@@ -9,7 +11,7 @@
 
 Jangan duplikasi deployment melalui Actions tanpa kebutuhan khusus.
 
-**Current Phase 0D OPEN:** [quality.yml](../.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Tooling 0D-3A merged/PR #14; Testing pada 0D-3B PROVISIONED terpisah dari Dev, migration APPLIED ONCE dengan explicit approval, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Preview isolation pending.
+**Historical Phase 0D snapshot — 2026-10-11 (OPEN saat itu):** [quality.yml](../.github/workflows/quality.yml) implemented dan remote verified; exact Quality Gate/GitHub Actions required pada testing/main. Testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED pada PR #20. [Behavioral evidence](proses/phase-0/0d/PHASE_0D_ENFORCEMENT_BEHAVIOR_PROOF_REPORT.md). Tooling 0D-3A merged/PR #14; Testing pada 0D-3B PROVISIONED terpisah dari Dev, migration APPLIED ONCE dengan explicit approval, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Preview isolation pending.
 
 ## 2. CI triggers
 
@@ -90,11 +92,13 @@ Setelah tim matang, automation dapat ditambah dengan ADR.
 
 ### Production tooling boundary — Phase 0D
 
+Status dalam dua paragraf berikut adalah snapshot 11 Oktober sebelum bootstrap/deployment dan closure Gate 1; bukan instruksi mengulang migration, provisioning atau preflight. Status terkini ada pada closure report di atas.
+
 **Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `db:migrate:production` memiliki exact environment/database guard dan TLS. Checkpoint A provisioning/private handoff dan separate Checkpoint B apply selesai: invocation 1/retry 0/exit 0; ledger satu row, schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [migration contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 Migration tidak dipanggil install/build/start/dev/test/CI/Vercel; quality workflow/order unchanged. Future apply butuh task/review/approval baru, dan partial failure butuh read-only inspection/separate remediation tanpa automatic retry.
 
-Vercel Preview preflight tetap [NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database foundation VERIFIED; fresh Vercel bootstrap preflight, account/connection checks dan first-deployment design masih diperlukan sebelum cloud integration/release. main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT** bukan authorization merge/deploy.
+Historical snapshot 2026-10-11: Vercel Preview preflight tetap [NOT READY](proses/phase-0/0d/PHASE_0D_VERCEL_PREVIEW_PREFLIGHT_REPORT.md). Production database foundation VERIFIED; fresh Vercel bootstrap preflight, account/connection checks dan first-deployment design masih diperlukan sebelum cloud integration/release. main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT** bukan authorization merge/deploy.
 
 ## 7. Release checklist
 
