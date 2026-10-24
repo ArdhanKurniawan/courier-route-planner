@@ -1,5 +1,7 @@
 # 04 — TECH STACK & ARCHITECTURE DECISION RECORDS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 ## ADR-001 — Next.js App Router + TypeScript
 
 **Status:** Accepted
@@ -117,7 +119,7 @@ Target:
 
 Keputusan manusia Phase 0D-3A mempertahankan tiga independent TiDB resources, tanpa shared Dev/Testing/Production fallback. Quota/spending akun wajib diverifikasi manusia sebelum provisioning. Perubahan isolation membutuhkan keputusan manusia dan ADR baru.
 
-Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main foundation promotion belum dilakukan, main behavioral proof deferred, Phase 0D/Gate 1 OPEN.
+Status 2026-10-11: Dev LIVE/established; Testing LIVE, migrated once dan verified; Production LIVE pada independent Starter AWS Tokyo, initial migration exactly once, schema/ledger verified. [Production live evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Ini realisasi ADR-008; Vercel belum integrated, main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED, Phase 0D/Gate 1 OPEN.
 
 ---
 

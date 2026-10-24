@@ -1,5 +1,7 @@
 # 31 — BRANCH PROTECTION & ACCIDENTAL PUSH GUARDS
 
+**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+
 **Status:** Required baseline control  
 **Goal:** mencegah anggota tim, maintainer, atau AI agent tidak sengaja mengubah dan mendorong perubahan langsung ke `main` atau `testing`.
 
@@ -46,13 +48,15 @@ Tidak ada direct code change ke `main` atau `testing`.
 
 Kita memakai minimum lima lapisan.
 
-### Current Phase 0D-1 CI state
+### Current Phase 0D-6C CI / enforcement state
 
-[Quality workflow](../.github/workflows/quality.yml) **IMPLEMENTED LOCALLY — REMOTE VERIFICATION PENDING**: workflow Quality, job ID quality, display/check job Quality Gate. Triggers PR dan push testing/main. Read-only contents, no project/cloud/DB secrets, no deploy/migration. [CI contract](12_CI_CD_RELEASE.md), [implementation report](proses/phase-0/0d/PHASE_0D_CI_IMPLEMENTATION_REPORT.md).
+[Quality workflow](../.github/workflows/quality.yml) **REMOTE VERIFIED**; main FOUNDATION PROMOTED melalui PR #20. Testing behavioral proof VERIFIED pada PR #12; **main required-check behavioral proof CLOSED/VERIFIED** pada PR #20 setelah ancestry sync PR #21, latest-head human approval, dan successful post-merge main Quality run 38125682617. [Main promotion closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md).
 
-Stage ini tidak push/create PR atau mengubah protections. Baseline read-only audit mengamati protect-main/protect-testing active dengan PR/force/delete rules; tidak ada required-status-check rule pada dua rulesets yang terbaca, sedangkan classic/bypass state belum terverifikasi. Lihat [bounded baseline evidence](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#g-current-github-actions-state).
+Fresh protect-main 24061641/protect-testing 24061672 tetap active, exact branch targets, deletion/non-fast-forward/PR required. Keduanya require **Quality Gate / GitHub Actions integration15368**, strict freshness=true, creation exemption=false, bypass actors=[]; connector caller bypass=never. Main approval1, dismiss stale=true, last-push approval=true, review-thread resolution=true. Testing approval0, stale/last-push/thread=false. Tidak ada rule yang dilemahkan atau diubah.
 
-Phase 0D-2 harus terlebih dahulu menjalankan real Linux Actions, membaca exact check name/app/context untuk current SHA, lalu meminta explicit human approval sebelum mengatur required checks testing/main. Jangan menyatakan enforcement sudah aktif dari file YAML lokal. Pending/cancelled/failed quality run belum memenuhi merge gate. Local hooks tetap control terpisah dan tidak diganti oleh workflow.
+PR #20 sempat blocked meski check green karena strict freshness dan review belum satisfied. Sync mempertahankan testing file tree dan menghasilkan fresh current-candidate PR check; annisabara1810 APPROVED pada latest head sebelum human merge. Unresolved threads 0. Pending/disabled observation memiliki simultaneous check/review/freshness blocks; tidak membuktikan check sebagai satu-satunya penyebab atau setiap administrator mechanism. Historical CI/configuration reports tetap dated snapshots.
+
+Workflow quality-only: PR/push testing/main, contents read, no project/cloud/DB secrets, no deploy/migration. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN. Local hook activation/acceptance per clone dan Vercel isolation tetap checks terpisah. [CI contract](12_CI_CD_RELEASE.md).
 
 ### Layer A — GitHub server-side branch protection (authoritative)
 
