@@ -1,8 +1,8 @@
 # 23 — PHASE GATES & CHECKLISTS
 
-**Current normative decision — 2026-10-18:** Gate 1 mengikuti revised evidence contract di bawah dan tetap OPEN. Snapshot promotion 11 Oktober berikut dipertahankan sebagai sejarah; tidak membatalkan evidence deployment sesudahnya.
+**Current normative decision — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif** setelah final human acceptance. Kontrak evidence proporsional 18 Oktober tetap berlaku; [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) merangkum final evidence. Historical reports dan verdict PARTIAL/NOT READY pada waktunya dipertahankan.
 
-**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+**Historical promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 Jangan pindah phase hanya karena “kelihatannya jalan”.
 
@@ -20,7 +20,7 @@ Jangan pindah phase hanya karena “kelihatannya jalan”.
 
 ## Gate 1 — Foundation
 
-**Status: OPEN.** Keputusan owner **2026-10-18 — YES APPROVE GATE 1 PROPORTIONATE EVIDENCE REVISION** memperbarui metode acceptance di bawah. [ADR-002 dan ADR-008](04_TECH_STACK_ADRS.md) tetap berlaku: main → Production, testing sebagai stable Preview, serta tiga independent TiDB resources tanpa shared fallback.
+**Status: CLOSED — 2026-10-24 (administratif, dokumentasi lokal).** Owner memberikan **YES ACCEPT PHASE 0 GATE 1 FINAL CLOSURE** berdasarkan seluruh criterion wajib PASS dan independent final assessment. Metode acceptance mengikuti keputusan proporsional 18 Oktober; ADR-002/ADR-008 tetap berlaku: main → Production, testing → stable Preview, tiga independent TiDB resources tanpa shared fallback.
 
 ### Kontrak acceptance yang berlaku
 
@@ -33,14 +33,14 @@ Runtime TiDB Isolation Verifier Ed25519, endpoint diagnostik, private key, signe
 
 | Criterion wajib | Evidence minimum / kondisi PASS | Status yang telah diterima |
 | --- | --- | --- |
-| Foundation dan quality | Node 24, TailAdmin Free/provenance/cleanup, local application, scripts quality sesuai docs/12, runtime audit sesuai kebijakan existing, dan required Quality Gate untuk exact accepted commit. | PASS historis: 0A–0C serta remote CI/main-promotion evidence. Tidak mengeklaim working tree verifier telah menjadi accepted candidate. |
+| Foundation dan quality | Node 24, TailAdmin Free/provenance/cleanup, local application, scripts quality sesuai docs/12, runtime audit sesuai kebijakan existing, dan required Quality Gate untuk exact accepted commit. | PASS: foundation historis dan exact candidate Quality Gate main/testing; audit runtime 0, full 4 Moderate dev-only diterima; lihat closure report. |
 | Database foundation | Dev/Testing/Production independent; schema/ledger initial coherent; dedicated application/migration roles dan credential sesuai environment, tanpa runtime admin/migrator atau shared fallback. | PASS historis: Dev/Testing/Production live foundation. Tidak mengulang initial migration atau provisioning. |
-| Pemisahan environment aplikasi | Seluruh rantai evidence gabungan pada bagian berikut lengkap untuk accepted Production/Preview deployments; tidak ada known relevant drift atau conflict. | PASS untuk gabungan evidence historis dan human attestations yang diterima owner; direct physical runtime SQL identity tetap NOT VERIFIED. |
-| Deployment dan minimum smoke | main Production dan stable testing Preview READY pada accepted source; shell/root serta health/readiness berhasil sesuai kontrak minimal, APIs no-store. Build/deploy tidak menjalankan migration. | PASS untuk scope minimum foundation berdasarkan laporan deployment dan accepted limited Preview HTTP evidence. Formal HTTP PARTIAL tetap PARTIAL. |
-| Reproduksi anggota kedua | Anggota bernama pada mesin kedua, clean accepted checkout, actual quality results dan Dev-only local application/connectivity smoke yang diotorisasi, tanpa secret exposure. | PENDING: hasil reproduksi belum tersedia. |
-| Final acceptance | Final review atas candidate/evidence matrix, keterbatasan dan konsistensi dokumen; tidak ada unresolved blocking mismatch; owner memberikan final Gate 1 acceptance. | PENDING: belum diberikan. |
+| Pemisahan environment aplikasi | Seluruh rantai evidence gabungan pada bagian berikut lengkap untuk accepted Production/Preview deployments; tidak ada known relevant drift atau conflict. | PASS dalam scope composite evidence historis + owner attestation/configuration preservation; direct physical runtime SQL identity tetap NOT VERIFIED. |
+| Deployment dan minimum smoke | main Production dan stable testing Preview READY pada accepted source; shell/root serta health/readiness berhasil sesuai kontrak minimal, APIs no-store. Build/deploy tidak menjalankan migration. | PASS: Production 24 Oktober melalui composite deployment evidence dan owner smoke; Preview minimum historis tetap diterima. Formal Preview HTTP PARTIAL tidak diubah. |
+| Reproduksi anggota kedua | Anggota bernama pada mesin kedua, clean accepted checkout, actual quality results dan Dev-only local application/connectivity smoke yang diotorisasi, tanpa secret exposure. | PASS — Chacha, laptop kedua Windows 10, clean accepted testing, Node 24.21.0/npm 11.19.0, 301 tests/quality/local smoke PASS; prior Dev APPLICATION authorization dan runtime Development dikonfirmasi manusia. |
+| Final acceptance | Final review atas candidate/evidence matrix, keterbatasan dan konsistensi dokumen; tidak ada unresolved blocking mismatch; owner memberikan final Gate 1 acceptance. | PASS — explicit final owner acceptance 24 Oktober 2026, setelah independent final assessment READY. |
 
-Accepted deployed foundation references tetap Production/main dan Preview/testing, dengan source/provenance pada [ringkasan evidence](#ringkasan-evidence-lokal-yang-belum-dipublikasikan). Implementasi verifier yang disimpan pada branch WIP lokal bukan pengganti kedua source tersebut.
+Accepted closure references: main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890`, dengan provenance/scope pada [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Historical deployment/source references pada ringkasan berikut tetap historis; WIP verifier tidak menjadi release candidate.
 
 ### Ringkasan evidence lokal yang belum dipublikasikan
 
@@ -73,11 +73,11 @@ Label acceptance ini adalah **pemisahan environment berdasarkan evidence gabunga
 
 Minimum smoke dan stable testing Preview sudah diterima melalui YES APPROVE GATE1 MINIMUM EVIDENCE PLAN. HTTP assessment PARTIAL pada [ringkasan lokal](#ringkasan-evidence-lokal-yang-belum-dipublikasikan) dan historical process deviations dipertahankan. Password replacement HUMAN-ATTESTED dan reuse UNKNOWN tetap residual uncertainty yang diterima owner; exposure tidak diubah menjadi CLOSED dan tidak memicu triage ulang tanpa risiko baru konkret.
 
-Gap saat ini adalah reproduksi anggota kedua dan final candidate/evidence acceptance. Lengkapi hanya hubungan konfigurasi–deployment yang terbukti belum tercatat atau berubah; jangan mengulang accepted mapping, SQL, screenshot, HTTP atau credential triage demi administrasi. Source/dependency/workflow/configuration/deployment drift membatalkan reuse hanya pada evidence terkait; exact new commit tetap memerlukan applicable required Quality Gate. Perubahan dokumen saja tidak otomatis membutuhkan deployment atau application probe.
+Reproduksi anggota kedua dan final candidate/evidence acceptance kini PASS; tidak ada unresolved mandatory Gate 1 blocker dalam accepted scope. Untuk perubahan berikutnya, evaluasi hanya evidence yang terdampak source/dependency/workflow/configuration/deployment drift dan applicable exact-commit Quality Gate. Jangan mengulang accepted mapping, SQL, screenshot, HTTP atau credential triage demi administrasi. Perubahan dokumen saja tidak otomatis membutuhkan deployment/application probe.
 
 Custody/ACL, system variables untuk ticket binding, dan collector checks khusus verifier tidak memblokir metode baru. Explicit saved spending-limit-0 yang belum terbukti tetap keterbatasan cost metadata, bukan bukti isolation gagal; jangan mengklaim angka fresh atau menjadikan billing edit sebagai syarat Gate 1 baru. Kebijakan resource/cost existing tetap berlaku untuk tindakan cloud berikutnya.
 
-Ikuti [reproduksi anggota kedua](17_SETUP_FROM_ZERO.md#reproduksi-anggota-kedua--gate-1) dan [DoD Gate 1/pemisahan WIP](19_DEFINITION_OF_DONE.md#8-gate-1--proportionate-evidence-and-deferred-verifier). Final review dilakukan sekali setelah evidence minimum lengkap. Tidak perlu endpoint, key, release atau SQL baru hanya untuk menjalankan metode evidence ini; tindakan live/Git berikutnya tetap membutuhkan otorisasi scope tersendiri.
+[Reproduksi anggota kedua](17_SETUP_FROM_ZERO.md#reproduksi-anggota-kedua--gate-1), [DoD/WIP boundary](19_DEFINITION_OF_DONE.md#8-gate-1--proportionate-evidence-and-deferred-verifier), independent final assessment dan human acceptance telah dipenuhi. Closure ini tidak memulai Gate 2, endpoint/key/SQL baru, ataupun publikasi Git. Tindakan berikutnya tetap membutuhkan authorization sesuai scope.
 
 ## Gate 2 — CRUD baseline
 

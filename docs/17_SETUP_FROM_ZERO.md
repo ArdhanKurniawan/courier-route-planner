@@ -1,8 +1,8 @@
 # 17 — SETUP FROM ZERO: GitHub → Next.js → TiDB → Vercel
 
-**Current Gate 1 decision — 2026-10-18:** gunakan [revised acceptance](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) dan petunjuk reproduksi di akhir dokumen. Provisioning/deployment yang sudah memiliki accepted evidence tidak diulang. Snapshot 11 Oktober di bawah tetap historis; verifier, key/ticket dan custody/ACL khusus ditunda.
+**Current Gate 1 decision — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif** setelah final human acceptance; [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Kontrak evidence proporsional 18 Oktober tetap berlaku. Reproduksi anggota kedua sudah PASS; jangan mengulang accepted provisioning, migration, deployment atau smoke untuk penutupan ini. Bagian bertanggal 11 Oktober adalah historical snapshots. Verifier/key/ticket/custody tetap ditunda; Gate 2 belum dimulai.
 
-**Promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
+**Historical promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
 Dokumen ini ditulis untuk tim yang belum pernah memakai stack ini.
 
@@ -130,6 +130,8 @@ Fallback ke blank `create-next-app` hanya jika template adoption gagal secara te
 
 ## PHASE E — Bootstrap bertahap: Phase 0A–0D
 
+Status pada paragraf pertama berikut adalah snapshot 11 Oktober, sebelum closure Gate 1; daftar commands tetap referensi onboarding, bukan eksekusi baru pada task closure.
+
 Phase 0A CLOSED/PR #7 dan Phase 0B CLOSED/PR #8; [independent Phase 0B verification PASS](proses/phase-0/0b/PHASE_0B_INDEPENDENT_VERIFICATION_REPORT.md). Phase 0C CLOSED/PR #9 merged ke testing pada `e1c36988e588e397af312a140677c3f71bd451d2`, [final independent verification PASS](proses/phase-0/0c/PHASE_0C_FINAL_INDEPENDENT_VERIFICATION_REPORT.md); Dev diprovision manusia, first migration applied dan live verification PASS. Phase 0D CI/required Quality Gate pada testing/main remote verified; testing behavioral proof VERIFIED, main required-check behavioral proof CLOSED/VERIFIED. Tooling 0D-3A merged/PR #14; 0D-3B Testing PROVISIONED, migration APPLIED ONCE, live verification PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Setelah clone/pull, gunakan lockfile yang tersedia:
 
 ```bash
@@ -153,11 +155,11 @@ Install dependency berikutnya hanya pada task phase terkait, setelah audit stack
 
 - Phase 0B — Environment + Health: strict APP_ENV validation, `.env.example` dan app-only health tersedia; tidak menambah dependency.
 - Phase 0C Stage 1: Drizzle ORM `0.45.3`, TiDB HTTP driver `0.3.0`, Zod `4.6.5`; Drizzle Kit `0.31.11` + mysql2 `3.24.5` dev-only, pure parser/lazy client/depots/readiness dan offline migration tersedia. Dev live verified; Testing live verified pada 0D-3B; Production live foundation verified pada Checkpoint B.
-- Phase 0D CI/enforcement — remote verified, testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED. Main/Preview deployment dan env/DB isolation tetap pending.
+- **Historical snapshot — 2026-10-11:** Phase 0D CI/enforcement — remote verified, testing behavioral proof VERIFIED; main required-check behavioral proof CLOSED/VERIFIED. Main/Preview deployment dan env/DB isolation tetap pending.
 - Phase 0D-3A merged/PR #14 — Testing migration guard/config/manual script; 0D-3B independent Testing resource, dedicated roles/private env, approved one-time initial apply dan read-only live verification PASS.
 - Leaflet/map, OSRM, Playwright/E2E dan auth mengikuti phase implementasinya nanti.
 
-Bagian F–Q di bawah adalah panduan phase terkait; Dev provisioning/first apply dan final Phase 0C verification sudah selesai. Cloud deployment dan Gate 1 tetap pending/OPEN; remote CI dan testing enforcement sudah verified. Sebelum mengikuti panduan cloud lanjutan, gunakan [approved baseline/staging checkpoints](proses/phase-0/0d/PHASE_0D_BASELINE_AUDIT_REPORT.md#ad-proposed-phase-0d-staging-plan); stage 0D-1 tidak mengotorisasi cloud setup atau Git operations.
+Bagian F–Q di bawah adalah panduan setup/reference. Foundation dan Gate 1 telah CLOSED menurut closure report; existing resources, initial migrations dan deployments tidak diulang. Scope live/Git berikutnya tetap memerlukan authorization tersendiri.
 
 Jika chart penelitian diperlukan nanti, jangan otomatis mempertahankan ApexCharts hanya karena datang dari template. Gunakan keputusan dependency yang sudah diaudit/di-ADR-kan.
 
@@ -193,7 +195,7 @@ Current Dev sudah diprovision dan initial migration applied sekali oleh manusia.
 4. generate connection password masing-masing;
 5. jangan share screenshot credential.
 
-Testing kini PROVISIONED terpisah dari Dev pada 0D-3B (Starter, AWS Tokyo, spending limit 0); initial migration APPLIED ONCE dan live verification PASS. Production LIVE pada independent Starter, initial migration exactly once/schema-ledger verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target tetap tiga independent Starter resources; tidak memakai shared fallback. Phase 0C CLOSED/final independent PASS; Vercel NOT CONNECTED dan Phase 0D/Gate 1 OPEN. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Panduan provisioning di atas bukan instruksi untuk membuat resource ulang.
+**Historical snapshot — 2026-10-11 (superseded by Gate 1 closure):** Testing kini PROVISIONED terpisah dari Dev pada 0D-3B (Starter, AWS Tokyo, spending limit 0); initial migration APPLIED ONCE dan live verification PASS. Production LIVE pada independent Starter, initial migration exactly once/schema-ledger verified; [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Target tetap tiga independent Starter resources; tidak memakai shared fallback. Phase 0C CLOSED/final independent PASS; Vercel NOT CONNECTED dan Phase 0D/Gate 1 OPEN. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Panduan provisioning di atas bukan instruksi untuk membuat resource ulang.
 
 Current docs saat baseline dibuat menyatakan first five Starter instances per org mendapat free monthly quota; **cek kembali UI/docs saat provisioning**.
 
@@ -224,21 +226,21 @@ Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot suda
 
 Testing migration tooling prepared locally: `getTestingMigrationCredentials`, `drizzle.testing.config.ts`, dan manual `npm run db:migrate:testing`. Exact APP_ENV=testing + parsed DB `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, hardened parser/no fallback. Dev `db:migrate` dan guard tetap unchanged. Same sole initial migration history; tidak membuat migration kedua.
 
-Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `.env.testing.local` (application) dan `.env.migrations.testing.local` (migrator) secara privat dengan credential berbeda, tanpa paste values ke chat. Kedua file ignored. Node `--env-file` tidak mengalahkan inherited variables; live commands memakai clean child environment yang menghapus inherited APP_ENV/DATABASE_URL sebelum satu file yang dituju dimuat. Migration APPLIED ONCE; live verification PASS. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
+**Historical snapshot — 2026-10-11 (superseded by Gate 1 closure):** Tooling 0D-3A merged/PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan `.env.testing.local` (application) dan `.env.migrations.testing.local` (migrator) secara privat dengan credential berbeda, tanpa paste values ke chat. Kedua file ignored. Node `--env-file` tidak mengalahkan inherited variables; live commands memakai clean child environment yang menghapus inherited APP_ENV/DATABASE_URL sebelum satu file yang dituju dimuat. Migration APPLIED ONCE; live verification PASS. Production LIVE pada independent Starter, migration exactly once dan schema/ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md).
 
 Urutan 0D-3B yang sudah dijalankan: approval **YES PROVISION TESTING RESOURCE** → independent Testing resource/logical DB → scoped app/migrator roles → human private files → structural/read-only connectivity → empty tables/ledger + exact SQL/history review → approval **YES APPLY TESTING MIGRATION** → apply once → read-only ledger/schema/app read/health/readiness PASS. [Testing live report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Jangan mengulang initial apply untuk verifikasi. DB name sendiri tidak membuktikan resource identity; provider identity dan authenticated role fingerprints membuktikan Testing terpisah dari Dev serta kedua roles satu target. DDL failure pada apply berikutnya membutuhkan inspection ledger/information_schema/partial state dan separate remediation; no blind rerun. [Tooling report](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
 ### Production migration tooling — Phase 0D
 
-**Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `npm run db:migrate:production` dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB, hardened parser dan TLS. Dev/Testing paths tetap terpisah.
+**Historical snapshot — 2026-10-11 (superseded by Gate 1 closure):** **Production LIVE; independent Starter; migration APPLIED EXACTLY ONCE; schema/ledger VERIFIED.** Dev LIVE/established dan Testing LIVE/migrated once/verified. Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight **NOT READY**; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 **OPEN**. Manual `npm run db:migrate:production` dengan `drizzle.production.config.ts`, exact APP_ENV=production/exact DB, hardened parser dan TLS. Dev/Testing paths tetap terpisah.
 
-Urutan yang sudah selesai: provider preflight → **YES PROVISION PRODUCTION RESOURCE** → independent resource/DB/dedicated roles → private human files → read-only connectivity/identity/grants/empty schema-ledger/exact bytes → separate **YES APPLY PRODUCTION MIGRATION** → apply invocation 1/retry 0/exit 0 → ledger/schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. Private files sudah ada dan ignored; onboarding tidak boleh mengulang provisioning, credential work atau initial migration. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [full contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
+**Historical snapshot — 2026-10-11 (superseded by Gate 1 closure):** Urutan yang sudah selesai: provider preflight → **YES PROVISION PRODUCTION RESOURCE** → independent resource/DB/dedicated roles → private human files → read-only connectivity/identity/grants/empty schema-ledger/exact bytes → separate **YES APPLY PRODUCTION MIGRATION** → apply invocation 1/retry 0/exit 0 → ledger/schema/ORM read dan local unchanged health/readiness handlers PASS. Public deployed HTTP belum diverifikasi. Private files sudah ada dan ignored; onboarding tidak boleh mengulang provisioning, credential work atau initial migration. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md); [tooling history](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_TOOLING_REPORT.md); [full contract](07_TIDB_GUIDE.md#production-migration-tooling--phase-0d).
 
 Future migration memerlukan task/review/approval baru; partial failure membutuhkan read-only inspection/separate remediation, tanpa automatic retry. Closure hanya dokumentasi, tanpa private env read atau DB query. Recommendation **READY FOR FRESH VERCEL BOOTSTRAP PREFLIGHT**; main FOUNDATION PROMOTED melalui PR #20.
 
 ## PHASE I — Health check
 
-App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi; Testing live checks pada 0D-3B juga HTTP 200, exact status JSON + no-store memakai application credential. Production local unchanged health/readiness handlers juga PASS memakai app credential, 200/status ok/no-store; public deployed HTTP belum verified. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Final independent Phase 0C verification PASS dan Phase 0C CLOSED. CI hanya menjalankan offline tests/history/build, tanpa memanggil endpoint live. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
+**Historical snapshot — 2026-10-11 (superseded by Gate 1 closure):** App-only `GET /api/health` dari Phase 0B tetap unchanged. Separate `GET /api/ready` tersedia Stage 1: satu SELECT 1 connectivity probe, 5000 ms/no retry, 200 ok atau expected failure 503 error, exact minimal JSON + no-store. Unit behavior dan Dev live health/readiness terverifikasi; Testing live checks pada 0D-3B juga HTTP 200, exact status JSON + no-store memakai application credential. Production local unchanged health/readiness handlers juga PASS memakai app credential, 200/status ok/no-store; public deployed HTTP belum verified. [Production live report](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Final independent Phase 0C verification PASS dan Phase 0C CLOSED. CI hanya menjalankan offline tests/history/build, tanpa memanggil endpoint live. Lihat [runbook](16_OBSERVABILITY_RUNBOOK.md#separate-db-readiness--phase-0c-stage-1).
 
 ## PHASE J — First Git commit
 
@@ -368,27 +370,29 @@ Sembilan required commands mengikuti PHASE E; full audit menjalankan parser vali
 
 ## Reproduksi anggota kedua — Gate 1
 
+**PASS — owner-reported / HUMAN-ATTESTED, diterima 2026-10-24:** Chacha, laptop kedua Windows 10, clean checkout accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890`, Node 24.21.0/npm 11.19.0, quality checks dan 301 tests PASS, local dashboard/health/readiness PASS. Owner menegaskan prior Dev APPLICATION authorization dan effective Development/Dev APPLICATION runtime. Detail/batas evidence: [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Prosedur bernomor berikut tetap referensi; bukan permintaan mengulang reproduksi.
+
 1. Owner menetapkan anggota dan exact accepted foundation ref/SHA. Gunakan mesin kedua serta clean checkout yang tidak membawa 11 file perubahan verifier atau private files dari workstation pertama; jangan memakai dirty working tree sebagai release baseline.
 2. Catat OS, Node 24/npm, commit SHA dan lockfile. Sebelum private env tersedia, jalankan actual quality commands PHASE E dan [docs/12](12_CI_CD_RELEASE.md#3-ci-stages): clean install, lint/typecheck/tests/coverage/db:check/build/post-build typecheck dan audit sesuai kebijakan existing. Full audit advisory berbeda dari tool/network error; catat exit/results aktual termasuk failure.
 3. Dengan separate owner authorization untuk local runtime/Dev application access, lakukan private handoff Dev application configuration kepada anggota. Jangan mengirim secret ke chat/report atau memakai Production/Testing/migrator/admin credential. Jangan menjalankan provisioning, db:generate, db:push atau migration sebagai onboarding.
 4. Jalankan local application dan bounded root/health/readiness smoke dengan existing Dev application credential. Readiness memakai existing SELECT 1; akses ini harus tercakup dalam izin langkah 3, bukan izin SQL/manual query tambahan. Catat source/waktu, actual status/body predicate dan command exits tanpa private values.
 5. Hasil minimum: nama anggota, konfirmasi mesin kedua/clean checkout, versions/SHA, actual checks dan local smoke, limitations serta provenance. Reviewer/owner menilai sekali pada final Gate 1 acceptance; jangan membuat replay capture baru bila evidence yang sama telah diterima.
 
-Tidak ada langkah di atas yang dijalankan oleh task revisi dokumentasi. Setelah hasil reproduksi dan evidence wajib lengkap, lakukan final independent review dan explicit human Gate 1 acceptance. Baru kemudian mulai Gate 2 sesuai [checklist resmi](23_PHASE_GATES_CHECKLISTS.md#gate-2--crud-baseline), termasuk server validation, DB integration tests, no Production test data dan auth sebelum public mutation menurut ADR-009.
+Final independent assessment dan human acceptance telah selesai pada 24 Oktober 2026; task closure hanya mencatat evidence yang sudah ada. Gate 1 CLOSED tidak otomatis memulai [Gate 2](23_PHASE_GATES_CHECKLISTS.md#gate-2--crud-baseline); CRUD/server validation/DB integration tests dan auth sebelum public mutation tetap memerlukan task terpisah menurut ADR-009.
 
 ## EXIT CRITERIA FOUNDATION
 
 Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation); bukan requirement endpoint/debug/key tambahan.
 
-- [ ] local Next.js works;
-- [ ] TiDB Dev works;
-- [ ] production deploy works;
-- [ ] Preview deploy works;
-- [ ] Production uses Prod DB;
-- [ ] Preview uses Testing DB;
-- [ ] no secret in Git;
-- [ ] CI basic works;
-- [ ] branch model exists;
-- [ ] team can reproduce setup on second laptop.
+- [x] local Next.js works;
+- [x] TiDB Dev works;
+- [x] production deploy works;
+- [x] Preview deploy works;
+- [x] Production uses Prod DB;
+- [x] Preview uses Testing DB;
+- [x] no secret in Git;
+- [x] CI basic works;
+- [x] branch model exists;
+- [x] team can reproduce setup on second laptop.
 
-**Jangan masuk Depot CRUD sebelum gate ini lulus.**
+**Gate 1 telah lulus; Gate 2/Depot CRUD belum dimulai oleh pekerjaan ini.**
