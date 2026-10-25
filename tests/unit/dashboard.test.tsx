@@ -12,28 +12,28 @@ describe("route planner dashboard", () => {
     expect(screen.getByText("Web Admin Route Optimization")).toBeVisible();
   });
 
-  it("explains that operational features are still unavailable", () => {
+  it("explains Depot access and the remaining research feature scope", () => {
     render(<Dashboard />);
 
     expect(
-      screen.getByText(
-        /Aplikasi saat ini berupa shell UI; data operasional belum tersedia\./,
-      ),
+      screen.getByText(/Pengelolaan Depot memerlukan login admin/),
     ).toBeVisible();
     expect(
       screen.getByText(
-        /Pengelolaan data, peta, optimasi rute, dan eksperimen penelitian belum diimplementasikan\./,
+        /Scenario, Order, peta, optimasi rute, dan eksperimen penelitian belum diimplementasikan\./,
       ),
     ).toBeVisible();
   });
 
-  it("associates Depot with its unconfigured status", () => {
+  it("associates Depot with its admin access requirement", () => {
     render(<Dashboard />);
 
     const status = screen.getByText("Depot", { selector: "dt" }).parentElement;
     expect(status).not.toBeNull();
     expect(
-      within(status!).getByText("Belum dikonfigurasi", { selector: "dd" }),
+      within(status!).getByText("Akses melalui login admin", {
+        selector: "dd",
+      }),
     ).toBeVisible();
   });
 
