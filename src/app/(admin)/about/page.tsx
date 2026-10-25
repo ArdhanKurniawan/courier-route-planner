@@ -18,7 +18,7 @@ export default function About() {
               Tahap aplikasi
             </dt>
             <dd className="mt-1">
-              UI Template Cleanup. Foundation belum selesai.
+              Gate 1 selesai. Gate 2 terbuka; Depot CRUD memerlukan login admin.
             </dd>
           </div>
           <div>
@@ -35,8 +35,8 @@ export default function About() {
               Fitur berikutnya
             </dt>
             <dd className="mt-1">
-              Database, pengelolaan depot/order/scenario, peta, optimasi rute,
-              benchmark, dan autentikasi belum diimplementasikan.
+              Scenario, Order, peta, optimasi rute, dan benchmark belum
+              diimplementasikan.
             </dd>
           </div>
         </dl>

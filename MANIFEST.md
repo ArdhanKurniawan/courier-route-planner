@@ -1,19 +1,19 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-10-24 for local Gate 1 documentation closure. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
+Actual filesystem bytes and SHA-256, regenerated 2026-10-25 for the local Gate 2 Depot candidate. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 334490 | `d73b6f7fcacecd43e51338dd4ad97885f2885889161e34e1c246a6583667c9aa` |
-| `README.md` | 19944 | `818572f1d23b108345a42adf41412a627c5dd50ab43581279d38eb600c614a0f` |
+| `MASTER_GUIDE.md` | 346573 | `268f05927e1a636600e41773226aa0641ed620da2512961ee4060672ad5ae487` |
+| `README.md` | 23374 | `dc02e283add5c2ebfbe8957434e59687059c02d128cb75843159f63c0d6efe78` |
 | `THIRD_PARTY_NOTICES.md` | 2146 | `f58d1d9995cf9c8810bbfe56c360422c31a282f7bcb18b6e95fb2c54d34a93e3` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
 | `docs/02_PRODUCT_REQUIREMENTS.md` | 6010 | `2f8ac06618e2530897960c5ec7543783f9ccac5582873427e0fe77caace89b89` |
 | `docs/03_SYSTEM_ARCHITECTURE.md` | 5061 | `ea24394c452b721b42f011f8a677456b3c0302179fa0e69706639eedb3310e17` |
-| `docs/04_TECH_STACK_ADRS.md` | 11216 | `0418d3fa42976668be0bf0cd53ddb6c55c03ee6316f11946f92c287489593d0b` |
+| `docs/04_TECH_STACK_ADRS.md` | 12958 | `0efb9050052e1cb4d0ef5c73516a92175d9d793d85af47cf9862b81ff9679e39` |
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
 | `docs/07_TIDB_GUIDE.md` | 12715 | `e0566838386317a51277191bc485a5cbb0af4f122736ffd3b864f5a9d5bf5f5b` |
@@ -22,8 +22,8 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-24 for local Gate 1 doc
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 10807 | `1ecb9f7d51553a8eeb774fcca07744abfa85b6eca6134bf366feb48c5c44f9f1` |
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 9763 | `900243ed1775a85fecb76b326621bde33d98210964ad04640f7f7b8e8294950b` |
-| `docs/13_SECURITY.md` | 2353 | `5ae03942b9f2a988ec38ab1b9cbd692043513798baba00deeb6ad8068da44105` |
-| `docs/14_TESTING_QA.md` | 13677 | `a1cd72ac25be610dfc2f918b97546a73f2e448c4d4b2fdbacf2b0c7c88a1b845` |
+| `docs/13_SECURITY.md` | 4923 | `d3437031a5ee8af1983d23f25e78e0f0f4994645a5bcd3d7fdce966b8018a5ed` |
+| `docs/14_TESTING_QA.md` | 17941 | `481a529d62c697afca82c77a281d784a6e46df828cd9d3bb301bdb9154030b87` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25552 | `95cf08279741e65eba0aa0d563eaa696580248dc5d5ef8af905aa40d3f3f56c7` |

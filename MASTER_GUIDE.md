@@ -4,9 +4,9 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-10-24. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-10-25. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
-Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. This local document has not been published and does not start Gate 2.
+Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. This local candidate includes Gate 2 Depot implementation notes, remains unpublished, and does not close Gate 2 or authorize runtime/release.
 
 ---
 
@@ -16,8 +16,8 @@ Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Foundation Web Admin dan tiga environment diterima dalam scope evidence minimum; CRUD domain/Gate 2 belum dimulai. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-24 (local documentation only; belum dipublikasikan).
+**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Depot CRUD dan single-admin auth diimplementasikan lokal, dengan initial Development QA dan bounded Testing integration yang sudah dicatat; belum dirilis. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
+**Tanggal sinkronisasi:** 2026-10-25 (local implementation candidate; belum dipublikasikan).
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -53,6 +53,22 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890` mempunyai file tree identik setelah PR #26. Quality Gate kedua SHA PASS; reproduksi Chacha pada laptop kedua Windows 10 PASS berdasarkan evidence owner/human attestation. Production deployment dan minimum smoke 24 Oktober diterima secara composite; pemisahan environment memakai accepted provisioning/configuration evidence dan konektivitas, bukan direct physical runtime SQL identity. Runtime audit 0; full audit 4 Moderate dev-only tetap residual risk. [Gate 1](docs/23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) CLOSED; [closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) mencatat provenance dan limitations.
 
 Historical Preview HTTP tetap PARTIAL, physical runtime SQL identity tetap **NOT VERIFIED**, dan verifier Ed25519 tetap WIP terpisah. Penutupan ini tidak memulai Gate 2 atau memenuhi seluruh future Feature/Database/Release DoD.
+
+### Gate 2 Phase 1A — local candidate 2026-10-25
+
+Local implementation contains single-administrator username/password login and protected Depot CRUD, with private Development configuration. Gate 2 remains OPEN; Order and Scenario CRUD are not implemented. Map, routing and algorithms remain outside this slice; the deferred Ed25519 verifier is not included. Development/Testing verification is not Production acceptance.
+
+- Authentication uses iron-session 9.0.1 and @node-rs/argon2 2.2.2, with environment-backed username/Argon2id hash and no auth tables, public registration or reset feature. GitHub OAuth is DEFERRED by owner decision.
+- Absolute session: 12 hours from successful login, ttl/maxAge 43200, no renewal through activity. Hosted cookies are HttpOnly/Secure/SameSite=Strict/host-only. Logout clears the browser cookie; a copied cookie can remain usable until its original expiry. Credential-version and separate environment secrets remain required.
+- Shared login limiting uses @upstash/ratelimit 2.2.0 and @upstash/redis 1.39.0: one account/environment bucket, 5 attempts per fixed 15-minute window, timeout/error fail-closed. Development uses owner-configured Upstash; actual Preview authentication/limiter QA remains pending.
+- /login and protected /depots provide the MVP entry. /api/depots supports GET/POST, /api/depots/[id] supports GET/PUT/DELETE. All Depot entry points authorize on the server; mutations require exact Origin/JSON, Zod input and the application context/logical-database guard before lazy TiDB acquisition.
+- Five writable fields: name, nullable address, latitude [-90,90], longitude [-180,180], isActive. IDs are decimal strings in HTTP/JSON, never Number; existing eight-column schema/migration unchanged. Uncertain writes return MUTATION_OUTCOME_UNKNOWN and must not be retried automatically. Current schema has no child relation; a future Scenario FK must use RESTRICT and include its own integration proof.
+- Default unit/component tests use synthetic credentials, cookies, Redis/TiDB transport and records: 426/426 PASS in existing offline evidence. No private .env file is required for offline checks. One separately authorized live test:db run passed 1/1 on Testing, including fixture cleanup; the runner remains opt-in and excluded from ordinary test/coverage and CI.
+- [DONE] Owner observed Development login/logout, main Depot CRUD and deactivation, plus server invalid-coordinate HTTP 400 INVALID_INPUT. Independent source review has no unresolved Critical or Important findings. These are existing observations/results, not tests rerun for this documentation correction.
+- [PENDING] Development browser reactivation and delete-cancellation confirmation; actual Preview authentication/limiter QA; final publication and release approval. Root/health/readiness contracts and accepted Gate 1 limitations remain unchanged.
+- [RESIDUAL RISK] One historical intermittent login HTTP 503 remains unexplained. Subsequent login requests succeeded; no root-cause fix or permanent reliability claim is made.
+
+See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation) and [testing boundaries](docs/14_TESTING_QA.md#14-gate-2-phase-1a--depot-and-single-admin-offline-scope). Local code/test evidence does not establish direct physical runtime SQL identity.
 
 ### Historical foundation evidence — 2026-10-11
 
@@ -1449,6 +1465,16 @@ Rencana P1: Auth.js + provider yang disepakati tim; alternatif paling sederhana 
 Boleh defer saat local-only foundation. Wajib sebelum custom production domain dibuka untuk mutation publik.
 
 ---
+
+### MVP supersession — owner decision 2026-10-25
+
+The original GitHub OAuth preference above remains historical. The owner now prioritizes one environment-configured administrator using username/password; GitHub OAuth is DEFERRED. Auth-before-public-mutation and server authorization remain mandatory.
+
+Selected local implementation: iron-session 9.0.1 for sealed cookie sessions, @node-rs/argon2 2.2.2 for library Argon2id verification, and @upstash/ratelimit 2.2.0 + @upstash/redis 1.39.0 for a shared login-attempt counter. No custom crypto, auth tables, registration, multi-user management or reset feature. NextAuth Credentials and Better Auth were evaluated in the preparation plan; neither is installed. Library/native-build and dependency checks do not replace actual runtime verification.
+
+Owner-approved session duration is an absolute 12 hours (43200 seconds) from successful login, with no rolling/sliding/activity renewal or remember-me. Server checks context, credential version and exact expiry on every protected request. Logout deletes the browser cookie; a copied stateless cookie may survive until the original expiry. No Redis session registry is introduced.
+
+Trade-offs: the MVP now takes custody of a password hash; separate per-environment credentials/secret and private human setup are required. The shared limiter adds service availability/quota/cost concerns and a global-bucket login-denial risk. Service provisioning, private setup, Testing DB integration and release remain separately authorized. Missing configuration/service or limiter timeout fails closed, never becomes anonymous access. This decision authorizes the MVP direction/local implementation only; it does not claim deployed authentication PASS.
 
 ## ADR-010 — OSRM bukan MVP core
 
@@ -2904,7 +2930,9 @@ Threats:
 
 Sebelum public mutation dibuka, gunakan authentication.
 
-Preferred initial approach:
+Current MVP owner decision (2026-10-25): one administrator with username/password; GitHub OAuth DEFERRED. The preferred approach below is retained as historical reasoning, superseded for the MVP by [ADR-009's owner decision](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation).
+
+Historical preferred initial approach:
 
 - Auth.js;
 - GitHub OAuth;
@@ -2913,6 +2941,16 @@ Preferred initial approach:
 Keuntungan: tidak menyimpan password sendiri.
 
 Auth dapat ditunda pada local foundation tetapi **bukan** pada public production admin.
+
+### Single-admin MVP contract
+
+Use the maintained session/KDF libraries, not custom hashing/JWT/session crypto. Store only the private Argon2id PHC hash and username in environment configuration; no plaintext password in source, examples, logs or URLs. Argon2id policy: v19, 19456 KiB, two passes, parallelism one, 32-byte output and at least 16-byte library-generated salt. Real hash/secret creation and entry remain a private human operation after approval.
+
+Session is absolute 43200 seconds from successful login, with library ttl and cookie maxAge 43200, no activity renewal. Server validates typed issuedAt/expiresAt, subject, current environment and credential version before any application DB acquisition. Hosted cookies are HttpOnly, Secure, SameSite=Strict, Path=/, no Domain; HTTP cookie relaxation is local Development only. Logout is a protected POST clearing the browser cookie. Copied cookies may remain usable until the original 12-hour expiry; no immediate per-session revocation claim or session database/registry.
+
+Login/logout/Depot mutations require exact configured Origin and JSON; no public registration/reset, permissive CORS, client role bypass or default administrator. Authentication config and Depot DB target are checked lazily and fail closed. Development, Testing and Production use distinct credentials, secrets, cookies and limiter scopes. Preview never inherits Production config; logical target validation is not direct physical runtime SQL identity proof.
+
+A shared regional limiter is required for deployed login: five syntactically valid attempts per fixed 15-minute window, account/environment key independent of submitted username/IP. Fixed windows can permit ten attempts across an adjacent-window boundary; global bucket exhaustion can deny new logins. Limiter timeouts (including SDK success-with-timeout), service/quota errors or malformed results deny before KDF/session minting. No in-memory fallback or successful-login reset. Upstash provisioning, cost policy and real cross-instance evidence are pending separate approval. Existing valid sessions/logout do not require Redis availability. Runtime/private configuration and manual auth verification remain PENDING; source implementation alone is not release acceptance.
 
 ## 3. Authorization
 
@@ -3186,6 +3224,27 @@ Quality menggunakan salinan public source byte-identical dengan lockfile yang sa
 Untuk verification task yang melarang private env reads, jalankan TDD juga dari public isolated copy: default Vite loader dapat membaca `.env` / `.env.local` / mode-specific env meskipun fixtures memakai explicit input. Initial root TDD pada task ini memiliki procedural deviation; RED/GREEN diulang tanpa private files dan dicatat transparan pada report. Existing Vitest config unchanged.
 
 Closure 0D-5B hanya dokumentasi: diff/internal links/MASTER-MANIFEST parity, bounded secret scan dan public source/config/migration preservation. Docs-only lint/build dilakukan pada isolated public copy tanpa ignored private env. Hasil fresh closure dicatat pada live report; historical suite/tooling evidence tidak dianggap fresh full-suite PASS. Tidak ada DB connection, SQL atau second migration.
+
+## 14. Gate 2 Phase 1A — Depot and single-admin offline scope
+
+Gate 1 is CLOSED; older dated sections above remain historical snapshots. This local candidate implements only Depot plus single-admin authentication; Gate 2 remains OPEN for Scenario/Order and actual feature acceptance.
+
+Offline unit/component tests use synthetic usernames/passwords/Argon2 hashes, secrets/cookies, Redis transport, TiDB HTTP replies and run records. Coverage includes auth configuration and zero-TiDB denials, exact 12-hour boundary/non-renewal/logout, Origin/body guards, limiter timeout fail-closed behavior, lossless BIGINT, coordinate bounds, repository metadata and FK-code projection, unchanged PUT, unknown write outcomes, UI pending/empty/error/confirmation and legacy health/readiness regressions. A real SDK test with a fake store is not live distributed-enforcement evidence.
+
+Standard local checks remain npm ci, lint, typecheck, test, test:coverage, db:check, build, post-build typecheck and existing runtime/full-audit policy. Runtime/private configuration is not required for these commands; missing config prevents login. Default test/coverage excludes tests/integration/** while keeping existing default exclusions and all-source coverage policy. No threshold is weakened.
+
+A separate `npm run test:db` exists outside CI and the default offline suite. It rejects before collection unless RUN_DB_INTEGRATION=1, APP_ENV=testing, a valid URL targeting exactly courier_route_planner_testing, and local/non-Vercel invocation. Each run requires its own bounded owner authorization and a private APPLICATION Testing handoff; never supply admin/root/migrator/Dev/Production credentials. No real values belong in chat or test fixtures.
+
+That runner covers one run-tagged Depot through create/read/edit/deactivate/reactivate/no-op/delete/404. A test wrapper records validated insert IDs before readback; finally cleanup uses only recorded run-owned IDs. Unknown insert/delete outcomes stop without retry/broad name deletion and report the run tag for human resolution. No migration, DDL, reset/truncate, fake Scenario FK or Production operation is performed. Live FK proof belongs to a future actual Scenario RESTRICT relation.
+
+### Current verification evidence
+
+- [DONE] Authentication and protected Depot CRUD are implemented locally. Existing offline evidence records 426/426 tests PASS; independent source review has no unresolved Critical or Important findings. This documentation correction does not rerun those checks.
+- [DONE] Owner observed successful Development login/logout, main CRUD operations, deactivation and removal of the deleted QA fixture. Owner also observed server invalid-coordinate rejection: HTTP 400 INVALID_INPUT. These are owner observations, not agent browser testing.
+- [DONE] One separately authorized TiDB Testing integration run passed 1/1, with fixture cleanup PASS, 12 observed SQL requests and zero retries. The existing runner exercised create/read/edit/deactivate/reactivate/no-op/delete/not-found using its own tagged fixture only. Target/process guards passed for APP_ENV=testing and courier_route_planner_testing; APPLICATION role/resource mapping was owner-attested. This verifies the service/repository round-trip, not HTTP login, UI behavior or direct physical SQL identity.
+- [PENDING] Explicit owner confirmation of Development browser reactivation and delete cancellation; actual Preview authentication/limiter QA; final publication and release approval. Existing manual QA scope for denied anonymous mutation, session expiry/non-renewal, Origin/cookie protections, actual shared limiting, list pagination, keyboard/mobile behavior and unknown-outcome refresh remains applicable; those results are not implied by the CRUD integration result.
+- [RESIDUAL RISK] One historical intermittent login HTTP 503 remains unexplained; subsequent login requests succeeded. No root-cause correction or permanent fix is claimed.
+- [BOUNDARY] Gate 1 remains CLOSED and Gate 2 OPEN. Order and Scenario CRUD are not implemented. Development/Testing verification is not Production acceptance. Physical runtime SQL identity remains NOT VERIFIED; neither these results nor /api/ready establish it. Historical evidence above remains unchanged.
 
 ---
 

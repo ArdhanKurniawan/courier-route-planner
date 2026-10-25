@@ -15,17 +15,22 @@
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:migrate": "node --env-file=.env.migrations.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.dev.config.ts",
     "db:migrate:testing": "node --env-file=.env.migrations.testing.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.testing.config.ts",
-    "db:migrate:production": "node --env-file=.env.migrations.production.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.production.config.ts"
+    "db:migrate:production": "node --env-file=.env.migrations.production.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.production.config.ts",
+    "test:db": "vitest run --config vitest.integration.config.ts"
   },
   "engines": {
     "node": "24.x"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.2",
     "@tailwindcss/postcss": "^4.3.3",
     "@tidbcloud/serverless": "0.3.0",
+    "@upstash/ratelimit": "2.2.0",
+    "@upstash/redis": "1.39.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "0.45.3",
     "flatpickr": "^4.6.13",
+    "iron-session": "9.0.1",
     "next": "^16.4.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

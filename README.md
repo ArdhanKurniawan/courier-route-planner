@@ -2,8 +2,8 @@
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Foundation Web Admin dan tiga environment diterima dalam scope evidence minimum; CRUD domain/Gate 2 belum dimulai. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-24 (local documentation only; belum dipublikasikan).
+**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Depot CRUD dan single-admin auth diimplementasikan lokal, dengan initial Development QA dan bounded Testing integration yang sudah dicatat; belum dirilis. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
+**Tanggal sinkronisasi:** 2026-10-25 (local implementation candidate; belum dipublikasikan).
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -39,6 +39,22 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890` mempunyai file tree identik setelah PR #26. Quality Gate kedua SHA PASS; reproduksi Chacha pada laptop kedua Windows 10 PASS berdasarkan evidence owner/human attestation. Production deployment dan minimum smoke 24 Oktober diterima secara composite; pemisahan environment memakai accepted provisioning/configuration evidence dan konektivitas, bukan direct physical runtime SQL identity. Runtime audit 0; full audit 4 Moderate dev-only tetap residual risk. [Gate 1](docs/23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) CLOSED; [closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) mencatat provenance dan limitations.
 
 Historical Preview HTTP tetap PARTIAL, physical runtime SQL identity tetap **NOT VERIFIED**, dan verifier Ed25519 tetap WIP terpisah. Penutupan ini tidak memulai Gate 2 atau memenuhi seluruh future Feature/Database/Release DoD.
+
+### Gate 2 Phase 1A — local candidate 2026-10-25
+
+Local implementation contains single-administrator username/password login and protected Depot CRUD, with private Development configuration. Gate 2 remains OPEN; Order and Scenario CRUD are not implemented. Map, routing and algorithms remain outside this slice; the deferred Ed25519 verifier is not included. Development/Testing verification is not Production acceptance.
+
+- Authentication uses iron-session 9.0.1 and @node-rs/argon2 2.2.2, with environment-backed username/Argon2id hash and no auth tables, public registration or reset feature. GitHub OAuth is DEFERRED by owner decision.
+- Absolute session: 12 hours from successful login, ttl/maxAge 43200, no renewal through activity. Hosted cookies are HttpOnly/Secure/SameSite=Strict/host-only. Logout clears the browser cookie; a copied cookie can remain usable until its original expiry. Credential-version and separate environment secrets remain required.
+- Shared login limiting uses @upstash/ratelimit 2.2.0 and @upstash/redis 1.39.0: one account/environment bucket, 5 attempts per fixed 15-minute window, timeout/error fail-closed. Development uses owner-configured Upstash; actual Preview authentication/limiter QA remains pending.
+- /login and protected /depots provide the MVP entry. /api/depots supports GET/POST, /api/depots/[id] supports GET/PUT/DELETE. All Depot entry points authorize on the server; mutations require exact Origin/JSON, Zod input and the application context/logical-database guard before lazy TiDB acquisition.
+- Five writable fields: name, nullable address, latitude [-90,90], longitude [-180,180], isActive. IDs are decimal strings in HTTP/JSON, never Number; existing eight-column schema/migration unchanged. Uncertain writes return MUTATION_OUTCOME_UNKNOWN and must not be retried automatically. Current schema has no child relation; a future Scenario FK must use RESTRICT and include its own integration proof.
+- Default unit/component tests use synthetic credentials, cookies, Redis/TiDB transport and records: 426/426 PASS in existing offline evidence. No private .env file is required for offline checks. One separately authorized live test:db run passed 1/1 on Testing, including fixture cleanup; the runner remains opt-in and excluded from ordinary test/coverage and CI.
+- [DONE] Owner observed Development login/logout, main Depot CRUD and deactivation, plus server invalid-coordinate HTTP 400 INVALID_INPUT. Independent source review has no unresolved Critical or Important findings. These are existing observations/results, not tests rerun for this documentation correction.
+- [PENDING] Development browser reactivation and delete-cancellation confirmation; actual Preview authentication/limiter QA; final publication and release approval. Root/health/readiness contracts and accepted Gate 1 limitations remain unchanged.
+- [RESIDUAL RISK] One historical intermittent login HTTP 503 remains unexplained. Subsequent login requests succeeded; no root-cause fix or permanent reliability claim is made.
+
+See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation) and [testing boundaries](docs/14_TESTING_QA.md#14-gate-2-phase-1a--depot-and-single-admin-offline-scope). Local code/test evidence does not establish direct physical runtime SQL identity.
 
 ### Historical foundation evidence — 2026-10-11
 
