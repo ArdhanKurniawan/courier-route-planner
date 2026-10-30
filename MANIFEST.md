@@ -1,12 +1,12 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-10-25 for the local Gate 2 Depot candidate. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
+Actual filesystem bytes and SHA-256, regenerated 2026-10-30 for the archived Phase 0D evidence location correction. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 346573 | `268f05927e1a636600e41773226aa0641ed620da2512961ee4060672ad5ae487` |
+| `MASTER_GUIDE.md` | 346940 | `888f90e95c4a1be5c9c1078218d71bf7b5c8ead14de39774304a5f310290594a` |
 | `README.md` | 23374 | `dc02e283add5c2ebfbe8957434e59687059c02d128cb75843159f63c0d6efe78` |
 | `THIRD_PARTY_NOTICES.md` | 2146 | `f58d1d9995cf9c8810bbfe56c360422c31a282f7bcb18b6e95fb2c54d34a93e3` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
@@ -28,11 +28,11 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-25 for the local Gate 2
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25552 | `95cf08279741e65eba0aa0d563eaa696580248dc5d5ef8af905aa40d3f3f56c7` |
 | `docs/18_ROADMAP_BACKLOG.md` | 9799 | `536cc471a5018b2b272acb5e3c930bdf4a12e1e26ffa7ead8a66f105def6d5b0` |
-| `docs/19_DEFINITION_OF_DONE.md` | 11343 | `672aa10df32df76541820b9c428dc933b6c0c479e531c4029dc6796f2ec4a67e` |
+| `docs/19_DEFINITION_OF_DONE.md` | 11548 | `08d4426f755142fa2e900637e60bde30c0c25e20502e1b61e32fabf9d2470ccf` |
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 17249 | `cdf756bb4e70d9bc5202d5f0d687e8534cd6b4c2e580ec383c157f03d7521750` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 17411 | `7b67c393932dbe77110a779cdd0d4ec143530335ebc6d0059ec398cd2f92eb0f` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

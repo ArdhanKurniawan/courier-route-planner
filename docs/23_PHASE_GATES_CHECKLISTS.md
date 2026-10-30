@@ -44,7 +44,7 @@ Accepted closure references: main Production `16700a73c37e4c7a3b08cf1ab69c96fd84
 
 ### Ringkasan evidence lokal yang belum dipublikasikan
 
-Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi audit lokal di docs/proses/phase-0/0d/, berstatus **NOT PUBLISHED**; file lengkap dan verdict historis dipertahankan tanpa dipublikasikan. Ringkasan ini mencatat dasar accepted minimum evidence serta keterbatasannya.
+Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi evidence historis berstatus **NOT PUBLISHED**. Laporan lengkap dipertahankan di arsip lokal eksternal milik owner, di luar repository dan bukan bagian dari normal Git checkout; evidence asli dan verdict historis tidak berubah. Ringkasan terpublikasi ini mempertahankan provenance, hasil historis yang diterima dan keterbatasannya tanpa membutuhkan salinan laporan di repository.
 
 | Sumber lokal — NOT PUBLISHED | Provenance dan hasil yang diterima | Batas pembuktian |
 | --- | --- | --- |

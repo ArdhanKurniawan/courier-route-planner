@@ -4230,7 +4230,7 @@ Ed25519 verifier, diagnostic endpoint, real keys/tickets, dedicated Windows cust
 
 ### Prosedur penyimpanan WIP — referensi untuk operasi yang diotorisasi terpisah
 
-Inventory historis berasal dari executor report Phase 0D-8B, 18 Oktober 2026, bagian 2. Referensi audit lokal: `PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md` — **NOT PUBLISHED**, disimpan di docs/proses/phase-0/0d/. Ringkasannya berikut membuat inventory dapat dibaca tanpa laporan lokal tersebut:
+Inventory historis berasal dari executor report Phase 0D-8B, 18 Oktober 2026, bagian 2. Referensi audit: `PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md` — **NOT PUBLISHED**. Laporan lengkap dipertahankan di arsip lokal eksternal milik owner, di luar repository dan bukan bagian dari normal Git checkout; evidence asli dan verdict historis tidak berubah. Ringkasan terpublikasi berikut mempertahankan provenance, inventory dan keterbatasan yang diperlukan tanpa membutuhkan salinan laporan di repository:
 
 - 9 file baru dalam arsip WIP: `scripts/foundation-sign-ticket.mjs`, `src/app/api/internal/foundation-verify/route.ts`, `src/config/foundation-verifier.ts`, `src/db/foundation-verify.ts`, `src/security/foundation-ticket.ts`, `tests/unit/foundation-ticket.test.ts`, `tests/unit/foundation-verifier-config.test.ts`, `tests/unit/foundation-verify-route.test.ts`, `tests/unit/foundation-verify.test.ts`.
 - 2 existing files yang dimodifikasi: `src/db/client.ts` dan `tests/unit/db-client.test.ts`.
@@ -5139,7 +5139,7 @@ Accepted closure references: main Production `16700a73c37e4c7a3b08cf1ab69c96fd84
 
 ### Ringkasan evidence lokal yang belum dipublikasikan
 
-Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi audit lokal di docs/proses/phase-0/0d/, berstatus **NOT PUBLISHED**; file lengkap dan verdict historis dipertahankan tanpa dipublikasikan. Ringkasan ini mencatat dasar accepted minimum evidence serta keterbatasannya.
+Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi evidence historis berstatus **NOT PUBLISHED**. Laporan lengkap dipertahankan di arsip lokal eksternal milik owner, di luar repository dan bukan bagian dari normal Git checkout; evidence asli dan verdict historis tidak berubah. Ringkasan terpublikasi ini mempertahankan provenance, hasil historis yang diterima dan keterbatasannya tanpa membutuhkan salinan laporan di repository.
 
 | Sumber lokal — NOT PUBLISHED | Provenance dan hasil yang diterima | Batas pembuktian |
 | --- | --- | --- |
