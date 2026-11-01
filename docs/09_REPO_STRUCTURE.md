@@ -98,6 +98,12 @@ src/domain/routing/
 
 ## Rule of dependency direction
 
+### Actual Phase 1B source — 2026-10-31
+
+`src/app/(admin)/scenarios/page.tsx` dan `src/app/api/scenarios/{route.ts,[id]/route.ts}` memakai existing server-side admin boundary. HTTP helper `src/lib/http/scenario-api.ts` → `src/application/scenarios/scenario-service.ts` → `src/db/repositories/scenario-repository.ts` → lazy application DB. DTO/Zod contracts berada di `src/lib/validation/scenario.ts`; UI di `src/components/scenarios/`.
+
+`src/db/schema.ts` kini memiliki source depots + scenarios; `drizzle/0001_scenarios.sql` dan snapshot/journal baru hanya generated offline, belum applied. Synthetic fixtures/tests Scenario tidak memerlukan private env, DB, Redis atau browser session. Route Scenario dikeluarkan dari placeholder `plannedModules`. Order, Generator, Map, freeze dan algoritma tetap future target; historical state di bagian terdahulu bukan evidence implementasi/runtime baru.
+
 ```text
 UI/API → application → algorithm domain (DistanceMatrix + params/seed)
              └→ infrastructure adapters / repositories

@@ -8,6 +8,13 @@
       "when": 1791072707266,
       "tag": "0000_dear_rictor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1793441266963,
+      "tag": "0001_scenarios",
+      "breakpoints": true
     }
   ]
 }

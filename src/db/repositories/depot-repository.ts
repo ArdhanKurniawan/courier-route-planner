@@ -2,7 +2,7 @@ import "server-only";
 import { asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase, type createDatabase } from "@/db/client";
-import { depots } from "@/db/schema";
+import { depots, scenarios } from "@/db/schema";
 import { DepotError, depotRow, parseDepotId } from "@/lib/validation/depot";
 
 export type DepotRow = typeof depots.$inferSelect;
@@ -62,6 +62,9 @@ function foreignKeyConflict(error: unknown) {
   return false;
 }
 const affected = z.object({ rowsAffected: z.number().int().min(0).max(1) });
+const referenceResult = z.object({
+  rows: z.tuple([z.object({ has_reference: z.enum(["0", "1"]) }).strict()]),
+});
 export function createDepotRepository(
   acquire: () => ReturnType<typeof createDatabase> = getDatabase,
 ): DepotRepository {
@@ -130,11 +133,22 @@ export function createDepotRepository(
             await db.update(depots).set(input).where(eq(depots.id, id)),
           ).rowsAffected,
       ),
-    remove: (id) =>
-      mutate(
+    remove: async (id) => {
+      // EXISTS always returns one flag; missing/malformed reads must not permit DELETE.
+      const referenced = await read(async (db) => {
+        const result = await db.execute(
+          sql`select cast(exists(select 1 from ${scenarios} where ${scenarios.depotId} = ${id} limit 1) as char) as has_reference`,
+        );
+        return referenceResult.parse(result).rows[0].has_reference === "1";
+      });
+      // Outside both wrappers so this definitive conflict retains DEPOT_IN_USE.
+      if (referenced) throw new DepotError("DEPOT_IN_USE");
+      // FK RESTRICT remains the final guard for a reference inserted after the read.
+      return mutate(
         async (db) =>
           affected.parse(await db.delete(depots).where(eq(depots.id, id)))
             .rowsAffected,
-      ),
+      );
+    },
   };
 }

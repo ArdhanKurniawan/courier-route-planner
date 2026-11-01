@@ -1,13 +1,13 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-10-30 for the archived Phase 0D evidence location correction. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
+Actual filesystem bytes and SHA-256, regenerated 2026-10-31 for the Phase 1B Scenario source documentation synchronization. Scope: existing documentation-pack sources plus docs/32-34 and the Gate 1 closure report; includes MASTER_GUIDE.md, excludes MANIFEST.md itself to avoid a self-hash cycle. Line-ending changes alter bytes/hashes; regenerate after changing source files. Historical report inventories outside this scope are unchanged. This is a documentation manifest, not an application dependency inventory or proof of Git publication.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 346940 | `888f90e95c4a1be5c9c1078218d71bf7b5c8ead14de39774304a5f310290594a` |
-| `README.md` | 23374 | `dc02e283add5c2ebfbe8957434e59687059c02d128cb75843159f63c0d6efe78` |
+| `MASTER_GUIDE.md` | 373769 | `c15507e9cec968d428cf050b3d1a462d3316a9a1dad0f26658299d491016cb6b` |
+| `README.md` | 27406 | `eace70e35ef7913190fdaef0db5b357812a11f5d2954429e45d59e5701450a1d` |
 | `THIRD_PARTY_NOTICES.md` | 2146 | `f58d1d9995cf9c8810bbfe56c360422c31a282f7bcb18b6e95fb2c54d34a93e3` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
@@ -17,13 +17,13 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-30 for the archived Pha
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
 | `docs/07_TIDB_GUIDE.md` | 12715 | `e0566838386317a51277191bc485a5cbb0af4f122736ffd3b864f5a9d5bf5f5b` |
-| `docs/08_DATABASE_DESIGN.md` | 10444 | `09a656f996371a35c7c63b6a9f2d6456eeabaf8fa1a22d07d58b39940158800e` |
-| `docs/09_REPO_STRUCTURE.md` | 8424 | `8d1bbdeff62db1ab46fb0022752225b89558a3d270f2d97a6099f60b4e3b4030` |
+| `docs/08_DATABASE_DESIGN.md` | 12833 | `3c0462b2529a89e888aef4774ee9b73170ac01314f9adbd4c303dfa7f126cbba` |
+| `docs/09_REPO_STRUCTURE.md` | 9327 | `223a749e6fb32f600c2fdaf6b0a41ed6bb2d028d46646a4d6c6030e8ac59813e` |
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 10807 | `1ecb9f7d51553a8eeb774fcca07744abfa85b6eca6134bf366feb48c5c44f9f1` |
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 9763 | `900243ed1775a85fecb76b326621bde33d98210964ad04640f7f7b8e8294950b` |
 | `docs/13_SECURITY.md` | 4923 | `d3437031a5ee8af1983d23f25e78e0f0f4994645a5bcd3d7fdce966b8018a5ed` |
-| `docs/14_TESTING_QA.md` | 17941 | `481a529d62c697afca82c77a281d784a6e46df828cd9d3bb301bdb9154030b87` |
+| `docs/14_TESTING_QA.md` | 36479 | `6ea6c00542f47dd98c591a7b2af6330c1db8f702d723eb6d6596ae0f819fe50e` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25552 | `95cf08279741e65eba0aa0d563eaa696580248dc5d5ef8af905aa40d3f3f56c7` |
@@ -32,7 +32,7 @@ Actual filesystem bytes and SHA-256, regenerated 2026-10-30 for the archived Pha
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 17411 | `7b67c393932dbe77110a779cdd0d4ec143530335ebc6d0059ec398cd2f92eb0f` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 18329 | `479753f3e916db943d9c79b118e294c4a8bdd0c776be08e6a0326e7c204671dd` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

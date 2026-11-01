@@ -2,8 +2,8 @@
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Depot CRUD dan single-admin auth diimplementasikan lokal, dengan initial Development QA dan bounded Testing integration yang sudah dicatat; belum dirilis. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-25 (local implementation candidate; belum dipublikasikan).
+**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Phase 1A auth/Depot merged ke testing melalui PR #30. Phase 1B Scenario CRUD selesai lokal, belum committed/published: migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, tetapi receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; remote Quality Gate kandidat, Preview QA dan release approval masih pending. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
+**Tanggal sinkronisasi:** 2026-10-31 (Scenario local candidate; belum dipublikasikan).
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -40,7 +40,7 @@ Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing 
 
 Historical Preview HTTP tetap PARTIAL, physical runtime SQL identity tetap **NOT VERIFIED**, dan verifier Ed25519 tetap WIP terpisah. Penutupan ini tidak memulai Gate 2 atau memenuhi seluruh future Feature/Database/Release DoD.
 
-### Gate 2 Phase 1A — local candidate 2026-10-25
+### Historical Gate 2 Phase 1A — local candidate 2026-10-25
 
 Local implementation contains single-administrator username/password login and protected Depot CRUD, with private Development configuration. Gate 2 remains OPEN; Order and Scenario CRUD are not implemented. Map, routing and algorithms remain outside this slice; the deferred Ed25519 verifier is not included. Development/Testing verification is not Production acceptance.
 
@@ -54,7 +54,22 @@ Local implementation contains single-administrator username/password login and p
 - [PENDING] Development browser reactivation and delete-cancellation confirmation; actual Preview authentication/limiter QA; final publication and release approval. Root/health/readiness contracts and accepted Gate 1 limitations remain unchanged.
 - [RESIDUAL RISK] One historical intermittent login HTTP 503 remains unexplained. Subsequent login requests succeeded; no root-cause fix or permanent reliability claim is made.
 
-See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation) and [testing boundaries](docs/14_TESTING_QA.md#14-gate-2-phase-1a--depot-and-single-admin-offline-scope). Local code/test evidence does not establish direct physical runtime SQL identity.
+See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation) and [testing boundaries](docs/14_TESTING_QA.md#14-historical-gate-2-phase-1a--depot-and-single-admin-scope-2026-10-25). Local code/test evidence does not establish direct physical runtime SQL identity.
+
+### Gate 2 Phase 1B — Scenario local candidate 2026-10-31
+
+Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeeping setelah Phase 1A merge `60b248c9b460cd7be48334a1c5b3fe64092254ea`). Owner melaporkan Development dan Preview login/Depot CRUD berhasil; ini observasi owner, bukan runtime test baru oleh agent. Pending manual checks dalam snapshot 25 Oktober tidak otomatis dianggap selesai.
+
+- [DONE] Protected `/scenarios`, `GET/POST /api/scenarios` dan `GET/PUT/DELETE /api/scenarios/[id]`; API → service → lazy repository, existing admin session/Origin/body/environment guards tetap digunakan. Penolakan autentikasi tidak memperoleh DB.
+- [DONE] Name, Depot, empat distribution patterns, configured customer count, nullable radius bounds dan nullable signed BIGINT seed. ID/seed diserialisasi sebagai string tanpa kehilangan presisi. Status selalu `draft` read-only; tidak ada freeze atau transisi.
+- [DONE] Create/pergantian Depot memakai Depot aktif melalui conditional SQL atomik. Referensi lama yang kemudian nonaktif boleh dipertahankan. FK `scenarios.depot_id → depots.id` memakai RESTRICT; delete Scenario tidak cascade dan future child references harus memakai FK nyata.
+- [DONE] Migration `0001_scenarios` diterapkan terpisah pada Development dan Testing dengan approval masing-masing; Testing invocation tepat satu kali, ledger 0000/0001 dan schema/FK/index readback PASS. Historical CRLF hash 0000 Testing dipertahankan; local SQL LF cocok historical Git blob. Owner melaporkan Development browser QA 8/8 PASS; ini human observation, bukan pengujian ulang agent.
+- [DONE] Dedicated Scenario integration **source** memakai service/repository existing dengan dua Depot dan satu Scenario valid, UUID tag, receipt ID sebelum readback dan cleanup exact-ID child-first. Assertion Depot referenced menguji precondition aplikasi; verifikasi schema/FK terpisah. UI tetap mencakup pagination, validation/loading/empty/error, konfirmasi delete dan lock setelah unknown mutation sampai explicit reload berhasil.
+- [DONE] Repository Depot delete memeriksa satu flag EXISTS tervalidasi pada kolom Scenario berindeks: referensi pada Depot aktif/nonaktif ditolak sebelum DELETE; failed/malformed read fail closed. Tanpa referensi, DELETE existing berjalan sekali. FK RESTRICT tetap mengamankan race; kode provider generic `61100002` dan timeout setelah precheck tetap unknown tanpa retry. TDD: 27 RED → 46/46 GREEN; full offline 548/548, coverage, lint, typecheck/build/post-build typecheck PASS.
+- [HISTORICAL] Live integration pertama **NOT PASS** saat HTTP 400 provider diklasifikasikan unknown; probe berikutnya menangkap `details.code = 61100002` tanpa bukti errno FK khusus. Seluruh fixture integration/probe telah dibersihkan dengan approval terpisah.
+- [DONE] Rerun Testing APPLICATION setelah koreksi: tepat satu invocation, **1/1 PASS**, exit 0; 38 SQL operations, tanpa transport failure atau retry. Referenced Depot ditolak oleh precondition dengan `DEPOT_IN_USE` tanpa DELETE; FK RESTRICT tetap safeguard database.
+- [LIMITATION] Assertion cleanup lulus, tetapi ID fixture tidak tertangkap pada persisted receipt; wrapper tetap **`STOP_NOT_PASS`** dan tidak ada independent post-run absence verification. Physical runtime SQL identity tetap **NOT VERIFIED**; FK concurrency race belum diuji. Lihat [hasil rerun dan batas evidence](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31).
+- [BOUNDARY] Gate 1 CLOSED; Gate 2 OPEN. Order, generator, map, routing, benchmark/freeze dan algoritma belum diimplementasikan. Auth 12 jam, fail-closed limiter dan environment isolation tidak diubah; historical intermittent login 503 tetap residual risk tanpa klaim perbaikan.
 
 ### Historical foundation evidence — 2026-10-11
 

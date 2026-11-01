@@ -16,6 +16,7 @@ import { POST as logout } from "@/app/api/auth/logout/route";
 import { requireAdmin } from "@/lib/security/admin";
 import { getDatabase } from "@/db/client";
 import DepotPage from "@/app/(admin)/depots/page";
+import ScenarioPage from "@/app/(admin)/scenarios/page";
 
 const boundary = vi.hoisted(() => ({
   allowed: true,
@@ -108,6 +109,9 @@ function request(
 describe("auth HTTP and server authorization", () => {
   it("protects the server-rendered Depot entry before rendering data", async () => {
     await expect(DepotPage()).rejects.toThrow("REDIRECT:/login");
+  });
+  it("protects the server-rendered Scenario entry before rendering data", async () => {
+    await expect(ScenarioPage()).rejects.toThrow("REDIRECT:/login");
   });
   it("cannot authorize a missing session and acquires no application DB", async () => {
     await expect(requireAdmin()).rejects.toMatchObject({ status: 401 });

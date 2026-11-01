@@ -81,6 +81,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 2 — CRUD baseline
 
+**Current Phase 1B candidate — 2026-10-31:** Phase 1A merged ke testing melalui PR #30. Scenario CRUD selesai lokal; migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; tidak ada independent post-run absence verification berbasis ID tersimpan. [Batas evidence dan provenance](14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31) tetap berlaku. Phase 1B belum committed/published; remote Quality Gate kandidat, Preview QA dan owner merge/release acceptance masih PENDING. Checklist acceptance berikut tidak otomatis ditutup. Status `draft` read-only, tanpa freeze/transisi; Order CRUD belum diimplementasikan. Physical runtime SQL identity NOT VERIFIED dan FK concurrency race belum diuji. Gate 1 CLOSED; Gate 2 OPEN.
+
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;
 - [ ] order CRUD accepted;
