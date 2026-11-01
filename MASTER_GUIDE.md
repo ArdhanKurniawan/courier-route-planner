@@ -4,9 +4,9 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-10-31. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-11-01. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
-Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. This local Scenario candidate follows Phase 1A merged into testing, remains unpublished, and does not close Gate 2 or authorize migration/runtime/release.
+Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. Phase 1B application is merged into Testing via PR #31. This local documentation candidate records scoped administrative closure readiness and owner-observed aggregate CRUD; detailed Browser QA remains PENDING. It does not close Gate 2 or authorize migration/runtime/Production release.
 
 ---
 
@@ -16,8 +16,8 @@ Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Phase 1A auth/Depot merged ke testing melalui PR #30. Phase 1B Scenario CRUD selesai lokal, belum committed/published: migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, tetapi receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; remote Quality Gate kandidat, Preview QA dan release approval masih pending. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-31 (Scenario local candidate; belum dipublikasikan).
+**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**. Phase 1A auth/Depot merged ke Testing melalui PR #30; Phase 1B Scenario CRUD merged melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Post-merge Quality Gate PASS dan stable Testing Preview READY. Owner melaporkan Browser QA core CRUD aman: **OWNER-OBSERVED**, agregat, bukan automated/independent verification. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope evidence tersebut; detail Browser QA tetap PENDING, Gate 2 OPEN, dan Production release belum diotorisasi. Lihat [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01) dan [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
+**Tanggal sinkronisasi:** 2026-11-01 (aplikasi Phase 1B sudah merged ke Testing; revisi dokumentasi closure ini masih lokal).
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -72,6 +72,8 @@ See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STA
 
 ### Gate 2 Phase 1B — Scenario local candidate 2026-10-31
 
+Snapshot source/evidence sebelum publikasi; status terkini dan laporan owner setelah merge ada pada bagian Testing post-merge di bawah.
+
 Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeeping setelah Phase 1A merge `60b248c9b460cd7be48334a1c5b3fe64092254ea`). Owner melaporkan Development dan Preview login/Depot CRUD berhasil; ini observasi owner, bukan runtime test baru oleh agent. Pending manual checks dalam snapshot 25 Oktober tidak otomatis dianggap selesai.
 
 - [DONE] Protected `/scenarios`, `GET/POST /api/scenarios` dan `GET/PUT/DELETE /api/scenarios/[id]`; API → service → lazy repository, existing admin session/Origin/body/environment guards tetap digunakan. Penolakan autentikasi tidak memperoleh DB.
@@ -84,6 +86,15 @@ Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeepin
 - [DONE] Rerun Testing APPLICATION setelah koreksi: tepat satu invocation, **1/1 PASS**, exit 0; 38 SQL operations, tanpa transport failure atau retry. Referenced Depot ditolak oleh precondition dengan `DEPOT_IN_USE` tanpa DELETE; FK RESTRICT tetap safeguard database.
 - [LIMITATION] Assertion cleanup lulus, tetapi ID fixture tidak tertangkap pada persisted receipt; wrapper tetap **`STOP_NOT_PASS`** dan tidak ada independent post-run absence verification. Physical runtime SQL identity tetap **NOT VERIFIED**; FK concurrency race belum diuji. Lihat [hasil rerun dan batas evidence](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31).
 - [BOUNDARY] Gate 1 CLOSED; Gate 2 OPEN. Order, generator, map, routing, benchmark/freeze dan algoritma belum diimplementasikan. Auth 12 jam, fail-closed limiter dan environment isolation tidak diubah; historical intermittent login 503 tetap residual risk tanpa klaim perbaikan.
+
+### Gate 2 Phase 1B — Testing post-merge (2026-11-01)
+
+[PR #31](https://github.com/ArdhanKurniawan/courier-route-planner/pull/31) merged ke Testing pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. [Post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) SUCCESS; [stable Testing Preview](https://courier-route-planner-git-testing-ardhankurniawans-projects.vercel.app) terikat ke deployment `dpl_96DD4QwZsw27ETQQa98fDSjuVwzz`, READY untuk SHA yang sama. Metadata/deployment read tidak menjalankan Browser QA.
+
+Owner melaporkan Browser QA Scenario CRUD pada stable Preview aman; dicatat sebagai **PASS — OWNER-OBSERVED (agregat core CRUD)**, dilaporkan 1 November 2026. Tanggal/jam pelaksanaan, status HTTP dan detail per case belum diberikan. Persistence/draft, invalid input, Depot aktif/nonaktif, penolakan Depot referenced, logout/session/cookie/Origin/limiter tetap **PENDING untuk detail Browser QA**, tanpa menghapus existing unit/Testing DB integration evidence.
+
+**READY FOR ADMINISTRATIVE CLOSURE — Testing core CRUD**, berdasarkan implementation/review, existing 548/548 offline dan 1/1 Testing integration, exact-commit CI/deployment serta laporan owner tersebut. Ini tidak menyatakan seluruh Browser/security QA, Full Feature/Release DoD atau Production acceptance PASS. Receipt historis tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity **NOT VERIFIED**, FK concurrency race belum diuji dan historical login 503 belum memiliki root cause terkonfirmasi. [Evidence matrix dan batas scope](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN; Order CRUD belum diimplementasikan.
+
 
 ### Historical foundation evidence — 2026-10-11
 
@@ -2035,7 +2046,7 @@ Gunakan explain hanya saat ada evidence query lambat.
 
 # 08 — DATABASE DESIGN
 
-**Current source status — 2026-10-31:** Phase 1B Scenario CRUD selesai lokal. Migration `0001_scenarios` Development dan Testing beserta schema/FK/index verification PASS berdasarkan evidence apply terpisah yang sudah diterima; ini bukan koneksi atau apply ulang pada penyelarasan dokumentasi ini. Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS; batas receipt/cleanup tercatat di [Testing QA](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31). Production migration 0001 dan release acceptance masih pending. Gate 1 CLOSED; Gate 2 OPEN. Paragraf foundation di bawah adalah snapshot historis sebelum implementasi Scenario.
+**Current source status — 2026-11-01:** Source `depots` + `scenarios` sudah merged ke Testing melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Migration `0001_scenarios` Development/Testing beserta schema/FK/index verification telah PASS pada checkpoint sebelumnya; tidak ada apply atau SQL baru pada task dokumentasi ini. Post-merge Quality Gate PASS dan stable Testing Preview READY. Laporan core CRUD owner bersifat OWNER-OBSERVED agregat; detail Browser QA dan batas cleanup ada di [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Physical runtime SQL identity NOT VERIFIED; FK concurrency race belum diuji. Production migration 0001/release masih memerlukan approval terpisah. Gate 1 CLOSED; Gate 2 OPEN. Paragraf foundation di bawah tetap snapshot historis sebelum Scenario.
 
 **Conceptual target design only.** Pengecualian aktual: **depots saja** di `src/db/schema.ts` dan generated migration `drizzle/0000_dear_rictor.sql`, offline independently verified dan sudah diterapkan sekali pada Dev, Testing (approved 0D-3B), serta Production (approved Checkpoint B, 2026-10-11). Dev LIVE/established; Testing LIVE/migrated once/verified; Production LIVE pada independent Starter, migration invocation 1/retry 0/exit 0. Read-only evidence setiap environment memastikan delapan kolom, PK/index dan masing-masing satu ledger entry cocok dengan source/SQL; BOOLEAN direpresentasikan TiDB sebagai `tinyint(1)` default 1. Production memiliki tepat `depots` dan runner ledger `__drizzle_migrations`, depots row count 0. Semua tabel/relasi lain tetap future conceptual target. Sinkronisasi 2026-10-02 menambahkan frozen matrix storage; Editable Scenario → Immutable Benchmark Case tetap dipertahankan. Phase 0C CLOSED/final independent verification PASS; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Dev evidence](docs/proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md); [Testing evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md); [Production evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Closure hanya memakai evidence tersimpan, tanpa DB connection atau migration baru.
 
@@ -2423,7 +2434,7 @@ src/domain/routing/
 
 `src/app/(admin)/scenarios/page.tsx` dan `src/app/api/scenarios/{route.ts,[id]/route.ts}` memakai existing server-side admin boundary. HTTP helper `src/lib/http/scenario-api.ts` → `src/application/scenarios/scenario-service.ts` → `src/db/repositories/scenario-repository.ts` → lazy application DB. DTO/Zod contracts berada di `src/lib/validation/scenario.ts`; UI di `src/components/scenarios/`.
 
-`src/db/schema.ts` kini memiliki source depots + scenarios; `drizzle/0001_scenarios.sql` dan snapshot/journal baru hanya generated offline, belum applied. Synthetic fixtures/tests Scenario tidak memerlukan private env, DB, Redis atau browser session. Route Scenario dikeluarkan dari placeholder `plannedModules`. Order, Generator, Map, freeze dan algoritma tetap future target; historical state di bagian terdahulu bukan evidence implementasi/runtime baru.
+`src/db/schema.ts` kini memiliki source depots + scenarios; migration `drizzle/0001_scenarios.sql` beserta snapshot/journal telah diterapkan dan diverifikasi pada Development/Testing melalui approval terpisah, bukan SQL baru pada pembaruan ini. Source di atas merged ke Testing melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; post-merge Quality Gate PASS dan stable Preview READY. Unit fixtures bersifat sintetis/offline; integration Scenario adalah runner live terpisah yang hanya boleh memakai Testing APPLICATION setelah approval. Route Scenario sudah keluar dari placeholder `plannedModules`. Core Browser CRUD dilaporkan OWNER-OBSERVED agregat, dengan detail PENDING pada [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Order, Generator, Map, freeze dan algoritma tetap future target; Production migration/release belum diotorisasi.
 
 ```text
 UI/API → application → algorithm domain (DistanceMatrix + params/seed)
@@ -3350,6 +3361,8 @@ Live integration tetap **NOT PASS** sampai rerun aktual; Preview/release dan sch
 
 ## 18. Scenario integration rerun — actual evidence (2026-10-31)
 
+Snapshot evidence rerun sebelum publikasi; status aplikasi belum published pada bagian ini tetap historis. Perkembangan setelah PR #31 dan laporan owner ada pada bagian 19.
+
 Evidence berikut berasal dari satu eksekusi Testing yang diotorisasi setelah koreksi precondition, bukan pengujian ulang pada task dokumentasi ini. Historical NOT PASS di bagian 17 dan hasil probe/cleanup sebelumnya tetap dipertahankan.
 
 - [DONE] Scenario CRUD selesai lokal. Migration 0001 Development/Testing dan schema/FK RESTRICT/index readback telah PASS pada checkpoint masing-masing. Development browser QA **8/8 PASS** adalah observasi owner. Existing offline suite **26 files / 548 tests PASS**, coverage, lint, typecheck, build dan post-build typecheck berlaku untuk source yang tidak berubah; tidak dijalankan ulang karena koreksi dokumentasi.
@@ -3365,6 +3378,39 @@ Evidence berikut berasal dari satu eksekusi Testing yang diotorisasi setelah kor
 - [LIMITATION] Persisted wrapper tidak menangkap console receipt fixture: `fixture=null`, `cleanupVerified=false`, verdict **`STOP_NOT_PASS`** tetap dipertahankan. ID rerun tidak tersedia dari artefak tersimpan; raw stdout/stderr sengaja tidak disimpan. Jangan menebak atau mengganti dengan ID historis. Gap ini adalah reporting limitation, bukan bukti test/mutation gagal atau fixture tersisa. Tidak ada unresolved mutation yang teramati; tidak ada retry, SQL tambahan atau cleanup spekulatif untuk melengkapi receipt.
 - [BOUNDARY] Physical runtime SQL identity tetap **NOT VERIFIED**. Generic `61100002` dan timeout pada mutation setelah precheck tetap unknown/503, tanpa klaim seluruhnya FK atau perbaikan historical intermittent login 503. Bagian 15–17 tetap snapshot historis; hasil PASS terbaru tidak menulis ulang kegagalan terdahulu.
 - [PENDING] Phase 1B belum committed/published. Remote Quality Gate kandidat, actual Scenario Preview QA beserta auth/session/Origin/cookie/shared-limiter checks dan owner merge/release approval tetap terpisah. Production migration 0001 memerlukan review/approval sendiri sebelum release yang memakai tabel Scenario; tidak ada migration saat install/build/CI/deploy. Gate 1 CLOSED; Gate 2 OPEN. Order, freeze, generator dan algoritma tetap di luar scope.
+
+## 19. Phase 1B Testing post-merge closure assessment (2026-11-01)
+
+### Target dan provenance
+
+Aplikasi sudah merged melalui [PR #31](https://github.com/ArdhanKurniawan/courier-route-planner/pull/31), bukan lagi kandidat aplikasi yang belum dipublikasikan. Accepted Testing SHA: `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. [Quality run 41269900374](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374), event push/testing, completed SUCCESS untuk exact SHA. Metadata Vercel mengikat [stable Testing alias](https://courier-route-planner-git-testing-ardhankurniawans-projects.vercel.app) ke `dpl_96DD4QwZsw27ETQQa98fDSjuVwzz`, Preview/testing, SHA yang sama, READY 1 November 2026 pukul 10.37.46 WIB. Tree merge identik dengan feature commit `51489bee552c88723a130ea019b0d47ca00d125c`, sehingga existing source/test evidence dapat dipakai kembali.
+
+Laporan owner diterima **1 November 2026**: Browser QA Scenario CRUD pada stable Testing Preview telah dilakukan dan hasilnya aman. Labelnya **OWNER-OBSERVED**, bukan automated atau independently verified. Environment/alias dan SHA di atas adalah konteks laporan dan target yang cocok pada metadata, bukan capture binding per HTTP request. **Tanggal/jam pelaksanaan QA aktual, browser, status/body per case dan screenshot/log terpisah belum diberikan (UNKNOWN).** Tanggal pelaporan maupun waktu READY deployment bukan waktu QA.
+
+### Rekonsiliasi evidence
+
+| Area | Evidence yang tersedia | Status dan batas pembuktian |
+| --- | --- | --- |
+| Scenario Create/Read/Update/Delete | Owner menyatakan Browser QA core CRUD pada stable Preview aman | **PASS — OWNER-OBSERVED agregat**; tidak mengarang hasil/status per endpoint |
+| Persistence dan status draft | Existing Testing integration 1/1 dan offline assertions; belum ada rincian Browser QA baru | **PENDING — detail Browser QA**; existing service/DB evidence tetap berlaku |
+| Validasi input server | Existing Zod/API unit tests; belum ada transkripsi negative Scenario HTTP pada stable Preview | **PENDING — detail Browser QA**; bukan klaim server validation belum diimplementasikan |
+| Depot aktif/nonaktif | Existing integration menguji active create, inactive create/switch rejection, dan retained-inactive edit | **PENDING — detail Browser QA**; tidak mengubah layer integration menjadi owner browser evidence |
+| FK RESTRICT / DEPOT_IN_USE | Existing schema/FK readback dan live application precondition proof | **PENDING — detail Browser QA**; concurrency race belum diuji |
+| Authentication dan logout | Phase 1A historical owner observations serta existing guards/tests; laporan terbaru tidak merinci login/logout | **PENDING — detail post-merge Browser QA**; tidak menganggap semua auth checks PASS dari CRUD saja |
+| Session/cookie | Existing absolute 12-hour/no-rolling contract dan synthetic tests | **PENDING — live expiry/non-renewal/cookie observations** |
+| Origin protection dan shared limiter | Existing source/offline tests; belum ada rincian runtime negative-Origin/429 pada target ini | **PENDING — runtime detail**; tidak mengubah env, melemahkan limiter, atau menjalankan probe untuk mengisi tabel |
+| Post-merge Quality Gate | GitHub run exact accepted SHA completed SUCCESS | **PASS — provider read**, bukan local rerun |
+| Deployment/alias identity | Vercel READY, testing branch/SHA dan stable alias cocok | **PASS — control-plane metadata**, bukan Browser/DB isolation verification |
+
+Existing 548/548 offline tests, Development browser QA 8/8 OWNER-OBSERVED, migration 0001 Development/Testing PASS dan live Testing integration 1/1 PASS tetap evidence bertanggal sebelumnya. Post-merge CI memverifikasi job quality; tidak menjalankan live DB integration. Tidak ada SQL, migration, integration, application HTTP atau Browser QA baru pada task dokumentasi ini.
+
+### Readiness administratif dan pekerjaan yang tetap terbuka
+
+**READY FOR ADMINISTRATIVE CLOSURE — Testing core Scenario CRUD**, dengan scope owner-observed agregat di atas bersama implementation/review, integration dan exact-commit CI/deployment evidence. Ini penilaian milestone core CRUD Testing, **bukan** klaim semua baris Browser QA PASS, seluruh Full Feature/Release DoD terpenuhi, Production-ready, atau Gate 2 CLOSED. Detail PENDING tetap terlihat untuk rekonsiliasi QA lanjutan; tidak menambah endpoint/verifier, SQL ulang atau syarat Gate 1 baru.
+
+Residual evidence tetap: persisted integration fixture IDs/receipt tidak lengkap; wrapper `STOP_NOT_PASS`, `fixture=null`, `cleanupVerified=false` dipertahankan, meskipun test cleanup assertions lulus. Tidak tersedia independent post-run absence verification berbasis ID tersimpan. Physical runtime SQL identity **NOT VERIFIED**; FK concurrency race belum diuji; generic provider error tetap unknown/503 tanpa retry. Insiden login HTTP 503 historis belum memiliki root cause terkonfirmasi. Historical FAIL/PARTIAL serta snapshot bagian 15–18 tidak ditulis ulang menjadi PASS.
+
+Revisi closure documentation ini masih lokal; branch/commit/push/PR memerlukan approval tersendiri. Production/main, env, credentials, migrations dan database tidak diubah. Gate 1 CLOSED; Gate 2 OPEN. Persiapan Phase 1C Order CRUD dapat diusulkan terpisah, tanpa implementasi pada task ini.
 
 ---
 
@@ -4066,7 +4112,9 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
+**Current status — 2026-11-01:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD belum dimulai dan memerlukan scope/approval implementasi terpisah.
+
+**Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
@@ -4133,7 +4181,7 @@ Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/requ
 
 ## Phase 1 — Admin baseline
 
-Backlog berikut belum dimulai; implementasi Gate 2 memerlukan task/approval terpisah.
+Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD adalah rencana Phase 1C, belum diimplementasikan/diotorisasi. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;
@@ -5296,7 +5344,7 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 2 — CRUD baseline
 
-**Current Phase 1B candidate — 2026-10-31:** Phase 1A merged ke testing melalui PR #30. Scenario CRUD selesai lokal; migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; tidak ada independent post-run absence verification berbasis ID tersimpan. [Batas evidence dan provenance](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31) tetap berlaku. Phase 1B belum committed/published; remote Quality Gate kandidat, Preview QA dan owner merge/release acceptance masih PENDING. Checklist acceptance berikut tidak otomatis ditutup. Status `draft` read-only, tanpa freeze/transisi; Order CRUD belum diimplementasikan. Physical runtime SQL identity NOT VERIFIED dan FK concurrency race belum diuji. Gate 1 CLOSED; Gate 2 OPEN.
+**Current Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
 
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;
