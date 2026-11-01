@@ -52,6 +52,9 @@ function rows() {
     ],
   };
 }
+function referenceReply(flag: "0" | "1") {
+  return { types: [{ name: "has_reference", type: "VARCHAR" }], rows: [[flag]] };
+}
 function request(
   method = "GET",
   body?: unknown,
@@ -154,17 +157,18 @@ describe("protected Depot HTTP contracts", () => {
     expect(await created.json()).toMatchObject({ data: { id } });
     replies = [{ rowsAffected: 0 }, rows()];
     expect((await PUT(request("PUT", input), context())).status).toBe(200);
-    replies = [{ rowsAffected: 1 }];
+    replies = [referenceReply("0"), { rowsAffected: 1 }];
     const removed = await DELETE(request("DELETE"), context());
     expect(removed.status).toBe(204);
     expect(await removed.text()).toBe("");
   });
-  it("maps missing rows to 404 without inventing child relations", async () => {
+  it("maps a missing Depot to 404 after confirming no Scenario reference", async () => {
     replies = [{ types: [], rows: [] }];
     expect((await detail(request(), context())).status).toBe(404);
-    replies = [{ rowsAffected: 0 }];
+    replies = [referenceReply("0"), { rowsAffected: 0 }];
     expect((await DELETE(request("DELETE"), context())).status).toBe(404);
-    expect(queries.every((q) => !q.includes("scenarios"))).toBe(true);
+    expect(queries.filter((q) => /^delete\b/iu.test(q))).toHaveLength(1);
+    expect(queries[1]).toContain("scenarios");
   });
   it("validates origin, id, query and fields before DB construction", async () => {
     expect(
@@ -212,6 +216,7 @@ describe("protected Depot HTTP contracts", () => {
   });
   it("maps only a definitive structured FK rejection to 409 and redacts other provider failures", async () => {
     replies = [
+      referenceReply("0"),
       Response.json(
         { message: "synthetic private SQL detail", code: 1451 },
         { status: 409 },
@@ -223,6 +228,7 @@ describe("protected Depot HTTP contracts", () => {
       error: { code: "DEPOT_IN_USE", message: "Depot is referenced." },
     });
     replies = [
+      referenceReply("0"),
       Response.json(
         { message: "synthetic private SQL detail", code: 9999 },
         { status: 500 },
@@ -233,7 +239,35 @@ describe("protected Depot HTTP contracts", () => {
     expect(JSON.stringify(await failure.json())).not.toContain(
       "synthetic private SQL detail",
     );
+    expect(queries).toHaveLength(4);
+  });
+  it("returns 409 for a confirmed reference before issuing any DELETE", async () => {
+    replies = [referenceReply("1")];
+    const response = await DELETE(request("DELETE"), context());
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: { code: "DEPOT_IN_USE", message: "Depot is referenced." } });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/iu);
+  });
+  it.each([
+    ["failed", Response.json({ code: 61100002, message: "synthetic private detail" }, { status: 400 })],
+    ["malformed", {}],
+  ])("returns unavailable on a %s precheck without DELETE", async (_label, reply) => {
+    replies = [reply];
+    const response = await DELETE(request("DELETE"), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: { code: "UNAVAILABLE", message: "Depot unavailable." } });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/iu);
+  });
+  it("keeps a generic provider error after a clear precheck as unknown without retry", async () => {
+    replies = [referenceReply("0"), Response.json({ code: 61100002, message: "synthetic private detail" }, { status: 400 })];
+    const response = await DELETE(request("DELETE"), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: { code: "MUTATION_OUTCOME_UNKNOWN", message: "Mutation outcome unknown. Refresh the list before another attempt." } });
     expect(queries).toHaveLength(2);
+    expect(queries[0]).toMatch(/^select\b/iu);
+    expect(queries[1]).toMatch(/^delete\b/iu);
   });
   it("labels committed-insert/readback failure as unknown, without automatic retry or SQL leakage", async () => {
     replies = [{ rowsAffected: 1, sLastInsertID: id }];

@@ -41,8 +41,11 @@ describe("route planner navigation", () => {
     expect(hrefs).not.toContain("/");
     expect(hrefs).not.toContain("/about");
     expect(hrefs).not.toContain("/depots");
+    expect(hrefs).not.toContain("/scenarios");
     expect([...hrefs].sort()).toEqual(
-      domainRoutes.filter((href) => href !== "/depots").sort(),
+      domainRoutes
+        .filter((href) => !["/depots", "/scenarios"].includes(href))
+        .sort(),
     );
   });
 });

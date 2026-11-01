@@ -44,7 +44,7 @@ Accepted closure references: main Production `16700a73c37e4c7a3b08cf1ab69c96fd84
 
 ### Ringkasan evidence lokal yang belum dipublikasikan
 
-Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi audit lokal di docs/proses/phase-0/0d/, berstatus **NOT PUBLISHED**; file lengkap dan verdict historis dipertahankan tanpa dipublikasikan. Ringkasan ini mencatat dasar accepted minimum evidence serta keterbatasannya.
+Ringkasan berikut berasal dari laporan eksekusi/assessment lokal bertanggal, bukan provider read, deployment, HTTP request atau pemeriksaan credential baru pada revisi dokumentasi ini. Semua nama laporan pada tabel adalah referensi evidence historis berstatus **NOT PUBLISHED**. Laporan lengkap dipertahankan di arsip lokal eksternal milik owner, di luar repository dan bukan bagian dari normal Git checkout; evidence asli dan verdict historis tidak berubah. Ringkasan terpublikasi ini mempertahankan provenance, hasil historis yang diterima dan keterbatasannya tanpa membutuhkan salinan laporan di repository.
 
 | Sumber lokal — NOT PUBLISHED | Provenance dan hasil yang diterima | Batas pembuktian |
 | --- | --- | --- |
@@ -80,6 +80,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 [Reproduksi anggota kedua](17_SETUP_FROM_ZERO.md#reproduksi-anggota-kedua--gate-1), [DoD/WIP boundary](19_DEFINITION_OF_DONE.md#8-gate-1--proportionate-evidence-and-deferred-verifier), independent final assessment dan human acceptance telah dipenuhi. Closure ini tidak memulai Gate 2, endpoint/key/SQL baru, ataupun publikasi Git. Tindakan berikutnya tetap membutuhkan authorization sesuai scope.
 
 ## Gate 2 — CRUD baseline
+
+**Current Phase 1B candidate — 2026-10-31:** Phase 1A merged ke testing melalui PR #30. Scenario CRUD selesai lokal; migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; tidak ada independent post-run absence verification berbasis ID tersimpan. [Batas evidence dan provenance](14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31) tetap berlaku. Phase 1B belum committed/published; remote Quality Gate kandidat, Preview QA dan owner merge/release acceptance masih PENDING. Checklist acceptance berikut tidak otomatis ditutup. Status `draft` read-only, tanpa freeze/transisi; Order CRUD belum diimplementasikan. Physical runtime SQL identity NOT VERIFIED dan FK concurrency race belum diuji. Gate 1 CLOSED; Gate 2 OPEN.
 
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;

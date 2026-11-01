@@ -19,6 +19,12 @@ function response(body: unknown) {
     headers: { "TiDB-Session": "synthetic-session" },
   });
 }
+function referenceReply(value: unknown) {
+  return {
+    types: [{ name: "has_reference", type: "VARCHAR" }],
+    rows: [[value]],
+  };
+}
 function rowReply(latitude = "0", active = "1") {
   return {
     types: [
@@ -73,7 +79,11 @@ describe("Depot Drizzle repository over synthetic HTTP transport", () => {
       const query = JSON.parse(init!.body).query as string;
       queries.push(query);
       return response(
-        query.startsWith("select") ? rowReply() : { rowsAffected: 0 },
+        query.includes("has_reference")
+          ? referenceReply("0")
+          : query.startsWith("select")
+            ? rowReply()
+            : { rowsAffected: 0 },
       );
     };
     const repo = createDepotRepository(() =>
@@ -118,9 +128,13 @@ describe("Depot Drizzle repository over synthetic HTTP transport", () => {
       await expect(repo.findById(BigInt(big))).rejects.toThrow();
     },
   );
-  it("retains unknown write outcomes and does not retry a transport failure", async () => {
-    const transport = vi.fn<DatabaseFetch>(async () => {
-      throw new Error("synthetic private URL");
+  it.each([new Error("synthetic private URL"), new DOMException("synthetic", "TimeoutError")])(
+    "retains unknown DELETE outcomes without retry after a successful precheck (%s)",
+    async (failure) => {
+    const transport = vi.fn<DatabaseFetch>(async (_url, init) => {
+      if (JSON.parse(init!.body).query.startsWith("select"))
+        return response(referenceReply("0"));
+      throw failure;
     });
     const repo = createDepotRepository(() =>
       createDatabase(fakeDatabaseUrl, transport),
@@ -128,7 +142,7 @@ describe("Depot Drizzle repository over synthetic HTTP transport", () => {
     await expect(repo.remove(BigInt(big))).rejects.toMatchObject({
       code: "MUTATION_OUTCOME_UNKNOWN",
     });
-    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledTimes(2);
   });
   it("rejects a row whose id conflicts with the requested identity", async () => {
     const repo = createDepotRepository(() =>
@@ -137,5 +151,93 @@ describe("Depot Drizzle repository over synthetic HTTP transport", () => {
     await expect(
       repo.findById(BigInt("9007199254740994")),
     ).rejects.toMatchObject({ code: "UNAVAILABLE" });
+  });
+
+  it.each([
+    ["active", BigInt("9007199254740993")],
+    ["inactive", BigInt("9007199254740994")],
+  ] as const)("blocks deleting a referenced %s Depot without issuing DELETE", async (_state, depotId) => {
+    const queries: string[] = [];
+    const repo = createDepotRepository(() => createDatabase(fakeDatabaseUrl, async (_url, init) => {
+      queries.push(JSON.parse(init!.body).query);
+      return response(referenceReply("1"));
+    }));
+    await expect(repo.remove(depotId)).rejects.toMatchObject({ code: "DEPOT_IN_USE" });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/iu);
+    expect(queries[0]).toContain("scenarios");
+    expect(queries[0]).toContain("depot_id");
+    expect(queries[0]).toContain(depotId.toString());
+    expect(queries[0]).toMatch(/limit 1/iu);
+    expect(queries[0]).not.toMatch(/\b(?:status|is_active)\b/iu);
+  });
+
+  it("deletes an unreferenced Depot once after one bounded existence result", async () => {
+    const queries: string[] = [];
+    const repo = createDepotRepository(() => createDatabase(fakeDatabaseUrl, async (_url, init) => {
+      const query = JSON.parse(init!.body).query;
+      queries.push(query);
+      return response(queries.length === 1 ? referenceReply("0") : { rowsAffected: 1 });
+    }));
+    expect(await repo.remove(BigInt(big))).toBe(1);
+    expect(queries).toHaveLength(2);
+    expect(queries[0]).toMatch(/^select\b/iu);
+    expect(queries[0]).toMatch(/exists\s*\(/iu);
+    expect(queries[0]).toMatch(/limit 1/iu);
+    expect(queries[1]).toMatch(/^delete\b/iu);
+    expect(queries[1]).toContain(big);
+  });
+
+  it("fails closed on a failed existence read without attempting DELETE", async () => {
+    const queries: string[] = [];
+    const repo = createDepotRepository(() => createDatabase(fakeDatabaseUrl, async (_url, init) => {
+      queries.push(JSON.parse(init!.body).query);
+      throw new Error("synthetic read failure");
+    }));
+    await expect(repo.remove(BigInt(big))).rejects.toMatchObject({ code: "UNAVAILABLE" });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/iu);
+  });
+
+  it.each([
+    ["missing row metadata", {}],
+    ["empty result", { types: [{ name: "has_reference", type: "VARCHAR" }], rows: [] }],
+    ["null rows", { types: [], rows: null }],
+    ["invalid flag", referenceReply("2")],
+    ["null flag", referenceReply(null)],
+    ["numeric flag", referenceReply(0)],
+    ["wrong column", { types: [{ name: "wrong", type: "VARCHAR" }], rows: [["0"]] }],
+    ["multiple rows", { types: [{ name: "has_reference", type: "VARCHAR" }], rows: [["0"], ["0"]] }],
+  ])("rejects %s rather than treating it as no references", async (_label, reply) => {
+    const queries: string[] = [];
+    const repo = createDepotRepository(() => createDatabase(fakeDatabaseUrl, async (_url, init) => {
+      queries.push(JSON.parse(init!.body).query);
+      return response(reply);
+    }));
+    await expect(repo.remove(BigInt(big))).rejects.toMatchObject({ code: "UNAVAILABLE" });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/iu);
+  });
+
+  it.each([
+    [1451, "DEPOT_IN_USE"],
+    ["1451", "DEPOT_IN_USE"],
+    ["ER_ROW_IS_REFERENCED_2", "DEPOT_IN_USE"],
+    [61100002, "MUTATION_OUTCOME_UNKNOWN"],
+    [1452, "MUTATION_OUTCOME_UNKNOWN"],
+    [1064, "MUTATION_OUTCOME_UNKNOWN"],
+  ])("preserves error code %s after the precheck, including a concurrent reference", async (code, expected) => {
+    const queries: string[] = [];
+    const repo = createDepotRepository(() => createDatabase(fakeDatabaseUrl, async (_url, init) => {
+      const query = JSON.parse(init!.body).query;
+      queries.push(query);
+      return queries.length === 1
+        ? response(referenceReply("0"))
+        : Response.json({ code, message: "synthetic SQL failure" }, { status: 400 });
+    }));
+    await expect(repo.remove(BigInt(big))).rejects.toMatchObject({ code: expected });
+    expect(queries).toHaveLength(2);
+    expect(queries[0]).toMatch(/^select\b/iu);
+    expect(queries[1]).toMatch(/^delete\b/iu);
   });
 });

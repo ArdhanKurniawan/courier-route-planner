@@ -1,5 +1,7 @@
 # 08 — DATABASE DESIGN
 
+**Current source status — 2026-10-31:** Phase 1B Scenario CRUD selesai lokal. Migration `0001_scenarios` Development dan Testing beserta schema/FK/index verification PASS berdasarkan evidence apply terpisah yang sudah diterima; ini bukan koneksi atau apply ulang pada penyelarasan dokumentasi ini. Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS; batas receipt/cleanup tercatat di [Testing QA](14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31). Production migration 0001 dan release acceptance masih pending. Gate 1 CLOSED; Gate 2 OPEN. Paragraf foundation di bawah adalah snapshot historis sebelum implementasi Scenario.
+
 **Conceptual target design only.** Pengecualian aktual: **depots saja** di `src/db/schema.ts` dan generated migration `drizzle/0000_dear_rictor.sql`, offline independently verified dan sudah diterapkan sekali pada Dev, Testing (approved 0D-3B), serta Production (approved Checkpoint B, 2026-10-11). Dev LIVE/established; Testing LIVE/migrated once/verified; Production LIVE pada independent Starter, migration invocation 1/retry 0/exit 0. Read-only evidence setiap environment memastikan delapan kolom, PK/index dan masing-masing satu ledger entry cocok dengan source/SQL; BOOLEAN direpresentasikan TiDB sebagai `tinyint(1)` default 1. Production memiliki tepat `depots` dan runner ledger `__drizzle_migrations`, depots row count 0. Semua tabel/relasi lain tetap future conceptual target. Sinkronisasi 2026-10-02 menambahkan frozen matrix storage; Editable Scenario → Immutable Benchmark Case tetap dipertahankan. Phase 0C CLOSED/final independent verification PASS; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Dev evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md); [Testing evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md); [Production evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Closure hanya memakai evidence tersimpan, tanpa DB connection atau migration baru.
 
 ## 1. Design goals
@@ -55,23 +57,27 @@ Stage 1 actual contract:
 
 ## 4. `scenarios`
 
-Editable working dataset.
+Editable working dataset. Source Phase 1B memakai sebelas kolom di bawah; tabel selain `depots`/`scenarios` pada dokumen ini tetap conceptual target.
 
 ```text
-id BIGINT PK
-depot_id BIGINT FK
-name VARCHAR
-distribution_pattern VARCHAR
-customer_count INT
+id BIGINT AUTO_INCREMENT PK NOT NULL
+depot_id BIGINT NOT NULL FK depots.id ON DELETE RESTRICT ON UPDATE RESTRICT
+name VARCHAR(255) NOT NULL
+distribution_pattern VARCHAR(32) NOT NULL
+customer_count INT NOT NULL
 radius_min_m INT NULL
 radius_max_m INT NULL
 generation_seed BIGINT NULL
-status VARCHAR
-created_at
-updated_at
+status VARCHAR(32) NOT NULL DEFAULT 'draft'
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 ```
 
-`customer_count` dapat dihitung dari orders, tetapi disimpan hanya jika diperlukan untuk config generator; actual count harus tetap diverifikasi dari rows.
+`customer_count` adalah configured count, bukan actual Order count; Phase 1B belum membuat Orders. Count/radius integer 0–2147483647 (batas storage, bukan pembatasan desain eksperimen); kedua radius non-null wajib min ≤ max, null berarti unspecified. Pattern: random/clustered/circular/directional; seed nullable signed BIGINT, id/seed memakai decimal string pada API tanpa Number conversion. Status hanya `draft`, diset server dan tidak dapat diubah klien; freeze/transisi ditunda.
+
+Index `scenarios_depot_id_idx` mendukung FK. Create/pergantian depot memerlukan depot aktif melalui conditional insert/update atomik; depot lama yang kemudian nonaktif boleh dipertahankan saat edit. FK mencegah penghapusan depot yang direferensikan. Scenario tanpa child boleh dihapus secara fisik; future Order/benchmark migrations wajib memakai relasi RESTRICT nyata dan proof tersendiri, tanpa cascade atau fabricated history precheck.
+
+Migration `drizzle/0001_scenarios.sql`, snapshot baru dan journal append disiapkan offline, tidak mengubah migration 0000 atau tabel depots. Sebelum live apply: owner mereview target/history, grants migrator, urutan CREATE → FK → index dan approval per environment. DDL dapat berhasil parsial; bila gagal/ambigu STOP, inspeksi state dengan approval baru, tanpa retry otomatis atau drop data. Mitigasi setelah apply adalah rollback release aplikasi yang belum memakai Scenario; jangan drop tabel berisi data sebagai rollback otomatis. Application credential tetap scoped CRUD; tidak digunakan untuk DDL.
 
 ## 5. `orders`
 

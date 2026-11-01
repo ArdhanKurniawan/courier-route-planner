@@ -3,6 +3,8 @@ import {
   boolean,
   datetime,
   double,
+  index,
+  int,
   mysqlTable,
   text,
   varchar,
@@ -19,3 +21,28 @@ export const depots = mysqlTable("depots", {
   createdAt: datetime("created_at", { mode: "date", fsp: 3 }).notNull(),
   updatedAt: datetime("updated_at", { mode: "date", fsp: 3 }).notNull(),
 });
+
+export const scenarios = mysqlTable(
+  "scenarios",
+  {
+    id: bigint("id", { mode: "bigint" }).autoincrement().primaryKey(),
+    depotId: bigint("depot_id", { mode: "bigint" })
+      .notNull()
+      .references(() => depots.id, {
+        onDelete: "restrict",
+        onUpdate: "restrict",
+      }),
+    name: varchar("name", { length: 255 }).notNull(),
+    distributionPattern: varchar("distribution_pattern", {
+      length: 32,
+    }).notNull(),
+    customerCount: int("customer_count").notNull(),
+    radiusMinM: int("radius_min_m"),
+    radiusMaxM: int("radius_max_m"),
+    generationSeed: bigint("generation_seed", { mode: "bigint" }),
+    status: varchar("status", { length: 32 }).notNull().default("draft"),
+    createdAt: datetime("created_at", { mode: "date", fsp: 3 }).notNull(),
+    updatedAt: datetime("updated_at", { mode: "date", fsp: 3 }).notNull(),
+  },
+  (table) => [index("scenarios_depot_id_idx").on(table.depotId)],
+);
