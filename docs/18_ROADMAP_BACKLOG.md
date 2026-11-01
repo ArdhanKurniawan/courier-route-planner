@@ -1,6 +1,8 @@
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
+**Current status — 2026-11-01:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD belum dimulai dan memerlukan scope/approval implementasi terpisah.
+
+**Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
@@ -67,7 +69,7 @@ Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/requ
 
 ## Phase 1 — Admin baseline
 
-Backlog berikut belum dimulai; implementasi Gate 2 memerlukan task/approval terpisah.
+Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD adalah rencana Phase 1C, belum diimplementasikan/diotorisasi. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;

@@ -2,8 +2,8 @@
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Gate 2 OPEN; Phase 1A auth/Depot merged ke testing melalui PR #30. Phase 1B Scenario CRUD selesai lokal, belum committed/published: migration 0001 Development/Testing PASS, Development browser QA 8/8 owner-observed, offline 548/548 dan live integration rerun 1/1 PASS. Assertion cleanup lulus, tetapi receipt fixture tidak lengkap dan wrapper tetap `STOP_NOT_PASS`; remote Quality Gate kandidat, Preview QA dan release approval masih pending. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-31 (Scenario local candidate; belum dipublikasikan).
+**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**. Phase 1A auth/Depot merged ke Testing melalui PR #30; Phase 1B Scenario CRUD merged melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Post-merge Quality Gate PASS dan stable Testing Preview READY. Owner melaporkan Browser QA core CRUD aman: **OWNER-OBSERVED**, agregat, bukan automated/independent verification. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope evidence tersebut; detail Browser QA tetap PENDING, Gate 2 OPEN, dan Production release belum diotorisasi. Lihat [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01) dan [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
+**Tanggal sinkronisasi:** 2026-11-01 (aplikasi Phase 1B sudah merged ke Testing; revisi dokumentasi closure ini masih lokal).
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
@@ -58,6 +58,8 @@ See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STA
 
 ### Gate 2 Phase 1B — Scenario local candidate 2026-10-31
 
+Snapshot source/evidence sebelum publikasi; status terkini dan laporan owner setelah merge ada pada bagian Testing post-merge di bawah.
+
 Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeeping setelah Phase 1A merge `60b248c9b460cd7be48334a1c5b3fe64092254ea`). Owner melaporkan Development dan Preview login/Depot CRUD berhasil; ini observasi owner, bukan runtime test baru oleh agent. Pending manual checks dalam snapshot 25 Oktober tidak otomatis dianggap selesai.
 
 - [DONE] Protected `/scenarios`, `GET/POST /api/scenarios` dan `GET/PUT/DELETE /api/scenarios/[id]`; API → service → lazy repository, existing admin session/Origin/body/environment guards tetap digunakan. Penolakan autentikasi tidak memperoleh DB.
@@ -70,6 +72,15 @@ Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeepin
 - [DONE] Rerun Testing APPLICATION setelah koreksi: tepat satu invocation, **1/1 PASS**, exit 0; 38 SQL operations, tanpa transport failure atau retry. Referenced Depot ditolak oleh precondition dengan `DEPOT_IN_USE` tanpa DELETE; FK RESTRICT tetap safeguard database.
 - [LIMITATION] Assertion cleanup lulus, tetapi ID fixture tidak tertangkap pada persisted receipt; wrapper tetap **`STOP_NOT_PASS`** dan tidak ada independent post-run absence verification. Physical runtime SQL identity tetap **NOT VERIFIED**; FK concurrency race belum diuji. Lihat [hasil rerun dan batas evidence](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31).
 - [BOUNDARY] Gate 1 CLOSED; Gate 2 OPEN. Order, generator, map, routing, benchmark/freeze dan algoritma belum diimplementasikan. Auth 12 jam, fail-closed limiter dan environment isolation tidak diubah; historical intermittent login 503 tetap residual risk tanpa klaim perbaikan.
+
+### Gate 2 Phase 1B — Testing post-merge (2026-11-01)
+
+[PR #31](https://github.com/ArdhanKurniawan/courier-route-planner/pull/31) merged ke Testing pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. [Post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) SUCCESS; [stable Testing Preview](https://courier-route-planner-git-testing-ardhankurniawans-projects.vercel.app) terikat ke deployment `dpl_96DD4QwZsw27ETQQa98fDSjuVwzz`, READY untuk SHA yang sama. Metadata/deployment read tidak menjalankan Browser QA.
+
+Owner melaporkan Browser QA Scenario CRUD pada stable Preview aman; dicatat sebagai **PASS — OWNER-OBSERVED (agregat core CRUD)**, dilaporkan 1 November 2026. Tanggal/jam pelaksanaan, status HTTP dan detail per case belum diberikan. Persistence/draft, invalid input, Depot aktif/nonaktif, penolakan Depot referenced, logout/session/cookie/Origin/limiter tetap **PENDING untuk detail Browser QA**, tanpa menghapus existing unit/Testing DB integration evidence.
+
+**READY FOR ADMINISTRATIVE CLOSURE — Testing core CRUD**, berdasarkan implementation/review, existing 548/548 offline dan 1/1 Testing integration, exact-commit CI/deployment serta laporan owner tersebut. Ini tidak menyatakan seluruh Browser/security QA, Full Feature/Release DoD atau Production acceptance PASS. Receipt historis tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity **NOT VERIFIED**, FK concurrency race belum diuji dan historical login 503 belum memiliki root cause terkonfirmasi. [Evidence matrix dan batas scope](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN; Order CRUD belum diimplementasikan.
+
 
 ### Historical foundation evidence — 2026-10-11
 
