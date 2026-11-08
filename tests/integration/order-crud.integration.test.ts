@@ -21,18 +21,23 @@ import {
   createOrderFixtureLookup,
   deleteOrderFixture,
 } from "../fixtures/order-integration-lookup";
+import {
+  createOrderReadDiagnostics,
+  OrderReadDiagnosticError,
+} from "../fixtures/order-read-diagnostics";
 
 const reconciliationRun = process.env.ORDER_INTEGRATION_RECONCILE_RUN;
 const receiptDirectory = process.env.ORDER_INTEGRATION_RECEIPT_DIR;
 
 async function execute() {
   const target = fixtureTarget(process.env.DATABASE_URL);
+  const readDiagnostics = createOrderReadDiagnostics();
   let queries = 0;
   const acquire = () =>
     createDatabase(process.env.DATABASE_URL, async (input, init) => {
       if (++queries > 100)
         throw Error("Owned integration query budget exhausted");
-      return fetch(input, init as RequestInit);
+      return readDiagnostics.observe(() => fetch(input, init as RequestInit));
     });
   const lookup = createOrderFixtureLookup((query) => acquire().execute(query));
   if (reconciliationRun !== undefined) {
@@ -124,9 +129,9 @@ async function execute() {
       ),
     ).rejects.toMatchObject({ code: "ORDER_CODE_CONFLICT" });
     await run.mutate(() => orders.createOrder(bid, input));
-    await expect(orders.getOrder(bid, BigInt(first.id))).rejects.toMatchObject({
-      code: "NOT_FOUND",
-    });
+    await readDiagnostics.expectNotFound(() =>
+      orders.getOrder(bid, BigInt(first.id)),
+    );
     const dummyId = await run.mutate(() =>
       repo.insert(aid, {
         ...input,
@@ -208,9 +213,9 @@ it(
   async () => {
     try {
       await execute();
-    } catch {
-      // Assertion/driver errors can carry private fixture data. Keep the
-      // detailed evidence in the receipt directory, outside public output.
+    } catch (error) {
+      if (error instanceof OrderReadDiagnosticError) throw error;
+      // Other assertion/driver errors may contain private data.
       throw Error(
         "Order integration incomplete. Inspect the private receipt directory.",
       );
