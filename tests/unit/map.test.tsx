@@ -99,36 +99,49 @@ describe("Admin Map", () => {
     await waitFor(() => expect(edit).not.toBeInTheDocument());
   });
 
-  it("resizes Leaflet when the TailAdmin content width changes and releases the observer", async () => {
-    let resize: (() => void) | undefined;
-    const observe = vi.fn();
-    const disconnect = vi.fn();
-    vi.stubGlobal(
-      "ResizeObserver",
-      class {
-        observe = observe;
-        disconnect = disconnect;
+  it.each(["unmount", "Scenario switch"])(
+    "resizes Leaflet when the content width changes and releases the observer on %s",
+    async (disposal) => {
+      let resize: (() => void) | undefined;
+      const observe = vi.fn();
+      const disconnect = vi.fn();
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          observe = observe;
+          disconnect = disconnect;
 
-        constructor(callback: () => void) {
-          resize = callback;
-        }
-      },
-    );
-    const invalidate = vi.spyOn(LeafletMap.prototype, "invalidateSize");
-    mockReads();
-    const { unmount } = render(<MapManager />);
-    await selectScenario("Scenario A", "10");
-    const map = await screen.findByRole("region", {
-      name: "Peta Depot dan Order",
-    });
-    expect(observe).toHaveBeenCalledWith(map);
-    expect(resize).toBeDefined();
-    resize?.();
-    expect(invalidate).toHaveBeenCalledWith({ debounceMoveend: true });
+          constructor(callback: () => void) {
+            resize = callback;
+          }
+        },
+      );
+      const invalidate = vi.spyOn(LeafletMap.prototype, "invalidateSize");
+      mockReads();
+      const { unmount } = render(<MapManager />);
+      await selectScenario("Scenario A", "10");
+      const map = await screen.findByRole("region", {
+        name: "Peta Depot dan Order",
+      });
+      await waitFor(() => expect(observe).toHaveBeenCalledWith(map));
+      expect(resize).toBeDefined();
+      resize?.();
+      expect(invalidate).toHaveBeenCalledWith({ debounceMoveend: true });
 
-    unmount();
-    expect(disconnect).toHaveBeenCalledOnce();
-  });
+      if (disposal === "Scenario switch") {
+        await selectScenario("Scenario B", "20");
+        await waitFor(() => expect(observe).toHaveBeenCalledTimes(2));
+        const replacement = screen.getByRole("region", {
+          name: "Peta Depot dan Order",
+        });
+        expect(replacement).not.toBe(map);
+        expect(observe).toHaveBeenLastCalledWith(replacement);
+      } else {
+        unmount();
+      }
+      expect(disconnect).toHaveBeenCalledOnce();
+    },
+  );
 
   it("loads all Scenario choices and all selected Order pages, then shows scoped markers and popup details", async () => {
     const second = {

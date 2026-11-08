@@ -40,17 +40,17 @@ export function createOrderService(
     listOrders: (scenarioId: bigint, query: OrderListQuery) =>
       read(async () => {
         await parent(scenarioId);
-        const [rows, total] = await Promise.all([
-          repo.list(scenarioId, { ...query, limit: query.limit + 1 }),
-          repo.count(scenarioId),
-        ]);
-        if (
-          typeof total !== "bigint" ||
-          total < BigInt("0") ||
-          (query.after === undefined &&
-            rows.length === 0 &&
-            total > BigInt("0"))
-        )
+        const total = await repo.count(scenarioId);
+        if (typeof total !== "bigint" || total < BigInt("0"))
+          throw new OrderError("UNAVAILABLE");
+        // A valid zero count proves absence even when TiDB omits rows on an empty SELECT.
+        if (total === BigInt("0"))
+          return { data: [], nextCursor: null, totalCount: "0" };
+        const rows = await repo.list(scenarioId, {
+          ...query,
+          limit: query.limit + 1,
+        });
+        if (query.after === undefined && rows.length === 0)
           throw new OrderError("UNAVAILABLE");
         const data = rows
           .slice(0, query.limit)
