@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
+import { createOrderService } from "@/application/orders/order-service";
 import { createDatabase } from "@/db/client";
 import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
 import {
@@ -48,7 +49,7 @@ function fixture(replies: unknown[]) {
 }
 describe("Order repository over synthetic TiDB HTTP", () => {
   it("acquires lazily and scopes reads/pagination to the selected Scenario", async () => {
-    const f = fixture([orderWire(), orderWire()]);
+    const f = fixture([orderWire()]);
     expect(f.acquire).not.toHaveBeenCalled();
     expect(
       await f.repo.list(sid, { after: id - BigInt("1"), limit: 2 }),
@@ -56,17 +57,112 @@ describe("Order repository over synthetic TiDB HTTP", () => {
     expect(f.queries[0]).toMatch(
       /where.*scenario_id.*and.*id.*order by.*id.*limit 2/i,
     );
-    expect(await f.repo.findById(sid, id)).toEqual(row);
-    expect(f.queries[1]).toMatch(/where.*scenario_id.*and.*id/i);
   });
+  it("reads and validates the existing Order after a scoped existence flag of 1", async () => {
+    const f = fixture([flag("1"), orderWire()]);
+
+    await expect(f.repo.findById(sid, id)).resolves.toEqual(row);
+
+    expect(f.queries).toHaveLength(2);
+    expect(f.queries[0]).toMatch(
+      /exists\(select 1 from .*where.*scenario_id.*and.*id.*limit 1/i,
+    );
+    expect(f.queries[1]).toMatch(/where.*scenario_id.*and.*id.*limit 1/i);
+    for (const query of f.queries) {
+      expect(query).toContain(`\`orders\`.\`scenario_id\` = ${sid}`);
+      expect(query).toContain(`\`orders\`.\`id\` = ${id}`);
+    }
+  });
+  it("returns null on an explicit scoped existence flag of 0 without readback", async () => {
+    const missingId = id + BigInt("1");
+    const f = fixture([flag("0")]);
+
+    await expect(f.repo.findById(sid, missingId)).resolves.toBeNull();
+
+    expect(f.queries).toHaveLength(1);
+    expect(f.queries[0]).toMatch(
+      /exists\(select 1 from .*where.*scenario_id.*and.*id.*limit 1/i,
+    );
+    expect(f.queries[0]).toContain(`\`orders\`.\`scenario_id\` = ${sid}`);
+    expect(f.queries[0]).toContain(`\`orders\`.\`id\` = ${missingId}`);
+  });
+  it("reports NOT_FOUND for an Order in another Scenario without reading its payload", async () => {
+    const otherScenario = sid + BigInt("1");
+    const f = fixture([flag("0")]);
+
+    await expect(
+      createOrderService(f.repo).getOrder(otherScenario, id),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    expect(f.queries).toHaveLength(1);
+    expect(f.queries[0]).toContain(`\`orders\`.\`scenario_id\` = ${otherScenario}`);
+    expect(f.queries[0]).toContain(`\`orders\`.\`id\` = ${id}`);
+  });
+  it.each([
+    { types: flag("0").types },
+    { rows: [["0"]] },
+    { ...flag("0"), rows: null },
+    { ...flag("0"), rows: [] },
+    { ...flag("0"), rows: [["0"], ["1"]] },
+    { types: [{ name: "wrong_field", type: "VARCHAR" }], rows: [["0"]] },
+    {
+      types: [{ name: "__proto__", type: "JSON" }],
+      rows: [['{"has_reference":"0"}']],
+    },
+    { types: [{ name: "has_reference", type: "JSON" }], rows: [['"0"']] },
+    {
+      types: [...flag("0").types, { name: "__proto__", type: "VARCHAR" }],
+      rows: [["0", "unexpected"]],
+    },
+    flag("2"),
+  ])("rejects missing or malformed existence evidence (%j)", async (response) => {
+    const f = fixture([response]);
+
+    await expect(f.repo.findById(sid, id)).rejects.toMatchObject({
+      code: "UNAVAILABLE",
+    });
+    expect(f.queries).toHaveLength(1);
+  });
+  it.each([
+    new Error("synthetic private transport error"),
+    Response.json(
+      { message: "synthetic private provider error" },
+      { status: 503 },
+    ),
+  ])(
+    "preserves UNAVAILABLE for transport and database errors without retry",
+    async (response) => {
+      const f = fixture([response]);
+
+      await expect(f.repo.findById(sid, id)).rejects.toMatchObject({
+        code: "UNAVAILABLE",
+      });
+      expect(f.queries).toHaveLength(1);
+    },
+  );
   it("rejects a row from another Scenario or a different requested id", async () => {
     await expect(
-      fixture([orderWire()]).repo.findById(sid + BigInt("1"), id),
+      fixture([flag("1"), orderWire()]).repo.findById(sid + BigInt("1"), id),
     ).rejects.toMatchObject({ code: "UNAVAILABLE" });
     await expect(
-      fixture([orderWire()]).repo.findById(sid, id + BigInt("1")),
+      fixture([flag("1"), orderWire()]).repo.findById(sid, id + BigInt("1")),
     ).rejects.toMatchObject({ code: "UNAVAILABLE" });
   });
+  it.each([
+    { ...orderWire(), rows: [] },
+    { types: orderWire().types },
+    { ...orderWire(), rows: [orderWire().rows[0], orderWire().rows[0]] },
+  ])(
+    "rejects inconsistent readback after a positive existence flag",
+    async (response) => {
+      const f = fixture([flag("1"), response]);
+
+      await expect(f.repo.findById(sid, id)).rejects.toMatchObject({
+        code: "UNAVAILABLE",
+      });
+      expect(f.queries).toHaveLength(2);
+    },
+  );
   it.each([
     {},
     { rowsAffected: 0 },
@@ -186,7 +282,7 @@ describe("Order repository over synthetic TiDB HTTP", () => {
     async (column, value) => {
       const w = orderWire();
       w.rows[0][column] = value;
-      await expect(fixture([w]).repo.findById(sid, id)).rejects.toMatchObject({
+      await expect(fixture([flag("1"), w]).repo.findById(sid, id)).rejects.toMatchObject({
         code: "UNAVAILABLE",
       });
     },

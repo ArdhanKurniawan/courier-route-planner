@@ -94,7 +94,7 @@ describe("Scenario-scoped protected Order API", () => {
     },
   );
   it("lists/counts and reads lossless private no-store data", async () => {
-    replies = [parentWire, orderWire(), orderWire()];
+    replies = [parentWire, orderWire(), flag("1"), orderWire()];
     parallelCount = countWire("88");
     const response = await collection!.GET(req(), ctx());
     expect(
@@ -114,10 +114,13 @@ describe("Scenario-scoped protected Order API", () => {
       parentWire,
       flag("0"),
       { rowsAffected: 1, sLastInsertID: id },
+      flag("1"),
       orderWire(),
+      flag("1"),
       orderWire(),
       flag("0"),
       { rowsAffected: 0 },
+      flag("1"),
       orderWire(),
       { rowsAffected: 1 },
     ];
@@ -223,12 +226,10 @@ describe("Scenario-scoped protected Order API", () => {
     },
   );
   it("rejects cross-Scenario access without moving or modifying another record", async () => {
-    replies = [
-      { ...orderWire(), rows: [] },
-      { ...orderWire(), rows: [] },
-      { rowsAffected: 0 },
-    ];
-    expect((await item!.GET(req(), ctx("2"))).status).toBe(404);
+    replies = [flag("0"), flag("0"), { rowsAffected: 0 }];
+    const read = await item!.GET(req(), ctx("2"));
+    expect(read.status).toBe(404);
+    expect(await read.json()).toMatchObject({ error: { code: "NOT_FOUND" } });
     expect((await item!.PUT(req("PUT", orderInput), ctx("2"))).status).toBe(
       404,
     );
