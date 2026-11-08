@@ -4,9 +4,9 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-11-03. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-11-08. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
-Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. Phase 1A/1B and documentation PR #32 are merged into Testing. Phase 1C Order CRUD is implemented locally. Migration 0002 Development/Testing, Testing post-apply verification, and Development core Browser QA passed. Testing Order CRUD live integration is PENDING and additional Browser/security QA is PARTIAL. Historical Phase 1B limitations remain unchanged. Gate 2 stays OPEN; no Production release is authorized.
+Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA remains PARTIAL and Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 ---
 
@@ -16,15 +16,14 @@ Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**. Phase 1A auth/Depot merged ke Testing melalui PR #30; Phase 1B Scenario CRUD merged melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Post-merge Quality Gate PASS dan stable Testing Preview READY. Owner melaporkan Browser QA core CRUD aman: **OWNER-OBSERVED**, agregat, bukan automated/independent verification. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope evidence tersebut; detail Browser QA tetap PENDING, Gate 2 OPEN, dan Production release belum diotorisasi. Lihat [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01) dan [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-11-01 (aplikasi Phase 1B sudah merged ke Testing; revisi dokumentasi closure ini masih lokal).
+**Status:** Gate 1 **CLOSED secara administratif — 2026-10-24** setelah final human acceptance. Phase 1A–1C dan Phase 2A sudah tersedia di `testing`. Gate 2 masih OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md)
+
+**Tanggal sinkronisasi:** 2026-11-08, berdasarkan baseline Testing `5696902` dan laporan UAT owner.
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
 
-**Phase 1C — 2026-11-07:** Protected Order CRUD is implemented locally. Migration `0002` passed in Development and Testing, including Testing post-apply verification. Development core Browser QA is accepted. Testing Order CRUD live integration remains **PENDING / NOT EXECUTED** and additional Browser/security QA is **PARTIAL**. Gate 1 CLOSED. Gate 2 OPEN.
-
-See [Phase 1C evidence and merge prerequisites](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07). Earlier dated snapshots retain their original scope and limitations.
+**Phase 1C dan 2A:** Migrasi `0002` Development/Testing, Testing Order CRUD live integration, dan Quality Gate Testing sudah PASS. Owner mengamati alur Order sintetis dari pembuatan, edit koordinat dan perpindahan marker, hingga penghapusan dan daftar kembali kosong. Browser/security QA masih **PARTIAL**. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 ## Approved Target Architecture
 
@@ -3499,6 +3498,19 @@ Sections 18–20 remain historical evidence. Phase 1C implements protected, Scen
 
 Gate 1 CLOSED. Gate 2 OPEN.
 
+## 22. UAT Testing Phase 1C dan 2A (2026-11-08)
+
+Baseline Testing `5696902` mencakup Order CRUD Phase 1C (#33–#35), Map Phase 2A (#36), dan koreksi HTTP 503 pada Scenario kosong serta tes ResizeObserver (#37). [Quality Gate pada SHA Testing](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/42475718520) dan [deployment Preview terkait](https://vercel.com/ardhankurniawans-projects/courier-route-planner/DHxc2tKYcPynRcnR2ccgqSwGWbKk) sudah diverifikasi.
+
+| Status | Cakupan bukti |
+|---|---|
+| PASS — owner-observed Browser UAT | Login admin dan akses Map di Testing Preview. Owner membuat Order sintetis `QA-MAP-001`, melihat marker Depot dan Order, mengubah koordinat melalui CRUD, lalu melihat marker berpindah sesuai perubahan. |
+| PASS — owner-observed penghapusan Order | Owner menghapus `QA-MAP-001` dan melihat daftar Order kembali kosong dengan jumlah aktual 0. Bukti ini mencakup Order tersebut dan daftar yang diamati. |
+| PASS — bukti integrasi terpisah | Migrasi `0002` Development dan Testing, Testing Order CRUD live integration 1/1 termasuk isolasi Scenario dan cleanup terverifikasi dengan 0 fixture tersisa. |
+| PENDING — Browser/security QA | Logout, akses dan mutasi tanpa sesi, atribut cookie dan perilaku sesi, penolakan Origin, limiter, dan detail Browser QA di luar alur yang dilaporkan owner. |
+
+Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Perbaikan redirect dicatat untuk setelah release ke `main`. [Roadmap](docs/18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
+
 ---
 
 # SOURCE: docs/15_RESEARCH_BENCHMARK_PROTOCOL.md
@@ -4199,9 +4211,9 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-11-07:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD diimplementasikan lokal. Migration `0002` Development/Testing dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING, Browser/security QA tambahan PARTIAL, dan publikasi menunggu otorisasi. [Evidence Phase 1C](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+**Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing` pada `5696902`. Quality Gate, migrasi Development/Testing `0002`, dan live integration Order CRUD PASS. Owner mengamati alur inti Order dan Map di Testing Preview. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
-**Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
+**Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif** setelah final human acceptance. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md)
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
@@ -4268,7 +4280,7 @@ Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/requ
 
 ## Phase 1 — Admin baseline
 
-Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD Phase 1C sudah diotorisasi dan diimplementasikan lokal; live acceptance dan publikasi belum dilakukan. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
+Auth/Depot Phase 1A (#30), Scenario Phase 1B (#31), dan Order Phase 1C (#33–#35) sudah diimplementasikan dan merged ke Testing. Browser/security QA yang belum teramati tetap PENDING. Daftar berikut mencatat lingkup Phase 1.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;
@@ -4277,14 +4289,12 @@ Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase
 - validation;
 - basic tests.
 
+Follow-up setelah release ke `main`: arahkan admin dengan sesi aktif dari `/login` ke halaman admin. Owner mengamati bahwa form login masih dapat tampil pada sesi aktif.
+
 ## Phase 2 — Map & dataset
 
-- Leaflet client component;
-- depot/customer marker;
-- edit marker/coordinates;
-- dummy generator;
-- seeded random primary generator; clustered/circular/directional optional additional support;
-- scenario data QA.
+- **Phase 2A Map — implemented di Testing** (#36–#37). Leaflet menampilkan marker Depot dan Order menurut Scenario. Aksi Edit membuka CRUD existing, dan reload Map membaca koordinat terbaru. Owner memverifikasi alur inti dengan satu Order sintetis. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+- **Phase 2B Dummy Generator — pending.** Prioritasnya generator random deterministik dari seed dan QA dataset Scenario. Pola clustered, circular, dan directional bersifat opsional.
 
 ## Phase 3 — Benchmark Input Foundation
 
@@ -5431,9 +5441,9 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 2 — CRUD baseline
 
-**Current Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
+**Historical Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
 
-**Current Phase 1C — 2026-11-07:** Order CRUD diimplementasikan. Migration `0002` Development/Testing, post-apply Testing, dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING dan Browser/security QA tambahan PARTIAL. Checklist di bawah tetap mengikuti acceptance aktual. [Bukti dan prasyarat merge](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+**Current Phase 1C — 2026-11-08:** Order CRUD sudah di `testing`. Migrasi `0002` Development/Testing, Testing Order CRUD live integration 1/1, dan cleanup integrasi PASS. Owner mengamati login, create/edit/delete Order sintetis lewat alur Map/CRUD, dan daftar kembali kosong. Browser/security QA masih PARTIAL dan Gate 2 masih OPEN. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;
@@ -5444,6 +5454,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 - [ ] no production data used in testing.
 
 ## Gate 3 — Dataset + map
+
+Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Phase 2B Dummy Generator masih pending. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 - [ ] markers correct;
 - [ ] OSM attribution;

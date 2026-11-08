@@ -2,15 +2,14 @@
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**. Phase 1A auth/Depot merged ke Testing melalui PR #30; Phase 1B Scenario CRUD merged melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Post-merge Quality Gate PASS dan stable Testing Preview READY. Owner melaporkan Browser QA core CRUD aman: **OWNER-OBSERVED**, agregat, bukan automated/independent verification. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope evidence tersebut; detail Browser QA tetap PENDING, Gate 2 OPEN, dan Production release belum diotorisasi. Lihat [assessment Testing](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01) dan [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-11-01 (aplikasi Phase 1B sudah merged ke Testing; revisi dokumentasi closure ini masih lokal).
+**Status:** Gate 1 **CLOSED secara administratif — 2026-10-24** setelah final human acceptance. Phase 1A–1C dan Phase 2A sudah tersedia di `testing`. Gate 2 masih OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md)
+
+**Tanggal sinkronisasi:** 2026-11-08, berdasarkan baseline Testing `5696902` dan laporan UAT owner.
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
 
-**Phase 1C — 2026-11-07:** Protected Order CRUD is implemented locally. Migration `0002` passed in Development and Testing, including Testing post-apply verification. Development core Browser QA is accepted. Testing Order CRUD live integration remains **PENDING / NOT EXECUTED** and additional Browser/security QA is **PARTIAL**. Gate 1 CLOSED. Gate 2 OPEN.
-
-See [Phase 1C evidence and merge prerequisites](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07). Earlier dated snapshots retain their original scope and limitations.
+**Phase 1C dan 2A:** Migrasi `0002` Development/Testing, Testing Order CRUD live integration, dan Quality Gate Testing sudah PASS. Owner mengamati alur Order sintetis dari pembuatan, edit koordinat dan perpindahan marker, hingga penghapusan dan daftar kembali kosong. Browser/security QA masih **PARTIAL**. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 ## Approved Target Architecture
 
