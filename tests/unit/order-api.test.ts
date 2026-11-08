@@ -24,7 +24,7 @@ vi.mock("@/db/client", async (original) => ({
 }));
 import * as collection from "@/app/api/scenarios/[id]/orders/route";
 import * as item from "@/app/api/scenarios/[id]/orders/[orderId]/route";
-let replies: unknown[], queries: string[], parallelCount: unknown;
+let replies: unknown[], queries: string[], countReply: unknown;
 const sid = dto.scenarioId,
   id = dto.id;
 const ctx = (scenarioId = sid, orderId = id) => ({
@@ -50,15 +50,15 @@ beforeEach(() => {
   boundary.status = 0;
   replies = [];
   queries = [];
-  parallelCount = undefined;
+  countReply = undefined;
   vi.stubEnv("APP_ENV", "development");
   vi.stubEnv("DATABASE_URL", fakeDatabaseUrl);
   const transport: DatabaseFetch = async (_url, init) => {
     const query = JSON.parse(init!.body).query;
     queries.push(query);
     const next =
-      query.includes("count(*)") && parallelCount !== undefined
-        ? parallelCount
+      query.includes("count(*)") && countReply !== undefined
+        ? countReply
         : replies.shift();
     if (next === undefined) throw Error("Unexpected synthetic SQL");
     return next instanceof Response
@@ -95,7 +95,7 @@ describe("Scenario-scoped protected Order API", () => {
   );
   it("lists/counts and reads lossless private no-store data", async () => {
     replies = [parentWire, orderWire(), flag("1"), orderWire()];
-    parallelCount = countWire("88");
+    countReply = countWire("88");
     const response = await collection!.GET(req(), ctx());
     expect(
       response.status,
@@ -185,11 +185,17 @@ describe("Scenario-scoped protected Order API", () => {
     ).toBe(400);
     expect(getDatabase).not.toHaveBeenCalled();
   });
-  it.each([{}, { rowsAffected: 0 }, { types: [], rows: [] }])(
-    "rejects an incomplete HTTP success when the Order count is positive (%j)",
+  it.each([
+    {},
+    { rowsAffected: 0 },
+    { types: [], rows: [] },
+    { types: orderWire().types },
+    Response.json({ message: "synthetic provider error" }, { status: 503 }),
+  ])(
+    "rejects a failed or incomplete SELECT when the Order count is positive (%j)",
     async (listResponse) => {
       replies = [parentWire, listResponse];
-      parallelCount = countWire("2");
+      countReply = countWire("2");
       const response = await collection.GET(req(), ctx());
       expect(response.status).toBe(503);
       expect(await response.json()).toMatchObject({
@@ -199,9 +205,43 @@ describe("Scenario-scoped protected Order API", () => {
       expect(queries.every((query) => /^\s*select\b/i.test(query))).toBe(true);
     },
   );
+  it("uses a verified zero count for the Map without issuing an empty row SELECT", async () => {
+    replies = [parentWire, { types: orderWire().types }];
+    countReply = countWire("0");
+
+    const response = await collection.GET(
+      req("GET", undefined, undefined, "?limit=100"),
+      ctx(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(await response.json()).toEqual({
+      data: [],
+      nextCursor: null,
+      totalCount: "0",
+    });
+    expect(queries).toHaveLength(2);
+    expect(queries[1]).toMatch(/count\(\*\).*where.*scenario_id/i);
+  });
+  it("does not treat a zero decoded from invalid count metadata as absence", async () => {
+    replies = [parentWire, { ...orderWire(), rows: [] }];
+    countReply = {
+      types: [{ name: "total", type: "JSON" }],
+      rows: [['"0"']],
+    };
+
+    const response = await collection.GET(req(), ctx());
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: { code: "UNAVAILABLE" },
+    });
+    expect(queries).toHaveLength(2);
+  });
   it("rejects a first page whose empty row list contradicts a positive count", async () => {
     replies = [parentWire, { ...orderWire(), rows: [] }];
-    parallelCount = countWire("2");
+    countReply = countWire("2");
     const response = await collection.GET(req(), ctx());
     expect(response.status).toBe(503);
   });
@@ -212,7 +252,7 @@ describe("Scenario-scoped protected Order API", () => {
     "accepts an empty first or exhausted cursor page with complete metadata",
     async ({ query, count }) => {
       replies = [parentWire, { ...orderWire(), rows: [] }];
-      parallelCount = countWire(count);
+      countReply = countWire(count);
       const response = await collection.GET(
         req("GET", undefined, undefined, query),
         ctx(),

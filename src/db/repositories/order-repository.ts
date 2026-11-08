@@ -36,6 +36,7 @@ const orderExistenceResult = flag.extend({
   types: z.strictObject({ has_reference: z.enum(["CHAR", "VARCHAR"]) }),
 });
 const countResult = z.object({
+  types: z.strictObject({ total: z.enum(["CHAR", "VARCHAR"]) }),
   rows: z.tuple([
     z
       .object({
