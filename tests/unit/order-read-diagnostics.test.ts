@@ -5,16 +5,20 @@ import { createDatabase } from "@/db/client";
 import { createOrderRepository } from "@/db/repositories/order-repository";
 import { OrderError } from "@/lib/validation/order";
 import { createOrderReadDiagnostics } from "../fixtures/order-read-diagnostics";
-import { orderRowFixture, orderWire } from "../fixtures/order";
+import { flag, orderRowFixture, orderWire } from "../fixtures/order";
 import { fakeDatabaseUrl } from "../fixtures/tidb-http";
 
 const privateValue = "synthetic-private-value";
 const headers = { "TiDB-Session": privateValue };
 
-function checkRead(reply: () => Promise<Response>) {
+function checkRead(...replies: (() => Promise<Response>)[]) {
   const diagnostics = createOrderReadDiagnostics();
   const database = createDatabase(fakeDatabaseUrl, () =>
-    diagnostics.observe(reply),
+    diagnostics.observe(async () => {
+      const reply = replies.shift();
+      if (!reply) throw Error("Unexpected synthetic SQL");
+      return reply();
+    }),
   );
   const orders = createOrderService(createOrderRepository(() => database));
   return diagnostics.expectNotFound(() =>
@@ -22,29 +26,38 @@ function checkRead(reply: () => Promise<Response>) {
   );
 }
 
+it("accepts NOT_FOUND for an explicit negative existence flag", async () => {
+  await expect(
+    checkRead(async () => Response.json(flag("0"), { headers })),
+  ).resolves.toBeUndefined();
+});
+
 it.each([{ rows: [] }, { rows: null }])(
-  "accepts NOT_FOUND for explicit empty rows (%j)",
+  "reports UNAVAILABLE when the required existence row is empty (%j)",
   async ({ rows }) => {
     await expect(
       checkRead(async () =>
-        Response.json({ types: orderWire().types, rows }, { headers }),
+        Response.json({ types: flag("0").types, rows }, { headers }),
       ),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow("actual=UNAVAILABLE origin=api");
   },
 );
 
 it("reports the unexpected application error with the available HTTP metadata", async () => {
   await expect(
-    checkRead(async () => Response.json(orderWire(), { headers })),
+    checkRead(
+      async () => Response.json(flag("1"), { headers }),
+      async () => Response.json(orderWire(), { headers }),
+    ),
   ).rejects.toThrow(
     /step=cross-scenario-order-read expected=NOT_FOUND actual=UNAVAILABLE origin=api httpStatus=200 hasTypes=true hasRows=true/,
   );
 });
 
 it.each([
-  { body: { types: orderWire().types }, hasTypes: true, hasRows: false },
+  { body: { types: flag("0").types }, hasTypes: true, hasRows: false },
   {
-    body: { types: orderWire().types, rows: privateValue },
+    body: { types: flag("0").types, rows: privateValue },
     hasTypes: true,
     hasRows: true,
   },

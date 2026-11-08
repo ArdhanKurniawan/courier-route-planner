@@ -32,6 +32,9 @@ const affected = z.object({ rowsAffected: z.number().int().min(0).max(1) });
 const flag = z.object({
   rows: z.tuple([z.object({ has_reference: z.enum(["0", "1"]) }).strict()]),
 });
+const orderExistenceResult = flag.extend({
+  types: z.strictObject({ has_reference: z.enum(["CHAR", "VARCHAR"]) }),
+});
 const countResult = z.object({
   rows: z.tuple([
     z
@@ -193,13 +196,18 @@ export function createOrderRepository(
       }),
     findById: (scenarioId, id) =>
       read(async (db) => {
-        const rows = await db
-          .select(projection)
-          .from(orders)
-          .where(and(eq(orders.scenarioId, scenarioId), eq(orders.id, id)))
-          .limit(1);
-        if (!rows.length) return null;
-        const row = orderRow.parse(rows[0]);
+        const scope = and(eq(orders.scenarioId, scenarioId), eq(orders.id, id));
+        // EXISTS returns one flag even when a scoped SELECT would have no rows.
+        const { has_reference: exists } = orderExistenceResult.parse(
+          await db.execute(
+            sql`select cast(exists(select 1 from ${orders} where ${scope} limit 1) as char) as has_reference`,
+          ),
+        ).rows[0];
+        if (exists === "0") return null;
+
+        const [row] = z.tuple([orderRow]).parse(
+          await db.select(projection).from(orders).where(scope).limit(1),
+        );
         if (row.id !== id || row.scenarioId !== scenarioId)
           throw new OrderError("UNAVAILABLE");
         return row;
