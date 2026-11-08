@@ -1,7 +1,13 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
+import RecordEditLoader, {
+  readEditRecord,
+} from "@/components/common/record-edit-loader";
+import { depotId } from "@/lib/validation/depot";
 import {
+  orderRow,
   parseOrderId,
   type OrderDTO,
   type OrderInput,
@@ -9,14 +15,71 @@ import {
 import type { ScenarioDTO } from "@/lib/validation/scenario";
 import OrderForm from "./order-form";
 
+type ScenarioOption = Pick<ScenarioDTO, "id" | "name" | "customerCount">;
+const scenarioDetail = z.object({
+  id: depotId,
+  name: z.string(),
+  customerCount: z.number().int().nonnegative(),
+});
+const orderDetail = orderRow.extend({
+  id: depotId,
+  scenarioId: depotId,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export function OrderEditTarget({
+  scenarioId,
+  id,
+}: {
+  scenarioId: string;
+  id: string;
+}) {
+  const load = useCallback(
+    async (signal: AbortSignal) => {
+      const base = `/api/scenarios/${scenarioId}`;
+      const [scenarioResponse, orderResponse] = await Promise.all([
+        readEditRecord(base, signal),
+        readEditRecord(`${base}/orders/${id}`, signal),
+      ]);
+      const scenario = scenarioDetail.parse(scenarioResponse);
+      const order = orderDetail.parse(orderResponse);
+      if (
+        scenario.id !== scenarioId ||
+        order.scenarioId !== scenarioId ||
+        order.id !== id
+      )
+        throw Error("Unexpected Scenario or Order");
+      return { scenario, order };
+    },
+    [id, scenarioId],
+  );
+  return (
+    <RecordEditLoader key={`${scenarioId}:${id}`} label="Order" load={load}>
+      {({ scenario, order }) => (
+        <OrderManager initialScenario={scenario} initialOrder={order} />
+      )}
+    </RecordEditLoader>
+  );
+}
+
 const button =
   "rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700";
 const uncertainMessage =
   "Status perubahan belum pasti. Muat ulang daftar sebelum mencoba lagi.";
-export default function OrderManager() {
+export default function OrderManager({
+  initialScenario,
+  initialOrder,
+}: {
+  initialScenario?: ScenarioOption;
+  initialOrder?: OrderDTO;
+} = {}) {
   const router = useRouter();
   const [scenarios, setScenarios] = useState<ScenarioDTO[]>([]),
-    [selected, setSelected] = useState<ScenarioDTO | null>(null);
+    [selected, setSelected] = useState<ScenarioOption | null>(
+      initialScenario ?? null,
+    );
+  const [edit, setEdit] = useState(initialOrder);
   const [after, setAfter] = useState<string>(),
     [next, setNext] = useState<string | null>(null),
     [revision, setRevision] = useState(0);
@@ -97,9 +160,10 @@ export default function OrderManager() {
           id="order-scenario"
           disabled={busy || loading || error}
           value={selected?.id ?? ""}
-          onChange={(e) =>
-            setSelected(scenarios.find((s) => s.id === e.target.value) ?? null)
-          }
+          onChange={(e) => {
+            setEdit(undefined);
+            setSelected(scenarios.find((s) => s.id === e.target.value) ?? null);
+          }}
           className="w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2 dark:border-gray-700"
         >
           <option value="">Pilih Scenario</option>
@@ -147,6 +211,7 @@ export default function OrderManager() {
         <OrdersForScenario
           key={selected.id}
           scenario={selected}
+          initialOrder={edit}
           onBusy={setBusy}
         />
       ) : (
@@ -157,16 +222,18 @@ export default function OrderManager() {
 }
 function OrdersForScenario({
   scenario,
+  initialOrder,
   onBusy,
 }: {
-  scenario: ScenarioDTO;
+  scenario: ScenarioOption;
+  initialOrder?: OrderDTO;
   onBusy: (busy: boolean) => void;
 }) {
   const router = useRouter(),
     lock = useRef(false),
     reading = useRef(true);
   const [rows, setRows] = useState<OrderDTO[]>([]),
-    [selected, setSelected] = useState<OrderDTO | null>(null);
+    [selected, setSelected] = useState<OrderDTO | null>(initialOrder ?? null);
   const [after, setAfter] = useState<string>(),
     [next, setNext] = useState<string | null>(null),
     [revision, setRevision] = useState(0),
@@ -217,14 +284,14 @@ function OrdersForScenario({
         setRows(result.data);
         setNext(result.nextCursor);
         setTotal(result.totalCount);
-        setSelected(null);
+        if (!initialOrder) setSelected(null);
         setUncertain(false);
         setFailed(false);
       } catch {
         if (active) {
           setRows([]);
           setTotal(null);
-          setSelected(null);
+          if (!initialOrder) setSelected(null);
           setFailed(true);
           setError("Daftar Order belum dapat dimuat. Silakan muat ulang.");
         }
@@ -240,9 +307,13 @@ function OrdersForScenario({
       active = false;
       controller.abort();
     };
-  }, [base, after, revision, scenario.id, router]);
+  }, [base, after, revision, scenario.id, initialOrder, router]);
   function refresh(cursor?: string) {
     if (lock.current) return;
+    if (initialOrder && uncertain) {
+      window.location.reload();
+      return;
+    }
     reading.current = true;
     setLoading(true);
     setError("");
@@ -341,6 +412,16 @@ function OrdersForScenario({
     }
   }
   const blocked = loading || pending || uncertain || failed;
+  const form = (
+    <OrderForm
+      key={selected?.id ?? "new"}
+      initial={selected}
+      pending={pending}
+      blocked={loading || uncertain || failed}
+      onSave={(input) => mutate(selected ? "PUT" : "POST", selected?.id, input)}
+      onCancel={() => setSelected(null)}
+    />
+  );
   return (
     <section className="space-y-4" aria-label="Order pada Scenario">
       <p>Jumlah pelanggan konfigurasi: {scenario.customerCount}</p>
@@ -361,6 +442,7 @@ function OrdersForScenario({
         </p>
       ) : null}
       {notice ? <p role="status">{notice}</p> : null}
+      {initialOrder && selected && form}
       {loading ? (
         <p role="status">Memuat Order…</p>
       ) : rows.length === 0 ? (
@@ -441,16 +523,7 @@ function OrdersForScenario({
           Order berikutnya
         </button>
       </div>
-      <OrderForm
-        key={selected?.id ?? "new"}
-        initial={selected}
-        pending={pending}
-        blocked={loading || uncertain || failed}
-        onSave={(input) =>
-          mutate(selected ? "PUT" : "POST", selected?.id, input)
-        }
-        onCancel={() => setSelected(null)}
-      />
+      {!initialOrder && form}
     </section>
   );
 }

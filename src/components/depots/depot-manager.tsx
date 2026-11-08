@@ -1,12 +1,45 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { DepotDTO, DepotInput } from "@/lib/validation/depot";
+import { z } from "zod";
+import RecordEditLoader, {
+  readEditRecord,
+} from "@/components/common/record-edit-loader";
+import {
+  depotId,
+  depotRow,
+  type DepotDTO,
+  type DepotInput,
+} from "@/lib/validation/depot";
 import DepotForm from "./depot-form";
+
+const depotDetail = depotRow.extend({
+  id: depotId,
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+});
+
+export function DepotEditTarget({ id }: { id: string }) {
+  const load = useCallback(
+    async (signal: AbortSignal) => {
+      const record = depotDetail.parse(
+        await readEditRecord(`/api/depots/${id}`, signal),
+      );
+      if (record.id !== id) throw Error("Unexpected Depot");
+      return record;
+    },
+    [id],
+  );
+  return (
+    <RecordEditLoader key={id} label="Depot" load={load}>
+      {(record) => <DepotManager initial={record} />}
+    </RecordEditLoader>
+  );
+}
 
 const uncertainMessage =
   "Status perubahan belum pasti. Muat ulang daftar sebelum mencoba lagi.";
-export default function DepotManager() {
+export default function DepotManager({ initial }: { initial?: DepotDTO } = {}) {
   const router = useRouter(),
     lock = useRef(false),
     readBusy = useRef(true);
@@ -18,7 +51,7 @@ export default function DepotManager() {
     [pending, setPending] = useState(false);
   const [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [selected, setSelected] = useState<DepotDTO | null>(null),
+    [selected, setSelected] = useState<DepotDTO | null>(initial ?? null),
     [uncertain, setUncertain] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
@@ -66,6 +99,10 @@ export default function DepotManager() {
     };
   }, [after, revision, router]);
   function refresh(cursor?: string) {
+    if (initial && uncertain) {
+      window.location.reload();
+      return;
+    }
     readBusy.current = true;
     setLoading(true);
     setError("");
@@ -115,7 +152,10 @@ export default function DepotManager() {
       }
       if (method !== "DELETE") {
         const payload = await response.json();
-        if (typeof payload?.data?.id !== "string")
+        if (
+          !depotId.safeParse(payload?.data?.id).success ||
+          (id && payload.data.id !== id)
+        )
           throw new Error("Missing receipt.");
       }
       setSelected(null);
@@ -154,6 +194,16 @@ export default function DepotManager() {
   }
   const action =
     "rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 dark:border-gray-700";
+  const form = (
+    <DepotForm
+      key={selected?.id ?? "new"}
+      initial={selected}
+      pending={pending}
+      blocked={uncertain || loading}
+      onCancel={() => setSelected(null)}
+      onSave={(input) => mutate(selected ? "PUT" : "POST", selected?.id, input)}
+    />
+  );
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
@@ -187,6 +237,7 @@ export default function DepotManager() {
           {notice}
         </p>
       )}
+      {initial && selected && form}
       {loading ? (
         <p role="status">Memuat depot…</p>
       ) : rows.length === 0 ? (
@@ -278,16 +329,7 @@ export default function DepotManager() {
           Berikutnya
         </button>
       </div>
-      <DepotForm
-        key={selected?.id ?? "new"}
-        initial={selected}
-        pending={pending}
-        blocked={uncertain || loading}
-        onCancel={() => setSelected(null)}
-        onSave={(input) =>
-          mutate(selected ? "PUT" : "POST", selected?.id, input)
-        }
-      />
+      {!initial && form}
     </div>
   );
 }
