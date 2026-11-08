@@ -18,6 +18,7 @@ import { getDatabase } from "@/db/client";
 import DepotPage from "@/app/(admin)/depots/page";
 import ScenarioPage from "@/app/(admin)/scenarios/page";
 import OrderPage from "@/app/(admin)/orders/page";
+import MapPage from "@/app/(admin)/map/page";
 
 const boundary = vi.hoisted(() => ({
   allowed: true,
@@ -116,6 +117,10 @@ describe("auth HTTP and server authorization", () => {
   });
   it("protects the server-rendered Order entry before rendering data", async () => {
     await expect(OrderPage()).rejects.toThrow("REDIRECT:/login");
+  });
+  it("protects the server-rendered Map entry before rendering data", async () => {
+    await expect(MapPage()).rejects.toThrow("REDIRECT:/login");
+    expect(getDatabase).not.toHaveBeenCalled();
   });
   it("cannot authorize a missing session and acquires no application DB", async () => {
     await expect(requireAdmin()).rejects.toMatchObject({ status: 401 });
