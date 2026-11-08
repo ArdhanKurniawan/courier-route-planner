@@ -163,7 +163,7 @@ describe("protected Depot HTTP contracts", () => {
     expect(await removed.text()).toBe("");
   });
   it("maps a missing Depot to 404 after confirming no Scenario reference", async () => {
-    replies = [{ types: [], rows: [] }];
+    replies = [{ types: [{ name: "id", type: "BIGINT" }], rows: [] }];
     expect((await detail(request(), context())).status).toBe(404);
     replies = [referenceReply("0"), { rowsAffected: 0 }];
     expect((await DELETE(request("DELETE"), context())).status).toBe(404);

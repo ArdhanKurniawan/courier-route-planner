@@ -16,7 +16,11 @@ it("imports the approved Depot/Scenario schema without DB configuration or netwo
   vi.stubGlobal("fetch", network);
   try {
     const schema = await import("@/db/schema");
-    expect(Object.keys(schema).sort()).toEqual(["depots", "scenarios"]);
+    expect(Object.keys(schema).sort()).toEqual([
+      "depots",
+      "orders",
+      "scenarios",
+    ]);
     expect(getTableName(schema.depots)).toBe("depots");
     expect(network).not.toHaveBeenCalled();
   } finally {

@@ -43,5 +43,6 @@ export const navigationGroups: NavigationGroup[] = [
 export const plannedModules = navigationGroups
   .flatMap((group) => group.items)
   .filter(
-    (item) => !["/", "/about", "/depots", "/scenarios"].includes(item.href),
+    (item) =>
+      !["/", "/about", "/depots", "/scenarios", "/orders"].includes(item.href),
   );

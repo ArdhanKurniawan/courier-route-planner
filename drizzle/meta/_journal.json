@@ -15,6 +15,13 @@
       "when": 1793441266963,
       "tag": "0001_scenarios",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1793514725884,
+      "tag": "0002_orders",
+      "breakpoints": true
     }
   ]
 }

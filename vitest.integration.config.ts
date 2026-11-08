@@ -36,7 +36,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/integration/**/*.integration.test.ts"],
+    include:
+      process.env.ORDER_INTEGRATION_RECONCILE_RUN === undefined
+        ? ["tests/integration/**/*.integration.test.ts"]
+        : ["tests/integration/order-crud.integration.test.ts"],
     fileParallelism: false,
     testTimeout: 30000,
     hookTimeout: 30000,

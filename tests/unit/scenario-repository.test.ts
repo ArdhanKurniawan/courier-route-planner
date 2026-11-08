@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createDatabase } from "@/db/client";
 import { createScenarioRepository } from "@/db/repositories/scenario-repository";
 import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
+import { flag } from "../fixtures/order";
 import {
   scenarioRowFixture as row,
   scenarioDate,
@@ -100,6 +101,7 @@ describe("Scenario repository over synthetic TiDB HTTP", () => {
     "maps SQL reference code %s to a definitive restriction",
     async (code) => {
       const f = fixture([
+        flag("0"),
         Response.json(
           { code, message: "synthetic private SQL" },
           { status: 409 },
@@ -108,7 +110,7 @@ describe("Scenario repository over synthetic TiDB HTTP", () => {
       await expect(f.repo.remove(id)).rejects.toMatchObject({
         code: "SCENARIO_IN_USE",
       });
-      expect(f.transport).toHaveBeenCalledTimes(1);
+      expect(f.transport).toHaveBeenCalledTimes(2);
     },
   );
   it("maps missing-parent FK errors to invalid Depot without masking transport failures", async () => {
@@ -121,11 +123,11 @@ describe("Scenario repository over synthetic TiDB HTTP", () => {
     await expect(f.repo.insert(insert)).rejects.toMatchObject({
       code: "INVALID_DEPOT",
     });
-    const failure = fixture([new Error("synthetic private URL")]);
+    const failure = fixture([flag("0"), new Error("synthetic private URL")]);
     await expect(failure.repo.remove(id)).rejects.toMatchObject({
       code: "MUTATION_OUTCOME_UNKNOWN",
     });
-    expect(failure.transport).toHaveBeenCalledTimes(1);
+    expect(failure.transport).toHaveBeenCalledTimes(2);
   });
   it.each([null, 1, "01", "9223372036854775808"])(
     "rejects invalid insert identity %j as unknown outcome",

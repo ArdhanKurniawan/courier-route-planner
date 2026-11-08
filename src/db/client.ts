@@ -48,6 +48,10 @@ export function createDatabase(
     // The same fresh signal remains attached while the driver reads the body.
     const signal = AbortSignal.timeout(5000);
     try {
+      // The installed driver sends a JSON query and defaults missing SELECT
+      // metadata to empty arrays before Drizzle can validate the result.
+      const { query } = JSON.parse(init?.body ?? "{}");
+      const selectsRows = typeof query === "string" && /^\s*select\b/i.test(query);
       const response = await transport(input, {
         ...init,
         signal,
@@ -67,8 +71,16 @@ export function createDatabase(
         json: () =>
           read(async () => {
             const payload: unknown = await response.json();
-            if (response.ok && !wireResult.safeParse(payload).success)
-              throw new DatabaseTransportError();
+            if (response.ok) {
+              const result = wireResult.safeParse(payload);
+              if (
+                !result.success ||
+                (selectsRows &&
+                  (!result.data.types?.length ||
+                    result.data.rows === undefined))
+              )
+                throw new DatabaseTransportError();
+            }
             return payload;
           }),
         text: () => read(() => response.text()),

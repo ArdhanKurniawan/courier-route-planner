@@ -5,6 +5,7 @@ import { HttpError } from "@/lib/http/request-security";
 import { GET, POST } from "@/app/api/scenarios/route";
 import { GET as detail, PUT, DELETE } from "@/app/api/scenarios/[id]/route";
 import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
+import { flag } from "../fixtures/order";
 import {
   scenarioInput as input,
   scenarioWire,
@@ -101,6 +102,7 @@ describe("Scenario protected HTTP contracts", () => {
       scenarioWire(),
       { rowsAffected: 0 },
       scenarioWire(),
+      flag("0"),
       { rowsAffected: 1 },
     ];
     const create = await POST(request("POST", input));
@@ -111,8 +113,8 @@ describe("Scenario protected HTTP contracts", () => {
     expect(remove.status).toBe(204);
     expect(await remove.text()).toBe("");
     expect(remove.headers.get("cache-control")).toBe("private, no-store");
-    expect(queries).toHaveLength(5);
-    expect(queries[4]).toContain(id);
+    expect(queries).toHaveLength(6);
+    expect(queries[5]).toContain(id);
   });
   it("rejects Origin violations, invalid lifecycle/config and malformed query before DB", async () => {
     expect(
@@ -188,6 +190,7 @@ describe("Scenario protected HTTP contracts", () => {
   it("returns 409 for definitive Depot/child conflicts and never leaks SQL details", async () => {
     replies = [
       { rowsAffected: 0, sLastInsertID: null },
+      flag("0"),
       Response.json(
         { code: 1451, message: "synthetic private SQL" },
         { status: 409 },
@@ -205,7 +208,11 @@ describe("Scenario protected HTTP contracts", () => {
     expect(body).not.toContain("synthetic private SQL");
   });
   it("preserves missing-id responses and unknown mutation outcomes without automatic retry", async () => {
-    replies = [{ types: [], rows: [] }, { rowsAffected: 0 }];
+    replies = [
+      { types: [{ name: "id", type: "BIGINT" }], rows: [] },
+      flag("0"),
+      { rowsAffected: 0 },
+    ];
     expect((await detail(request(), context())).status).toBe(404);
     expect((await DELETE(request("DELETE"), context())).status).toBe(404);
     replies = [
@@ -217,6 +224,6 @@ describe("Scenario protected HTTP contracts", () => {
     expect(await response.json()).toMatchObject({
       error: { code: "MUTATION_OUTCOME_UNKNOWN" },
     });
-    expect(queries).toHaveLength(4);
+    expect(queries).toHaveLength(5);
   });
 });

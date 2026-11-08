@@ -8,6 +8,10 @@
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
 
+**Phase 1C — 2026-11-07:** Protected Order CRUD is implemented locally. Migration `0002` passed in Development and Testing, including Testing post-apply verification. Development core Browser QA is accepted. Testing Order CRUD live integration remains **PENDING / NOT EXECUTED** and additional Browser/security QA is **PARTIAL**. Gate 1 CLOSED. Gate 2 OPEN.
+
+See [Phase 1C evidence and merge prerequisites](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07). Earlier dated snapshots retain their original scope and limitations.
+
 ## Approved Target Architecture
 
 Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelaskan terpisah di bawah.

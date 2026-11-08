@@ -4,9 +4,9 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-11-01. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-11-03. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
-Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. Phase 1B application is merged into Testing via PR #31. This local documentation candidate records scoped administrative closure readiness and owner-observed aggregate CRUD; detailed Browser QA remains PENDING. It does not close Gate 2 or authorize migration/runtime/Production release.
+Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-24**; see [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Older dated source snapshots remain historical. Phase 1A/1B and documentation PR #32 are merged into Testing. Phase 1C Order CRUD is implemented locally. Migration 0002 Development/Testing, Testing post-apply verification, and Development core Browser QA passed. Testing Order CRUD live integration is PENDING and additional Browser/security QA is PARTIAL. Historical Phase 1B limitations remain unchanged. Gate 2 stays OPEN; no Production release is authorized.
 
 ---
 
@@ -21,6 +21,10 @@ Current administrative status: **Phase 0 / Phase 0D / Gate 1 CLOSED — 2026-10-
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
+
+**Phase 1C — 2026-11-07:** Protected Order CRUD is implemented locally. Migration `0002` passed in Development and Testing, including Testing post-apply verification. Development core Browser QA is accepted. Testing Order CRUD live integration remains **PENDING / NOT EXECUTED** and additional Browser/security QA is **PARTIAL**. Gate 1 CLOSED. Gate 2 OPEN.
+
+See [Phase 1C evidence and merge prerequisites](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07). Earlier dated snapshots retain their original scope and limitations.
 
 ## Approved Target Architecture
 
@@ -692,6 +696,13 @@ Reason: current ApexCharts uses a revenue-based/community licensing model; proje
 - License: MIT according to upstream repository.
 - Intended use: possible charts for research/benchmark result visualization after explicit task/ADR.
 
+## clean-code project skill
+
+- Upstream: [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/clean-code).
+- Project skill: [SKILL.md](.agents/skills/clean-code/SKILL.md), with upstream provenance retained.
+- License: [upstream MIT notice](licenses/AGENTIC-AWESOME-SKILLS-MIT.txt).
+- Scope: agent guidance for project work.
+
 ---
 
 # SOURCE: docs/00_START_HERE.md
@@ -1035,6 +1046,8 @@ Minimal field:
 - latitude;
 - longitude;
 - source (`dummy`/`manual`).
+
+Owner-approved Phase 1C contract (2026-11-01): every Order belongs to exactly one Scenario. Order code is canonical uppercase, at most 64 Unicode characters after normalization, unique within that Scenario with case-insensitive and accent-insensitive comparison. The same code may exist in another Scenario. Manual API creation fixes source=manual; source and Scenario association cannot be changed by editing. Future trusted generator-created dummy Orders remain editable while preserving source=dummy. Scenario deletion is blocked while Orders reference it. Scenario customer_count is configuration, never an Order quota or an automatically updated actual count.
 
 ### FR-005 Map
 
@@ -1974,13 +1987,21 @@ schema.ts change
 → production window
 ```
 
-Scripts tersedia: `npm run db:generate`, `npm run db:check`, serta guarded `db:migrate` untuk apply yang diotorisasi terpisah. Config offline `drizzle.config.ts` tidak memuat env/credential. `drizzle.dev.config.ts` hanya menerima APP_ENV=development dan DB `courier_route_planner_dev`, melalui pure helper yang menghasilkan object credentials dengan TLS `rejectUnauthorized: true`.
+Scripts tersedia: `npm run db:generate`, `npm run db:check`, serta guarded `db:migrate` untuk apply yang diotorisasi terpisah. Config offline `drizzle.config.ts` tidak memuat env/credential. Sejak koreksi lokal TLS 2026-11-03, Development apply memakai `scripts/migrate-development.mjs`: pure helper tetap membutuhkan APP_ENV=development dan DB `courier_route_planner_dev`, lalu credentials diteruskan langsung ke existing mysql2 dengan TLS `rejectUnauthorized: true` dan `verifyIdentity: true`. Runner juga memeriksa TLS socket/certificate hostname sebelum memanggil migrator resmi Drizzle ORM. `drizzle.dev.config.ts` dipertahankan sebagai legacy Kit config; bukan jalur apply Development aktif karena validator Kit terpasang membuang opsi `verifyIdentity`. Tooling Testing/Production tidak diubah oleh koreksi ini.
 
-Future apply memakai Node 24 `--env-file=.env.migrations.local` dan installed Kit bin; inherited shell variables mengalahkan file. Operator harus mulai dari clean/verified shell tanpa mencetak secret. Stage 1 offline tidak menjalankan apply/provisioning. Sesudah independent offline PASS, manusia menerapkan SQL `drizzle/0000_dear_rictor.sql` pada Dev; read-only verification menemukan tepat satu ledger entry dengan hash SQL dan timestamp journal yang cocok. Task live verification tidak mengulang migration, menulis data atau mengubah credential/grants. `db:check` tetap hanya offline history check; live schema/ledger evidence diperiksa terpisah.
+Future apply memakai `npm run db:migrate`, Node 24 `--env-file=.env.migrations.local` dan runner Development tersebut; inherited shell variables mengalahkan file. Operator harus mulai dari clean/verified shell tanpa mencetak secret. Historical Stage 1 offline tidak menjalankan apply/provisioning. Sesudah independent offline PASS, manusia menerapkan SQL `drizzle/0000_dear_rictor.sql` pada Dev; read-only verification menemukan tepat satu ledger entry dengan hash SQL dan timestamp journal yang cocok. Task live verification tidak mengulang migration, menulis data atau mengubah credential/grants. `db:check` tetap hanya offline history check; live schema/ledger evidence diperiksa terpisah.
+
+Runner tidak mengimplementasikan migration engine: installed Drizzle ORM tetap membaca folder `drizzle`, journal, SHA-256 dari teks SQL tanpa normalisasi line ending, breakpoint, urutan timestamp, serta ledger default `__drizzle_migrations`. Drizzle memilih pending migration dari `created_at` terakhir; runner tidak menggantikan preflight hash seluruh ledger, target/resource/principal, least privilege, dan absence/partial-schema checks. Import runner tidak membuka koneksi; hanya explicit manual command setelah approval yang boleh menerapkan migration. Task koreksi TLS sendiri LOCAL/OFFLINE ONLY, tanpa SQL atau apply.
+
+Satu invocation membuat satu koneksi tanpa retry. Kegagalan TLS terjadi sebelum query migrasi; driver/Drizzle errors tidak dicetak karena dapat mengandung credential/SQL. Error atau gagal mengamati graceful socket close menghasilkan exit nonzero dengan pesan tetap; outcome apply bisa ambigu dan harus direkonsiliasi sebelum invocation lain. Migrator resmi Drizzle memakai BEGIN/COMMIT/ROLLBACK, tetapi TiDB DDL autocommit tetap dapat meninggalkan partial schema: tidak ada janji atomic rollback, custom repair, atau automatic re-apply.
 
 `drizzle-kit push` dilarang. Migration tidak berjalan pada install/ci/build/start/dev/routes/CI/Vercel. TiDB DDL dapat autocommit; sebelum future apply, siapkan mitigation untuk partial failure, periksa history/schema aktual, dan jangan menganggap rollback transaksi atau rerun otomatis aman.
 
 ### Testing migration tooling — Phase 0D-3A
+
+**Current Phase 1C path:** `npm run db:migrate:testing` memakai `scripts/migrate-testing.mjs` dan runner mysql2/Drizzle bersama. Runner memverifikasi chain dan hostname TLS sebelum query migrasi. `drizzle.testing.config.ts` kini khusus tooling offline. Migration `0002` dan post-apply verification Testing telah PASS. [Evidence dan status integrasi](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
+**Snapshot historis Phase 0D-3A/3B:**
 
 Testing migration tooling prepared locally. `drizzle.testing.config.ts` reuse offline config dan pure `getTestingMigrationCredentials`; exact APP_ENV=testing, parsed DB `courier_route_planner_testing`, TLS `rejectUnauthorized: true`. Parser hardened yang sama menolak invalid authority/path/encoding/query/fragment; error generic tanpa credential. Tidak ada trim/default/fallback. Dev helper/config/script tetap Dev-only.
 
@@ -2127,24 +2148,32 @@ Migration `drizzle/0001_scenarios.sql`, snapshot baru dan journal append disiapk
 
 ## 5. `orders`
 
+Phase 1C implements Order CRUD. Migration `0002_orders` passed in Development and Testing, with Testing ledger/schema verified after apply. Production apply requires separate approval. [Phase 1C evidence](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
 ```text
-id BIGINT PK
-scenario_id BIGINT FK
-order_code VARCHAR
-customer_name VARCHAR
+id BIGINT AUTO_INCREMENT PK NOT NULL
+scenario_id BIGINT NOT NULL FK scenarios.id ON DELETE RESTRICT ON UPDATE RESTRICT
+order_code VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
+customer_name VARCHAR(255) NOT NULL
 address TEXT NULL
-latitude DECIMAL/DOUBLE
-longitude DECIMAL/DOUBLE
-source VARCHAR  -- dummy/manual
-created_at
-updated_at
-```
-
-Unique recommendation:
-
-```text
+latitude DOUBLE NOT NULL
+longitude DOUBLE NOT NULL
+source VARCHAR(16) NOT NULL -- manual/dummy
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 UNIQUE(scenario_id, order_code)
+INDEX(scenario_id, id)
 ```
+
+IDs remain signed BIGINT internally and decimal strings in JSON. Coordinates are finite and range-validated server-side; address is nullable, with the established 2000-character application limit. Timestamps are supplied by the service, UTC by convention.
+
+Order codes are trimmed and converted with locale-independent uppercase before the 64-Unicode-character limit is checked, including uppercase expansions. The explicit column collation enforces scoped case/accent-insensitive uniqueness; the owner explicitly accepted accent-insensitivity. Duplicate prechecks compare with the database column, not a JavaScript approximation of Unicode collation. No default database collation is assumed. Native collation behavior/framework and target compatibility must be verified in a separately authorized migration preflight; offline schema tests do not prove live behavior. See [TiDB collation contract](https://docs.pingcap.com/tidb/stable/character-set-and-collation/).
+
+Manual HTTP creation owns source=manual. Input rejects source/scenarioId/id/timestamps. Update SQL changes neither source nor scenario_id, so a future trusted source=dummy record stays dummy. No generator is implemented. Actual count is a scoped COUNT(*) returned as a decimal string; Scenario configured customer_count is not changed, enforced as quota, or substituted by page length.
+
+The unique index protects concurrent duplicate writes; the second composite index supports Scenario-scoped cursor pagination without a redundant standalone scenario_id index. Scenario deletion uses an indexed, strictly validated EXISTS precheck and returns SCENARIO_IN_USE/409 when referenced. RESTRICT remains the final race guard. Definitive provider conflict codes may map to 409; generic provider errors/timeouts remain MUTATION_OUTCOME_UNKNOWN without retry. This does not claim live concurrency testing.
+
+Apply 0002 separately to Development and Testing only after target/history/TLS/grants/collation review and explicit approval; the new Scenario-delete precheck expects the Orders table to exist. DDL autocommit/partial failure means STOP without automatic retry/drop/ledger repair. Mitigation is reverting the application release while retaining the table/data, never destructive automatic rollback. Migration 0000/0001 remain byte-identical. No Production apply is authorized.
 
 ## 6. `benchmark_cases`
 
@@ -2347,12 +2376,14 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](READM
 ├── tsconfig.json
 ├── eslint.config.*
 ├── drizzle.config.ts
-├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
+├── drizzle.dev.config.ts  # legacy Kit config; active Dev apply uses runner below
 ├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
 ├── drizzle.production.config.ts  # explicit Production apply only, guarded; initial applied exactly once
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
+├── scripts/
+│   └── migrate-development.mjs  # explicit Dev-only mysql2 TLS + official Drizzle migrator
 ├── src/
 │   ├── app/
 │   │   ├── (admin)/
@@ -2485,6 +2516,12 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 - TS properties: `camelCase`;
 - constants: `UPPER_SNAKE_CASE` bila benar-benar constant.
 
+## Phase 1C local Order source — 2026-11-01
+
+Protected page: src/app/(admin)/orders/page.tsx. UI: src/components/orders/order-manager.tsx and order-form.tsx. Nested API lives under the existing Scenario [id] directory: src/app/api/scenarios/[id]/orders/route.ts and orders/[orderId]/route.ts; [id] represents scenarioId, without introducing a conflicting Next slug. API helper src/lib/http/order-api.ts uses the existing auth/Origin/body/environment guards, then application/orders/order-service.ts and db/repositories/order-repository.ts. Zod/DTOs are in lib/validation/order.ts. All identifiers remain strings at HTTP boundaries. Scenario repository adds only an Order reference precondition; existing authentication/database client/dependencies are unchanged.
+
+Migration `0002_orders`, snapshot and journal append are versioned with Order source. The migration passed in Development and Testing. `tests/integration/order-crud.integration.test.ts` uses the fixture registry and lookup under `tests/fixtures/` for durable receipts and scoped cleanup. Testing live integration remains **NOT EXECUTED**. [Evidence and pending checkpoints](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
 ---
 
 # SOURCE: docs/10_ENVIRONMENTS_SECRETS.md
@@ -2543,7 +2580,7 @@ DATABASE_URL=
 
 Manusia dapat menyalin template ini ke `.env.local` untuk local runtime. `.env` dan `.env.*` ignored, dengan exception `!.env.example`; `.env.local` tidak boleh di-commit. Tests memakai scoped env fixtures, bukan file secret; build/tests tidak memerlukan DB credential.
 
-Stage 1 tidak membuat real env file atau credential. Explicit Dev apply memakai Node 24 `--env-file=.env.migrations.local`; inherited shell variables override file values. Operator wajib clean/verified shell tanpa mencetak secret. Guard membutuhkan APP_ENV exact development, DB exact `courier_route_planner_dev`, object credentials dengan TLS certificate verification aktif. Ini logical-name guard, bukan bukti resource identity; manusia tetap harus memverifikasi Dev resource sebelum apply. Tidak ada dotenv/env loader tambahan, atau migration otomatis pada aplikasi/CI/deployment.
+Stage 1 tidak membuat real env file atau credential. Explicit Dev apply memakai Node 24 `--env-file=.env.migrations.local`; inherited shell variables override file values. Operator wajib clean/verified shell tanpa mencetak secret. Guard membutuhkan APP_ENV exact development, DB exact `courier_route_planner_dev`, object credentials dengan TLS certificate-chain dan hostname verification aktif (`rejectUnauthorized: true`, `verifyIdentity: true`). Sejak koreksi lokal 2026-11-03, `db:migrate` memakai runner Development langsung ke mysql2 + migrator resmi Drizzle ORM, bukan validator SSL Kit; lihat [prosedur Development](docs/07_TIDB_GUIDE.md#7-migration-policy). Ini logical-name guard, bukan bukti resource identity; manusia tetap harus memverifikasi Dev resource/principal sebelum apply. Tidak ada dotenv/env loader tambahan, atau migration otomatis pada aplikasi/CI/deployment. Raw driver errors/SQL/credential tidak boleh dicetak; runner hanya menghasilkan pesan tetap dan tidak melakukan retry.
 
 GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"error"}` untuk konfigurasi invalid/missing; JSON dan `Cache-Control: no-store`. Payload tidak memuat env, version, timestamp atau detail error. Lihat [runbook](docs/16_OBSERVABILITY_RUNBOOK.md#4-health-endpoint).
 
@@ -2551,7 +2588,9 @@ GET /api/health memvalidasi APP_ENV: 200 `{"status":"ok"}` atau 503 `{"status":"
 
 ### Testing tooling contract — Phase 0D-3A
 
-Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local`, installed Kit bin dan `drizzle.testing.config.ts`. Explicit pure Testing helper hanya menerima APP_ENV exact testing dan parsed DB exact `courier_route_planner_testing`; TLS `rejectUnauthorized: true`, same hardened URL parser, generic error. Dev path tetap APP_ENV=development/exact Dev DB. Production menggunakan helper/config terpisah di bawah; tidak ada generic env switch.
+Manual `npm run db:migrate:testing` memakai Node 24 `--env-file=.env.migrations.testing.local` dan `scripts/migrate-testing.mjs`. Guard menerima exact `APP_ENV=testing` dan database `courier_route_planner_testing`. Runner mysql2 memverifikasi chain dan hostname TLS. Dev dan Production memakai jalur terpisah. Testing Order integration menggunakan credential APPLICATION terpisah dan `ORDER_INTEGRATION_RECEIPT_DIR` yang menunjuk direktori privat existing di luar Git. [Prosedur Phase 1C](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
+**Snapshot historis Phase 0D-3A/3B:**
 
 0D-3A tooling merged melalui PR #14. Testing PROVISIONED pada 0D-3B; manusia menyimpan APP_ENV=testing + application URL pada `.env.testing.local` dan migration URL terpisah pada `.env.migrations.testing.local` tanpa paste credential ke chat. Safe in-memory structural checks dan authenticated connections membuktikan role/password separation, exact logical DB, physical Testing identity dan reviewed grants. Child process menghapus inherited APP_ENV/DATABASE_URL sebelum satu file dimuat; TLS bypass variables juga dihapus. Migration command dijalankan sekali setelah approval **YES APPLY TESTING MIGRATION**, lalu ledger/schema/app read/health/readiness diverifikasi. [Testing live report](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md). Tidak ada nilai private env di output. Production LIVE independent Starter, migrated exactly once/schema-ledger verified; Vercel NOT integrated; public Production/Preview NOT deployed; historical Preview preflight NOT READY; main FOUNDATION PROMOTED (PR #20), main Quality Gate VERIFIED, main required-check behavioral proof CLOSED/VERIFIED; Phase 0D/Gate 1 OPEN. [Tooling evidence](docs/proses/phase-0/0d/PHASE_0D_TIDB_TESTING_TOOLING_REPORT.md).
 
@@ -2986,7 +3025,7 @@ Use the maintained session/KDF libraries, not custom hashing/JWT/session crypto.
 
 Session is absolute 43200 seconds from successful login, with library ttl and cookie maxAge 43200, no activity renewal. Server validates typed issuedAt/expiresAt, subject, current environment and credential version before any application DB acquisition. Hosted cookies are HttpOnly, Secure, SameSite=Strict, Path=/, no Domain; HTTP cookie relaxation is local Development only. Logout is a protected POST clearing the browser cookie. Copied cookies may remain usable until the original 12-hour expiry; no immediate per-session revocation claim or session database/registry.
 
-Login/logout/Depot mutations require exact configured Origin and JSON; no public registration/reset, permissive CORS, client role bypass or default administrator. Authentication config and Depot DB target are checked lazily and fail closed. Development, Testing and Production use distinct credentials, secrets, cookies and limiter scopes. Preview never inherits Production config; logical target validation is not direct physical runtime SQL identity proof.
+Login/logout and admin CRUD mutations require exact configured Origin and JSON; no public registration/reset, permissive CORS, client role bypass or default administrator. Authentication config and Depot DB target are checked lazily and fail closed. Development, Testing and Production use distinct credentials, secrets, cookies and limiter scopes. Preview never inherits Production config; logical target validation is not direct physical runtime SQL identity proof.
 
 A shared regional limiter is required for deployed login: five syntactically valid attempts per fixed 15-minute window, account/environment key independent of submitted username/IP. Fixed windows can permit ten attempts across an adjacent-window boundary; global bucket exhaustion can deny new logins. Limiter timeouts (including SDK success-with-timeout), service/quota errors or malformed results deny before KDF/session minting. No in-memory fallback or successful-login reset. Upstash provisioning, cost policy and real cross-instance evidence are pending separate approval. Existing valid sessions/logout do not require Redis availability. Runtime/private configuration and manual auth verification remain PENDING; source implementation alone is not release acceptance.
 
@@ -3065,6 +3104,8 @@ Jangan auto-upgrade major dependency tanpa test. Dependabot/Renovate boleh ditam
 - [ ] no unsafe HTML;
 - [ ] resource limits enforced;
 - [ ] error message tidak expose secret/stack sensitif ke user.
+
+Phase 1C local Order endpoints reuse this boundary before database acquisition. Source/scenarioId ownership is server-controlled; nested queries include both Scenario and Order identifiers. There is still one administrator, not multi-user ownership. No authentication settings, limiter policy, secrets, new dependency or credential has been changed; local tests do not prove live Browser/session/limiter acceptance.
 
 ---
 
@@ -3411,6 +3452,52 @@ Existing 548/548 offline tests, Development browser QA 8/8 OWNER-OBSERVED, migra
 Residual evidence tetap: persisted integration fixture IDs/receipt tidak lengkap; wrapper `STOP_NOT_PASS`, `fixture=null`, `cleanupVerified=false` dipertahankan, meskipun test cleanup assertions lulus. Tidak tersedia independent post-run absence verification berbasis ID tersimpan. Physical runtime SQL identity **NOT VERIFIED**; FK concurrency race belum diuji; generic provider error tetap unknown/503 tanpa retry. Insiden login HTTP 503 historis belum memiliki root cause terkonfirmasi. Historical FAIL/PARTIAL serta snapshot bagian 15–18 tidak ditulis ulang menjadi PASS.
 
 Revisi closure documentation ini masih lokal; branch/commit/push/PR memerlukan approval tersendiri. Production/main, env, credentials, migrations dan database tidak diubah. Gate 1 CLOSED; Gate 2 OPEN. Persiapan Phase 1C Order CRUD dapat diusulkan terpisah, tanpa implementasi pada task ini.
+
+## 20. Phase 1C Order local implementation (2026-11-01)
+
+Baseline: accepted Testing PR #32 merge 815485b3beca80cee105c49aca9acdb123042653. This is LOCAL SOURCE/OFFLINE evidence, not migration, runtime, Preview or Production acceptance. Gate 1 CLOSED; Gate 2 OPEN.
+
+Owner approved canonical uppercase, max 64 Unicode characters, scoped case-insensitive uniqueness and then explicitly accepted accent-insensitivity. Tests exercise normalization/expansion, finite coordinates, nullable address, BIGINT string boundaries, strict source/Scenario immutability, scoped reads/mutations, actual-count independence, no-op update, duplicate/parent conflicts, malformed replies and fail-closed unknown outcomes. Protected API/page tests retain session/Origin/environment/body boundaries and zero DB acquisition for rejected requests. UI tests cover Scenario selection, manual create/edit/delete, dummy-source preservation, cancellation, pagination, expired access, stale edit reset, bounded errors and uncertain-write lock.
+
+TDD: validation/schema RED 32 assertion failures -> 34/34 GREEN including the existing schema checks; backend/precondition RED 31 -> 31/31 GREEN; API RED 15 -> 15/15 GREEN; UI RED 11 and page/navigation RED 2 -> combined 24/24 GREEN; integration safety helper RED 6 -> 6/6 GREEN. Full regression: 34 files / 644 tests PASS at this checkpoint. Initial sandbox cache EPERM occurred before collection and is not RED evidence; a test-case BigInt-name formatter failure was corrected before the validation RED. A parallel-read fixture ordering issue and POST status fixture were corrected without weakening production behavior. TypeScript uses the existing target and lossless BigInt constructor, not newly unsupported literal syntax.
+
+Final verification after focused review corrections: 34 files / 649 tests PASS; coverage, ESLint (zero warnings), Next route type generation + TypeScript, offline db:check, Turbopack build and post-build typecheck PASS. Documentation validation PASS: 430 internal links/anchors, 45 MASTER_GUIDE source parity checks and 47 MANIFEST byte/hash entries; git diff --check PASS. Historical/private source preservation is checked separately without credential reads. Initial typecheck rejected new BigInt literal syntax under the existing compiler target; lossless BigInt constructors corrected this without changing compiler config. Independent fresh-context review found 0 Critical, 1 Important (unrecognized JSON mutation errors did not lock writes), and 1 Minor (explicit Scenario reload kept stale selected configuration). Both were reproduced by four failing UI assertions and corrected: component suite 16/16 GREEN, then the final whole suite/quality checks above. The UI now accepts only known definitive status/code rejection pairs as recoverable; malformed/unrecognized responses stay uncertain until explicit successful reload. Selected Scenario metadata refreshes without changing Order count. No second independent re-review is claimed; the fixes are verified by regression tests. Tests/build run against a byte-matched public source copy with existing installed dependencies and no private env, clean child target environment, no new dependency install. The existing Vite native-config-loader warning is informational; file-only integration discovery also reports the existing mixed-export config warning. The initial public build's no-cache notice concerns build caching, not functional correctness. File-only discovery selected exactly the new Order integration file and executed no test body. No claim of live SQL or independent physical runtime SQL identity is made.
+
+### Prepared Testing integration — NOT RUN
+
+A separate exact-file flow is prepared for a later, explicitly authorized Testing APPLICATION run after migration 0002 and schema/collation/grants verification. Existing RUN_DB_INTEGRATION=1, APP_ENV=testing, exact logical database and local/non-Vercel guards remain unchanged; physical target/role use independent evidence, never only the logical name. This task reads no private credential.
+
+Proposed invocation after approval and isolated private setup: npm run test:db -- tests/integration/order-crud.integration.test.ts. Maximum one invocation/no retry, 100 transport queries and a 600-second test bound; existing individual DB requests retain their 5-second timeout. Fixtures: one Depot, two Scenarios, three Orders (including a test-only dummy row), all tagged by UUID. The flow covers case/accent duplicate rejection, same code in another Scenario, cross-Scenario denial, configured-count independence, retained dummy source, no-op update and Scenario deletion restriction.
+
+Record insert IDs before service readback; cleanup uses only recorded IDs and ownership markers in Order -> Scenario -> Depot order, with absence reads and a structured receipt even on failure. Unknown mutation/unrecorded ownership blocks further writes/cleanup. No broad query/delete, reset, seed, truncate, mutation retry or Production SQL. The live collation/FK and cleanup result remain PENDING until actually executed. Historical Phase 1B receipt STOP_NOT_PASS, physical identity NOT VERIFIED, untested FK concurrency and unresolved historical login 503 remain unchanged.
+
+### Development migration TLS correction — LOCAL/OFFLINE ONLY, 2026-11-03
+
+`db:migrate` now uses `scripts/migrate-development.mjs` with the installed mysql2 and official Drizzle ORM migrator. The Dev credential helper requires both TLS flags; the runner checks the authorized TLS socket and hostname before Drizzle queries. Kit's SSL validator no longer sits between these flags and mysql2. Testing/Production tooling, SQL 0000/0001/0002 and the journal are unchanged.
+
+TDD regression first failed on missing hostname verification; the initial runner scaffold then failed behavior assertions before implementation. `tests/unit/dev-migration-runner.test.ts` mocks only mysql2 transport and keeps installed Drizzle hashing/splitting/migration code real. Offline coverage includes native hostname mismatch, unauthorized certificate and handshake failures, non-Dev zero acquisition, pending 0002 only after 0000/0001, already-recorded skip, historical ledger/hash parity, DDL failure, lost ledger acknowledgement, credential-free output, import safety and graceful/forced closure timeouts. Synthetic peer metadata is not a live TLS handshake or provider integration PASS.
+
+No migration or live SQL was executed for this correction. Drizzle's timestamp-based selection still requires explicit preflight of all ledger hashes and schema state. Its transaction rollback does not promise atomic TiDB DDL rollback. Failure/ambiguous completion is STOP without retry or repair. Historical 649-test evidence and previous live/preflight verdicts are retained as dated evidence, not rewritten by these new offline checks. Actual corrected-path apply remains separately authorized work; Gate 1 CLOSED, Gate 2 OPEN.
+
+Local verification 2026-11-03: 21 runner cases plus 53 DB environment cases PASS; full coverage run 35 files / 670 tests PASS. Lint, typecheck, offline `db:check`, build and post-build typecheck PASS. A clean-environment native Node 24 import also PASS without invoking the entrypoint. Existing Vite future-loader and Node typeless-ESM warnings are informational; no global module/PATH policy was changed to suppress them. Independent focused review closed with 0 Critical / 0 Important / 0 unresolved Minor findings. These are offline outcomes, not live migration/TLS or Production acceptance.
+
+### Remaining human checkpoints
+
+1. Separately authorize Development migration preflight; verify existing migration hashes/formatting history, exact target/resource/role/TLS, reviewed grants, live collation framework, and Scenario FK compatibility. Then review one-time apply and partial-failure mitigation separately.
+2. After approved Dev apply, Browser QA with new owned fixtures: selection/counts, CRUD, invalid input, duplicate/cross-Scenario/source protections, cancellation and Scenario-in-use response. No automated claim from component tests.
+3. Separately approve Testing migration and one bounded exact-file integration run with persisted cleanup receipt.
+4. Pre-commit review and exact allowlist, then separate Git/PR authorization, required CI and actual Preview auth/cookie/Origin/limiter/Order QA. Owner release approval remains separate; no Production release is authorized here.
+
+## 21. Phase 1C verification and Draft PR readiness (2026-11-07)
+
+Sections 18–20 remain historical evidence. Phase 1C implements protected, Scenario-scoped Order CRUD and rejects incomplete TiDB SELECT responses before they can appear as empty lists. An empty first page that contradicts a positive count returns HTTP 503. The UI keeps writes locked until a successful reload. Valid empty results and exhausted cursor pages remain supported.
+
+- **Accepted PASS** — migration `0002` in Development and Testing, Testing post-apply verification, and Development core Browser QA based on owner evidence. The previous reviewed snapshot passed 703/703 offline tests. The focused correction reproduced nine failures before the fix and passed 11/11 focused cases afterward. Final offline regression passed 714/714 tests across 35 files, including 25/25 receipt tests. ESLint, typecheck, offline db:check, build and post-build typecheck passed. Independent focused review found no unresolved findings.
+- **PENDING / NOT EXECUTED** — live Order CRUD integration against Testing. Additional Browser/security QA is **PARTIAL**. Physical runtime SQL identity remains NOT VERIFIED, the FK concurrency race is untested, and the historical login 503 remains unresolved.
+- **Receipt storage** — use an existing private local directory outside Git for `ORDER_INTEGRATION_RECEIPT_DIR`. On the verified Windows host, the existing user profile can be used from a normal local shell after the guard passes. Custom ACL provisioning and a dedicated receipt root are deferred. The runner rejects unsafe access, verifies the UUID run directory before storing a receipt, and retains durable tracking, scoped cleanup, and stop-on-ambiguity behavior. Reconciliation stays read-only.
+- **Draft and merge** — a Draft PR to `testing` can be opened with pending QA recorded. [Quality Gate](.github/workflows/quality.yml) is offline and required on the current PR candidate. Before merge, satisfy applicable acceptance criteria, verify Preview access and required QA, and obtain a green check on a current base. Live DB integration remains part of [Feature DoD](docs/19_DEFINITION_OF_DONE.md#2-feature-dod). Production apply and release require separate approval.
+
+Gate 1 CLOSED. Gate 2 OPEN.
 
 ---
 
@@ -3929,7 +4016,7 @@ npm run db:check
 
 Generated SQL `drizzle/0000_dear_rictor.sql` + stable meta journal/snapshot sudah direview; **APPLIED ONCE ON DEV** oleh manusia, **APPLIED ONCE ON TESTING** pada 0D-3B dan **APPLIED EXACTLY ONCE ON PRODUCTION** pada Checkpoint B setelah separate approval. Masing-masing live ledger berisi satu entry; Testing/Production ledger cocok dengan actual reader raw-byte SQL hash dan timestamp journal, bukan LF-normalized reference. Live schema cocok. `db:check` hanya offline consistency. Jangan mengubah generated history sembarangan, atau menggunakan `drizzle-kit push`.
 
-`db:migrate` memakai installed Kit bin via Node 24 `--env-file=.env.migrations.local`, guarded Dev config: APP_ENV exact development, DB exact courier_route_planner_dev, TLS certificate verification aktif. Inherited shell vars override file; mulai dari clean/verified shell tanpa mencetak credential. Initial apply sudah dilakukan manusia; jangan rerun untuk menguji idempotence. Setiap migration berikutnya memerlukan task dan approval manusia tersendiri. Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel.
+`db:migrate` memakai `scripts/migrate-development.mjs` via Node 24 `--env-file=.env.migrations.local`: APP_ENV exact development, DB exact courier_route_planner_dev, TLS certificate-chain dan hostname verification aktif pada mysql2 sebelum migrator resmi Drizzle ORM dipanggil. Ini koreksi lokal 2026-11-03 atas jalur Kit yang membuang opsi hostname verification; SQL/journal/hash/ledger tetap milik Drizzle dan tidak diubah. `drizzle.dev.config.ts` kini legacy, bukan active apply entrypoint. Inherited shell vars override file; mulai dari clean/verified shell tanpa mencetak credential. Initial apply sudah dilakukan manusia; jangan rerun untuk menguji idempotence. Setiap migration berikutnya memerlukan task dan approval manusia tersendiri, termasuk [preflight/partial-failure handling](docs/07_TIDB_GUIDE.md#7-migration-policy). Koreksi TLS belum membuktikan live apply. Tidak ada migration otomatis pada install/ci/build/start/dev/routes/Actions/Vercel.
 
 ### Testing migration tooling dan live foundation — Phase 0D-3A/3B
 
@@ -4112,7 +4199,7 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-11-01:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD belum dimulai dan memerlukan scope/approval implementasi terpisah.
+**Current status — 2026-11-07:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD diimplementasikan lokal. Migration `0002` Development/Testing dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING, Browser/security QA tambahan PARTIAL, dan publikasi menunggu otorisasi. [Evidence Phase 1C](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
 
 **Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
 
@@ -4181,7 +4268,7 @@ Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/requ
 
 ## Phase 1 — Admin baseline
 
-Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD adalah rencana Phase 1C, belum diimplementasikan/diotorisasi. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
+Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD Phase 1C sudah diotorisasi dan diimplementasikan lokal; live acceptance dan publikasi belum dilakukan. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;
@@ -5345,6 +5432,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 ## Gate 2 — CRUD baseline
 
 **Current Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
+
+**Current Phase 1C — 2026-11-07:** Order CRUD diimplementasikan. Migration `0002` Development/Testing, post-apply Testing, dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING dan Browser/security QA tambahan PARTIAL. Checklist di bawah tetap mengikuti acceptance aktual. [Bukti dan prasyarat merge](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
 
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;

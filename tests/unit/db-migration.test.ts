@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 import {
   DatabaseConfigError,
   getDevMigrationCredentials,
@@ -19,6 +20,19 @@ afterEach(() => {
 });
 
 describe("Testing migration credentials", () => {
+  it("routes the Testing command to the native TLS runner with the Testing env file", () => {
+    expect(packageJson.scripts["db:migrate:testing"]).toBe(
+      "node --env-file=.env.migrations.testing.local ./scripts/migrate-testing.mjs",
+    );
+  });
+
+  it("keeps the legacy Testing Kit config credential-free even with a valid target", async () => {
+    vi.stubEnv("APP_ENV", "testing");
+    vi.stubEnv("DATABASE_URL", testingUrl);
+    const { default: config } = await import("../../drizzle.testing.config");
+    expect(config).not.toHaveProperty("dbCredentials");
+  });
+
   it("decodes a Testing credential with verified TLS and an explicit port", () => {
     expect(
       getTestingMigrationCredentials(
@@ -33,7 +47,7 @@ describe("Testing migration credentials", () => {
       user: "fixture_user",
       password: "pass@word",
       database: "courier_route_planner_testing",
-      ssl: { rejectUnauthorized: true },
+      ssl: { rejectUnauthorized: true, verifyIdentity: true },
     });
   });
 

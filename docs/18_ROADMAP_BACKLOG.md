@@ -1,6 +1,6 @@
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-11-01:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD belum dimulai dan memerlukan scope/approval implementasi terpisah.
+**Current status — 2026-11-07:** Gate 1 CLOSED. Phase 1A auth/Depot merged melalui PR #30 dan Phase 1B Scenario melalui PR #31 ke Testing (`0beb0642b39bdb7194a25a9e72c340fbd07d4a40`); post-merge Quality Gate PASS, stable Preview READY. Owner melaporkan core Scenario Browser CRUD aman, OWNER-OBSERVED agregat; milestone Testing core CRUD READY FOR ADMINISTRATIVE CLOSURE dengan detail Browser QA masih PENDING pada [assessment](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN. Phase 1C Order CRUD diimplementasikan lokal. Migration `0002` Development/Testing dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING, Browser/security QA tambahan PARTIAL, dan publikasi menunggu otorisasi. [Evidence Phase 1C](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
 
 **Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif**, final human acceptance tercatat di [closure report](proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md). Tidak ada unresolved mandatory Gate 1 blocker dalam scope yang diterima; Gate 2 belum dimulai.
 
@@ -69,7 +69,7 @@ Phase 0, Phase 0D dan Gate 1 CLOSED secara administratif. Historical PR #20/requ
 
 ## Phase 1 — Admin baseline
 
-Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD adalah rencana Phase 1C, belum diimplementasikan/diotorisasi. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
+Scope berikut tidak semuanya TODO: shell, auth/Depot Phase 1A dan Scenario Phase 1B sudah diimplementasikan serta merged ke Testing. Existing offline 548/548, Testing integration 1/1 dan owner-observed core Scenario CRUD mendukung administrative closure readiness yang terbatas pada Testing; detail Browser QA tetap PENDING. Order CRUD Phase 1C sudah diotorisasi dan diimplementasikan lokal; live acceptance dan publikasi belum dilakukan. Daftar berikut tetap inventory Phase 1, bukan klaim Gate 2 keseluruhan selesai.
 
 - app shell/navigation dari TailAdmin yang sudah dibersihkan;
 - depot CRUD;

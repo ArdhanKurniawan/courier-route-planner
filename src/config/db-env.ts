@@ -72,7 +72,7 @@ export function getDevMigrationCredentials(
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
     database,
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: true, verifyIdentity: true },
   };
 }
 
@@ -91,7 +91,7 @@ export function getTestingMigrationCredentials(
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
     database,
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: true, verifyIdentity: true },
   };
 }
 
