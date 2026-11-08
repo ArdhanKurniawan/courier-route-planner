@@ -81,9 +81,9 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 2 — CRUD baseline
 
-**Current Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
+**Historical Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
 
-**Current Phase 1C — 2026-11-07:** Order CRUD diimplementasikan. Migration `0002` Development/Testing, post-apply Testing, dan Development core Browser QA PASS. Testing Order CRUD live integration PENDING dan Browser/security QA tambahan PARTIAL. Checklist di bawah tetap mengikuti acceptance aktual. [Bukti dan prasyarat merge](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+**Current Phase 1C — 2026-11-08:** Order CRUD sudah di `testing`. Migrasi `0002` Development/Testing, Testing Order CRUD live integration 1/1, dan cleanup integrasi PASS. Owner mengamati login, create/edit/delete Order sintetis lewat alur Map/CRUD, dan daftar kembali kosong. Browser/security QA masih PARTIAL dan Gate 2 masih OPEN. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 - [ ] depot CRUD accepted;
 - [ ] scenario CRUD accepted;
@@ -94,6 +94,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 - [ ] no production data used in testing.
 
 ## Gate 3 — Dataset + map
+
+Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Phase 2B Dummy Generator masih pending. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 - [ ] markers correct;
 - [ ] OSM attribution;
