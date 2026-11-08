@@ -8,6 +8,8 @@ Derived from the source list below, in order. Regenerated 2026-11-08. Relative M
 
 Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA remains PARTIAL and Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
+Current Production migration path on Testing: `npm run db:migrate:production` uses the mysql2 and Drizzle runner with certificate and hostname verification. The Drizzle Kit apply path in the Phase 0D excerpts records the original setup. Production migrations `0001` and `0002` are pending. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+
 ---
 
 # SOURCE: README.md
@@ -3500,16 +3502,21 @@ Gate 1 CLOSED. Gate 2 OPEN.
 
 ## 22. UAT Testing Phase 1C dan 2A (2026-11-08)
 
-Baseline Testing `5696902` mencakup Order CRUD Phase 1C (#33–#35), Map Phase 2A (#36), dan koreksi HTTP 503 pada Scenario kosong serta tes ResizeObserver (#37). [Quality Gate pada SHA Testing](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/42475718520) dan [deployment Preview terkait](https://vercel.com/ardhankurniawans-projects/courier-route-planner/DHxc2tKYcPynRcnR2ccgqSwGWbKk) sudah diverifikasi.
+Baseline UAT Testing `5696902` mencakup Order CRUD Phase 1C (#33–#35), Map Phase 2A (#36), dan koreksi HTTP 503 pada Scenario kosong serta tes ResizeObserver (#37). [Quality Gate pada SHA Testing](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/42475718520) dan [deployment Preview terkait](https://vercel.com/ardhankurniawans-projects/courier-route-planner/DHxc2tKYcPynRcnR2ccgqSwGWbKk) sudah diverifikasi.
 
 | Status | Cakupan bukti |
 |---|---|
-| PASS — owner-observed Browser UAT | Login admin dan akses Map di Testing Preview. Owner membuat Order sintetis `QA-MAP-001`, melihat marker Depot dan Order, mengubah koordinat melalui CRUD, lalu melihat marker berpindah sesuai perubahan. |
+| PASS — owner-observed Browser UAT | Login admin dan akses Map di Testing Preview. Owner membuat Order sintetis `QA-MAP-001`, melihat marker Depot dan Order, mengubah koordinat melalui CRUD, lalu melihat marker tetap di posisi baru setelah reload penuh. |
 | PASS — owner-observed penghapusan Order | Owner menghapus `QA-MAP-001` dan melihat daftar Order kembali kosong dengan jumlah aktual 0. Bukti ini mencakup Order tersebut dan daftar yang diamati. |
 | PASS — bukti integrasi terpisah | Migrasi `0002` Development dan Testing, Testing Order CRUD live integration 1/1 termasuk isolasi Scenario dan cleanup terverifikasi dengan 0 fixture tersisa. |
-| PENDING — Browser/security QA | Logout, akses dan mutasi tanpa sesi, atribut cookie dan perilaku sesi, penolakan Origin, limiter, dan detail Browser QA di luar alur yang dilaporkan owner. |
+| PASS — owner-observed logout dan akses tanpa sesi | Setelah logout, `/map` mengarahkan ke `/login`. GET `/api/scenarios/90001/orders?limit=1` mengembalikan HTTP 401 dengan JSON `UNAUTHORIZED`. Cookie `__Host-crp-admin-testing` teramati sebelum logout dan hilang setelah logout. |
+| PENDING — Browser/security QA | Penolakan mutasi tanpa sesi dan Origin tidak sah, atribut keamanan cookie saat diterbitkan, dan limiter pada Testing Preview. Bukti perilaku sesi di browser mencakup reload aktif dan logout. |
 
-Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Perbaikan redirect dicatat untuk setelah release ke `main`. [Roadmap](docs/18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
+Tes offline yang sudah diterima mencakup autentikasi, expiry dan cookie sesi, penolakan Origin dan mutasi tanpa sesi, serta limiter dengan transport Redis sintetis. Pemeriksaan runtime yang masih PENDING tetap mengikuti [kontrak keamanan](docs/13_SECURITY.md#single-admin-mvp-contract). [Tes sesi](tests/unit/admin-auth.test.ts) · [Tes autentikasi](tests/unit/admin-access.test.ts) · [Tes API Order](tests/unit/order-api.test.ts) · [Tes limiter](tests/unit/login-rate-limit.test.ts)
+
+**Readiness rilis setelah UAT.** Perbaikan runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Perintah `npm run db:migrate:production` kini memakai runner mysql2 dan migrator Drizzle dengan verifikasi sertifikat dan hostname sebelum query migrasi. Bukti perubahan runner berasal dari pengujian offline. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan eksekusi Production memerlukan persetujuan terpisah. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+
+Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Redirect ke home (`/`) dijadwalkan setelah release ke `main` dan sebelum Phase 2B. [Roadmap](docs/18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
 
 ---
 
@@ -4211,7 +4218,9 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing` pada `5696902`. Quality Gate, migrasi Development/Testing `0002`, dan live integration Order CRUD PASS. Owner mengamati alur inti Order dan Map di Testing Preview. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+**Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+
+Perbaikan verifikasi hostname TLS pada runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan persetujuan terpisah masih diperlukan. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
 
 **Historical status — 2026-10-24:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif** setelah final human acceptance. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md)
 
@@ -4289,7 +4298,7 @@ Auth/Depot Phase 1A (#30), Scenario Phase 1B (#31), dan Order Phase 1C (#33–#3
 - validation;
 - basic tests.
 
-Follow-up setelah release ke `main`: arahkan admin dengan sesi aktif dari `/login` ke halaman admin. Owner mengamati bahwa form login masih dapat tampil pada sesi aktif.
+Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan sesi aktif dari `/login` ke home (`/`). Owner mengamati bahwa form login masih dapat tampil pada sesi aktif.
 
 ## Phase 2 — Map & dataset
 
