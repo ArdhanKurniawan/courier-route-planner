@@ -15,7 +15,7 @@
     "db:check": "drizzle-kit check --config=drizzle.config.ts",
     "db:migrate": "node --env-file=.env.migrations.local ./scripts/migrate-development.mjs",
     "db:migrate:testing": "node --env-file=.env.migrations.testing.local ./scripts/migrate-testing.mjs",
-    "db:migrate:production": "node --env-file=.env.migrations.production.local ./node_modules/drizzle-kit/bin.cjs migrate --config=drizzle.production.config.ts",
+    "db:migrate:production": "node --env-file=.env.migrations.production.local ./scripts/migrate-production.mjs",
     "test:db": "vitest run --config vitest.integration.config.ts"
   },
   "engines": {

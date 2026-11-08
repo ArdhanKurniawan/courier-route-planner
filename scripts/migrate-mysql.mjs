@@ -51,7 +51,7 @@ async function closeConnection(connection) {
 
 /**
  * @param {() => import("mysql2").ConnectionOptions & {host: string}} loadCredentials
- * @param {"Development" | "Testing"} target
+ * @param {"Development" | "Testing" | "Production"} target
  */
 export async function runMysqlMigration(loadCredentials, target) {
   let client;
