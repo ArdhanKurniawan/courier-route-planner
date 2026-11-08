@@ -110,6 +110,6 @@ export function getProductionMigrationCredentials(
     user: decodeURIComponent(parsed.username),
     password: decodeURIComponent(parsed.password),
     database,
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: true, verifyIdentity: true },
   };
 }

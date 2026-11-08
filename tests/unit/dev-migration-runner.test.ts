@@ -2,6 +2,7 @@
 import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runDevelopmentMigration } from "../../scripts/migrate-development.mjs";
+import { runProductionMigration } from "../../scripts/migrate-production.mjs";
 import { runTestingMigration } from "../../scripts/migrate-testing.mjs";
 
 const mysql = vi.hoisted(() => ({ createConnection: vi.fn() }));
@@ -29,6 +30,11 @@ const testingEnvironment = {
   APP_ENV: "testing",
   DATABASE_URL:
     "mysql://fixture_migrator:fixture_password@fixture.invalid:4000/courier_route_planner_testing",
+};
+const productionEnvironment = {
+  APP_ENV: "production",
+  DATABASE_URL:
+    "mysql://fixture_migrator:fixture_password@fixture.invalid:4000/courier_route_planner_production",
 };
 const testingLedger = () => {
   const rows = initialLedger();
@@ -345,6 +351,83 @@ describe("Testing migration runner", () => {
     vi.stubEnv("DATABASE_URL", testingEnvironment.DATABASE_URL);
     vi.resetModules();
     await import("../../scripts/migrate-testing.mjs");
+    expect(mysql.createConnection).not.toHaveBeenCalled();
+  });
+});
+
+describe("Production migration runner", () => {
+  beforeEach(() => {
+    connection = new FakeConnection(testingLedger().slice(0, 1));
+    mysql.createConnection.mockReturnValue(connection);
+  });
+
+  it("enables both TLS checks and delegates pending migrations to Drizzle", async () => {
+    const initial = [...connection.ledger];
+    expect(await runProductionMigration(productionEnvironment)).toBe(0);
+    expect(mysql.createConnection).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        host: "fixture.invalid",
+        port: 4000,
+        database: "courier_route_planner_production",
+        ssl: { rejectUnauthorized: true, verifyIdentity: true },
+      }),
+    );
+    expect(
+      connection.queries.filter((sql) => /^CREATE TABLE `/.test(sql)),
+    ).toEqual([
+      expect.stringMatching(/^CREATE TABLE `scenarios`/),
+      expect.stringMatching(/^CREATE TABLE `orders`/),
+    ]);
+    expect(connection.ledger).toHaveLength(3);
+    expect(connection.ledger[0]).toEqual(initial[0]);
+    expect(connection.stream.closed).toBe(true);
+  });
+
+  it.each(["hostname mismatch", "untrusted chain", "missing TLS"] as const)(
+    "rejects %s before any migration query",
+    async (failure) => {
+      const stream = connection.stream;
+      if (failure === "hostname mismatch")
+        stream.certificate = { subjectaltname: "DNS:other-fixture.invalid" };
+      if (failure === "untrusted chain") stream.authorized = false;
+      if (failure === "missing TLS") stream.encrypted = false;
+      expect(await runProductionMigration(productionEnvironment)).toBe(1);
+      expect(mysql.createConnection).toHaveBeenCalledTimes(1);
+      expect(connection.queries).toEqual([]);
+      expect(stream.closed).toBe(true);
+      expect(info).not.toHaveBeenCalled();
+    },
+  );
+
+  it("stops on a failed handshake before queries and redacts the driver error", async () => {
+    connection.handshakeError = new Error(productionEnvironment.DATABASE_URL);
+    expect(await runProductionMigration(productionEnvironment)).toBe(1);
+    expect(mysql.createConnection).toHaveBeenCalledTimes(1);
+    expect(connection.queries).toEqual([]);
+    expect(connection.stream.closed).toBe(true);
+    expect(info).not.toHaveBeenCalled();
+    expect(JSON.stringify(error.mock.calls)).not.toMatch(
+      /fixture_password|mysql:\/\//,
+    );
+  });
+
+  it.each([
+    { ...productionEnvironment, APP_ENV: "testing" },
+    { ...productionEnvironment, DATABASE_URL: testingEnvironment.DATABASE_URL },
+    {
+      ...productionEnvironment,
+      DATABASE_URL: productionEnvironment.DATABASE_URL + "?ssl=false",
+    },
+  ])("rejects unsafe Production input before connecting", async (input) => {
+    expect(await runProductionMigration(input)).toBe(1);
+    expect(mysql.createConnection).not.toHaveBeenCalled();
+  });
+
+  it("can be imported with Production env present without connecting", async () => {
+    vi.stubEnv("APP_ENV", productionEnvironment.APP_ENV);
+    vi.stubEnv("DATABASE_URL", productionEnvironment.DATABASE_URL);
+    vi.resetModules();
+    await import("../../scripts/migrate-production.mjs");
     expect(mysql.createConnection).not.toHaveBeenCalled();
   });
 });
