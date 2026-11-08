@@ -95,7 +95,7 @@ describe("database configuration", () => {
 });
 
 describe("Dev migration credentials", () => {
-  it("decodes credentials and keeps TLS certificate verification enabled", () => {
+  it("decodes credentials and requires certificate-chain and hostname verification", () => {
     expect(
       getDevMigrationCredentials(
         "development",
@@ -109,7 +109,7 @@ describe("Dev migration credentials", () => {
       user: "fixture_user",
       password: "pass@word",
       database: "courier_route_planner_dev",
-      ssl: { rejectUnauthorized: true },
+      ssl: { rejectUnauthorized: true, verifyIdentity: true },
     });
   });
   it("uses the standard MySQL port when omitted", () => {

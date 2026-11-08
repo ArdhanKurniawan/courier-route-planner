@@ -81,24 +81,32 @@ Migration `drizzle/0001_scenarios.sql`, snapshot baru dan journal append disiapk
 
 ## 5. `orders`
 
+Phase 1C implements Order CRUD. Migration `0002_orders` passed in Development and Testing, with Testing ledger/schema verified after apply. Production apply requires separate approval. [Phase 1C evidence](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
 ```text
-id BIGINT PK
-scenario_id BIGINT FK
-order_code VARCHAR
-customer_name VARCHAR
+id BIGINT AUTO_INCREMENT PK NOT NULL
+scenario_id BIGINT NOT NULL FK scenarios.id ON DELETE RESTRICT ON UPDATE RESTRICT
+order_code VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
+customer_name VARCHAR(255) NOT NULL
 address TEXT NULL
-latitude DECIMAL/DOUBLE
-longitude DECIMAL/DOUBLE
-source VARCHAR  -- dummy/manual
-created_at
-updated_at
-```
-
-Unique recommendation:
-
-```text
+latitude DOUBLE NOT NULL
+longitude DOUBLE NOT NULL
+source VARCHAR(16) NOT NULL -- manual/dummy
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 UNIQUE(scenario_id, order_code)
+INDEX(scenario_id, id)
 ```
+
+IDs remain signed BIGINT internally and decimal strings in JSON. Coordinates are finite and range-validated server-side; address is nullable, with the established 2000-character application limit. Timestamps are supplied by the service, UTC by convention.
+
+Order codes are trimmed and converted with locale-independent uppercase before the 64-Unicode-character limit is checked, including uppercase expansions. The explicit column collation enforces scoped case/accent-insensitive uniqueness; the owner explicitly accepted accent-insensitivity. Duplicate prechecks compare with the database column, not a JavaScript approximation of Unicode collation. No default database collation is assumed. Native collation behavior/framework and target compatibility must be verified in a separately authorized migration preflight; offline schema tests do not prove live behavior. See [TiDB collation contract](https://docs.pingcap.com/tidb/stable/character-set-and-collation/).
+
+Manual HTTP creation owns source=manual. Input rejects source/scenarioId/id/timestamps. Update SQL changes neither source nor scenario_id, so a future trusted source=dummy record stays dummy. No generator is implemented. Actual count is a scoped COUNT(*) returned as a decimal string; Scenario configured customer_count is not changed, enforced as quota, or substituted by page length.
+
+The unique index protects concurrent duplicate writes; the second composite index supports Scenario-scoped cursor pagination without a redundant standalone scenario_id index. Scenario deletion uses an indexed, strictly validated EXISTS precheck and returns SCENARIO_IN_USE/409 when referenced. RESTRICT remains the final race guard. Definitive provider conflict codes may map to 409; generic provider errors/timeouts remain MUTATION_OUTCOME_UNKNOWN without retry. This does not claim live concurrency testing.
+
+Apply 0002 separately to Development and Testing only after target/history/TLS/grants/collation review and explicit approval; the new Scenario-delete precheck expects the Orders table to exist. DDL autocommit/partial failure means STOP without automatic retry/drop/ledger repair. Mitigation is reverting the application release while retaining the table/data, never destructive automatic rollback. Migration 0000/0001 remain byte-identical. No Production apply is authorized.
 
 ## 6. `benchmark_cases`
 

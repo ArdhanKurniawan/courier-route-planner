@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, eq, exists, gt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase, type createDatabase } from "@/db/client";
-import { depots, scenarios } from "@/db/schema";
+import { depots, orders, scenarios } from "@/db/schema";
 import {
   ScenarioError,
   parseScenarioId,
@@ -194,12 +194,28 @@ export function createScenarioRepository(
             ),
         ).rowsAffected;
       }),
-    // Future child tables must use real RESTRICT FKs; no fabricated history precheck.
-    remove: (id) =>
-      write(
+    remove: async (id) => {
+      const result = await read(async (db) => {
+        const value = await db.execute(
+          sql`select cast(exists(select 1 from ${orders} where ${orders.scenarioId} = ${id} limit 1) as char) as has_reference`,
+        );
+        return (
+          z
+            .object({
+              rows: z.tuple([
+                z.object({ has_reference: z.enum(["0", "1"]) }).strict(),
+              ]),
+            })
+            .parse(value).rows[0].has_reference === "1"
+        );
+      });
+      if (result) throw new ScenarioError("SCENARIO_IN_USE");
+      // RESTRICT remains authoritative if a child appears after this precheck.
+      return write(
         async (db) =>
           affected.parse(await db.delete(scenarios).where(eq(scenarios.id, id)))
             .rowsAffected,
-      ),
+      );
+    },
   };
 }
