@@ -396,10 +396,21 @@ Baseline UAT Testing `5696902` mencakup Order CRUD Phase 1C (#33–#35), Map Pha
 | PASS — owner-observed penghapusan Order | Owner menghapus `QA-MAP-001` dan melihat daftar Order kembali kosong dengan jumlah aktual 0. Bukti ini mencakup Order tersebut dan daftar yang diamati. |
 | PASS — bukti integrasi terpisah | Migrasi `0002` Development dan Testing, Testing Order CRUD live integration 1/1 termasuk isolasi Scenario dan cleanup terverifikasi dengan 0 fixture tersisa. |
 | PASS — owner-observed logout dan akses tanpa sesi | Setelah logout, `/map` mengarahkan ke `/login`. GET `/api/scenarios/90001/orders?limit=1` mengembalikan HTTP 401 dengan JSON `UNAUTHORIZED`. Cookie `__Host-crp-admin-testing` teramati sebelum logout dan hilang setelah logout. |
-| PENDING — Browser/security QA | Penolakan mutasi tanpa sesi dan Origin tidak sah, atribut keamanan cookie saat diterbitkan, dan limiter pada Testing Preview. Bukti perilaku sesi di browser mencakup reload aktif dan logout. |
+| PASS — owner-observed POST tanpa sesi | POST Orders pada Testing Preview mengembalikan HTTP 401 dengan kode `UNAUTHORIZED`. |
+| PASS — owner-observed penolakan Origin | Origin tidak sah menghasilkan HTTP 403 dengan kode `FORBIDDEN` dan pesan `Request origin denied.` |
+| PASS — owner-observed atribut cookie | Owner mengonfirmasi `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, `Max-Age=43200`, dan ketiadaan atribut `Domain` pada cookie admin saat login. |
+| PASS — owner-observed rate limiter | Lima respons HTTP 401 diikuti HTTP 429 dan pesan pembatasan login di UI. Respons 429 memuat kode JSON `RATE_LIMITED`, pesan `Login temporarily limited.`, dan header `Retry-After: 848` (detik). |
 
-Tes offline yang sudah diterima mencakup autentikasi, expiry dan cookie sesi, penolakan Origin dan mutasi tanpa sesi, serta limiter dengan transport Redis sintetis. Pemeriksaan runtime yang masih PENDING tetap mengikuti [kontrak keamanan](13_SECURITY.md#single-admin-mvp-contract). [Tes sesi](../tests/unit/admin-auth.test.ts) · [Tes autentikasi](../tests/unit/admin-access.test.ts) · [Tes API Order](../tests/unit/order-api.test.ts) · [Tes limiter](../tests/unit/login-rate-limit.test.ts)
+**Browser/security QA PASS untuk acceptance rilis Phase 1C dan 2A.** Empat kategori yang sebelumnya tertunda telah dikonfirmasi owner melalui Chrome pada Testing Preview. Bukti akhir diterima pada 2026-11-13. Tes offline yang sudah diterima mencakup autentikasi, expiry dan cookie sesi, penolakan Origin dan mutasi tanpa sesi, serta limiter dengan transport Redis sintetis. [Kontrak keamanan](13_SECURITY.md#single-admin-mvp-contract) · [Tes sesi](../tests/unit/admin-auth.test.ts) · [Tes autentikasi](../tests/unit/admin-access.test.ts) · [Tes API Order](../tests/unit/order-api.test.ts) · [Tes limiter](../tests/unit/login-rate-limit.test.ts)
 
-**Readiness rilis setelah UAT.** Perbaikan runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Perintah `npm run db:migrate:production` kini memakai runner mysql2 dan migrator Drizzle dengan verifikasi sertifikat dan hostname sebelum query migrasi. Bukti perubahan runner berasal dari pengujian offline. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan eksekusi Production memerlukan persetujuan terpisah. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+### Migrasi Production dan status rilis (2026-11-13)
+
+Snapshot Production berstatus `Succeeded`, masih berlaku saat eksekusi, dan dapat dipilih di Snapshot Restore. Pemeriksaan pemulihan berhenti pada pemilihan snapshot.
+
+Setelah preflight read-only dan persetujuan owner, runner mysql2 dan Drizzle dari baseline Testing `eba494b` menerapkan `0001_scenarios` lalu `0002_orders` dalam satu eksekusi dengan exit code `0`. Runner memverifikasi sertifikat dan hostname sebelum menjalankan query. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+
+Verifikasi read-only pascamigrasi mengonfirmasi tepat tiga entri ledger dengan hash dan timestamp yang sesuai, termasuk hash historis `0000`. Kolom dan primary key `depots`, `scenarios`, dan `orders` sesuai. Foreign key Scenario → Depot dan Order → Scenario memakai `RESTRICT` untuk update dan delete. Indeks, keunikan kode Order per Scenario, dan collation `utf8mb4_unicode_ci` terverifikasi.
+
+Tahap berikutnya adalah review PR `testing` → `main`, Quality Gate PR, dan smoke test setelah deployment.
 
 Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Redirect ke home (`/`) dijadwalkan setelah release ke `main` dan sebelum Phase 2B. [Roadmap](18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)

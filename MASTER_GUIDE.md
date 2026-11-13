@@ -4,11 +4,11 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-11-08. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-11-13. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
-Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA remains PARTIAL and Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA for the Phase 1C and 2A release passed based on the owner's Testing Preview evidence received on 2026-11-13. Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
-Current Production migration path on Testing: `npm run db:migrate:production` uses the mysql2 and Drizzle runner with certificate and hostname verification. The Drizzle Kit apply path in the Phase 0D excerpts records the original setup. Production migrations `0001` and `0002` are pending. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+Production migrations `0001` and `0002` were applied and verified on 2026-11-13. The mysql2 and Drizzle runner from Testing baseline `eba494b` completed in one invocation with exit code `0`. A read-only check verified the ledger and schema. Release review and post-deployment smoke testing are pending. [Production migration evidence](docs/14_TESTING_QA.md#migrasi-production-dan-status-rilis-2026-11-13)
 
 ---
 
@@ -24,6 +24,8 @@ Current Production migration path on Testing: `npm run db:migrate:production` us
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
+
+> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
 
 **Phase 1C dan 2A:** Migrasi `0002` Development/Testing, Testing Order CRUD live integration, dan Quality Gate Testing sudah PASS. Owner mengamati alur Order sintetis dari pembuatan, edit koordinat dan perpindahan marker, hingga penghapusan dan daftar kembali kosong. Browser/security QA masih **PARTIAL**. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
@@ -3510,11 +3512,22 @@ Baseline UAT Testing `5696902` mencakup Order CRUD Phase 1C (#33–#35), Map Pha
 | PASS — owner-observed penghapusan Order | Owner menghapus `QA-MAP-001` dan melihat daftar Order kembali kosong dengan jumlah aktual 0. Bukti ini mencakup Order tersebut dan daftar yang diamati. |
 | PASS — bukti integrasi terpisah | Migrasi `0002` Development dan Testing, Testing Order CRUD live integration 1/1 termasuk isolasi Scenario dan cleanup terverifikasi dengan 0 fixture tersisa. |
 | PASS — owner-observed logout dan akses tanpa sesi | Setelah logout, `/map` mengarahkan ke `/login`. GET `/api/scenarios/90001/orders?limit=1` mengembalikan HTTP 401 dengan JSON `UNAUTHORIZED`. Cookie `__Host-crp-admin-testing` teramati sebelum logout dan hilang setelah logout. |
-| PENDING — Browser/security QA | Penolakan mutasi tanpa sesi dan Origin tidak sah, atribut keamanan cookie saat diterbitkan, dan limiter pada Testing Preview. Bukti perilaku sesi di browser mencakup reload aktif dan logout. |
+| PASS — owner-observed POST tanpa sesi | POST Orders pada Testing Preview mengembalikan HTTP 401 dengan kode `UNAUTHORIZED`. |
+| PASS — owner-observed penolakan Origin | Origin tidak sah menghasilkan HTTP 403 dengan kode `FORBIDDEN` dan pesan `Request origin denied.` |
+| PASS — owner-observed atribut cookie | Owner mengonfirmasi `HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/`, `Max-Age=43200`, dan ketiadaan atribut `Domain` pada cookie admin saat login. |
+| PASS — owner-observed rate limiter | Lima respons HTTP 401 diikuti HTTP 429 dan pesan pembatasan login di UI. Respons 429 memuat kode JSON `RATE_LIMITED`, pesan `Login temporarily limited.`, dan header `Retry-After: 848` (detik). |
 
-Tes offline yang sudah diterima mencakup autentikasi, expiry dan cookie sesi, penolakan Origin dan mutasi tanpa sesi, serta limiter dengan transport Redis sintetis. Pemeriksaan runtime yang masih PENDING tetap mengikuti [kontrak keamanan](docs/13_SECURITY.md#single-admin-mvp-contract). [Tes sesi](tests/unit/admin-auth.test.ts) · [Tes autentikasi](tests/unit/admin-access.test.ts) · [Tes API Order](tests/unit/order-api.test.ts) · [Tes limiter](tests/unit/login-rate-limit.test.ts)
+**Browser/security QA PASS untuk acceptance rilis Phase 1C dan 2A.** Empat kategori yang sebelumnya tertunda telah dikonfirmasi owner melalui Chrome pada Testing Preview. Bukti akhir diterima pada 2026-11-13. Tes offline yang sudah diterima mencakup autentikasi, expiry dan cookie sesi, penolakan Origin dan mutasi tanpa sesi, serta limiter dengan transport Redis sintetis. [Kontrak keamanan](docs/13_SECURITY.md#single-admin-mvp-contract) · [Tes sesi](tests/unit/admin-auth.test.ts) · [Tes autentikasi](tests/unit/admin-access.test.ts) · [Tes API Order](tests/unit/order-api.test.ts) · [Tes limiter](tests/unit/login-rate-limit.test.ts)
 
-**Readiness rilis setelah UAT.** Perbaikan runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Perintah `npm run db:migrate:production` kini memakai runner mysql2 dan migrator Drizzle dengan verifikasi sertifikat dan hostname sebelum query migrasi. Bukti perubahan runner berasal dari pengujian offline. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan eksekusi Production memerlukan persetujuan terpisah. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+### Migrasi Production dan status rilis (2026-11-13)
+
+Snapshot Production berstatus `Succeeded`, masih berlaku saat eksekusi, dan dapat dipilih di Snapshot Restore. Pemeriksaan pemulihan berhenti pada pemilihan snapshot.
+
+Setelah preflight read-only dan persetujuan owner, runner mysql2 dan Drizzle dari baseline Testing `eba494b` menerapkan `0001_scenarios` lalu `0002_orders` dalam satu eksekusi dengan exit code `0`. Runner memverifikasi sertifikat dan hostname sebelum menjalankan query. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
+
+Verifikasi read-only pascamigrasi mengonfirmasi tepat tiga entri ledger dengan hash dan timestamp yang sesuai, termasuk hash historis `0000`. Kolom dan primary key `depots`, `scenarios`, dan `orders` sesuai. Foreign key Scenario → Depot dan Order → Scenario memakai `RESTRICT` untuk update dan delete. Indeks, keunikan kode Order per Scenario, dan collation `utf8mb4_unicode_ci` terverifikasi.
+
+Tahap berikutnya adalah review PR `testing` → `main`, Quality Gate PR, dan smoke test setelah deployment.
 
 Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Redirect ke home (`/`) dijadwalkan setelah release ke `main` dan sebelum Phase 2B. [Roadmap](docs/18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
 
@@ -4217,6 +4230,8 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 # SOURCE: docs/18_ROADMAP_BACKLOG.md
 
 # 18 — ROADMAP & BACKLOG
+
+> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
 
 **Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
@@ -5451,6 +5466,8 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 ## Gate 2 — CRUD baseline
 
 **Historical Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
+
+> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
 
 **Current Phase 1C — 2026-11-08:** Order CRUD sudah di `testing`. Migrasi `0002` Development/Testing, Testing Order CRUD live integration 1/1, dan cleanup integrasi PASS. Owner mengamati login, create/edit/delete Order sintetis lewat alur Map/CRUD, dan daftar kembali kosong. Browser/security QA masih PARTIAL dan Gate 2 masih OPEN. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
