@@ -1,12 +1,12 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-11-08 for Testing UAT evidence and release readiness. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, regenerated 2026-11-13 for Testing security QA and Production migration evidence. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 406707 | `bbe9db8d1b8a413653cff7b253aa6863ea2d125305ab62d76e0817a7ae34ee98` |
+| `MASTER_GUIDE.md` | 408552 | `637174bf6de3e193d89f5fc0c0915b1e161f4a073a7abc637573d9d3e485d4dd` |
 | `README.md` | 29263 | `1548fcb962729cf5ece8ce59e7ed897254d425997a55fb2729679c8f52ef0cdb` |
 | `THIRD_PARTY_NOTICES.md` | 2518 | `a9722a66fbf7e99a3990e6d419f4a4a80d4a55956af256a910bb698a9f284c7d` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
@@ -23,7 +23,7 @@ Actual filesystem bytes and SHA-256, regenerated 2026-11-08 for Testing UAT evid
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 9763 | `900243ed1775a85fecb76b326621bde33d98210964ad04640f7f7b8e8294950b` |
 | `docs/13_SECURITY.md` | 5349 | `2d515cbd746045942a113f1d8251fb2c6756ce90c99019865a9e196586990aea` |
-| `docs/14_TESTING_QA.md` | 55542 | `c147c9bfc40bce61864abe82fbd0163f222259398502d63f3dde4bc26ca25777` |
+| `docs/14_TESTING_QA.md` | 56730 | `6fe3de53878f21c2a35401c5652013586da1f4dea5be99d4ed6cde098d2b95bf` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25966 | `b77e1c42a26a2c02c02523bec7559558f07931991ecfe9a3f94fff31d9764b8b` |
