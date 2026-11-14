@@ -11,7 +11,7 @@ export const distributionPatterns = [
   "directional",
 ] as const;
 const pattern = z.enum(distributionPatterns);
-const seed = z
+export const scenarioSeed = z
   .string()
   .max(20)
   .refine(
@@ -35,7 +35,7 @@ const input = z
     customerCount: integer,
     radiusMinM: integer.nullable(),
     radiusMaxM: integer.nullable(),
-    generationSeed: seed.nullable(),
+    generationSeed: scenarioSeed.nullable(),
   })
   .refine(radiiValid, {
     path: ["radiusMaxM"],
