@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { hash } from "@node-rs/argon2";
 import type { CookieStore } from "iron-session";
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   afterEach,
   beforeAll,
@@ -14,7 +15,10 @@ import * as passwords from "@/lib/security/admin-password";
 import { POST as login } from "@/app/api/auth/login/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { requireAdmin } from "@/lib/security/admin";
+import { startAdminSession } from "@/lib/security/admin-session";
+import { AuthConfigurationError, parseAuthConfig } from "@/config/auth";
 import { getDatabase } from "@/db/client";
+import LoginPage from "@/app/login/page";
 import DepotPage from "@/app/(admin)/depots/page";
 import ScenarioPage from "@/app/(admin)/scenarios/page";
 import OrderPage from "@/app/(admin)/orders/page";
@@ -32,6 +36,7 @@ vi.mock("next/navigation", () => ({
   redirect: (path: string) => {
     throw new Error("REDIRECT:" + path);
   },
+  useRouter: () => ({ replace: vi.fn() }),
 }));
 vi.mock("@/db/client", () => ({
   getDatabase: vi.fn(() => {
@@ -84,9 +89,9 @@ beforeEach(() => {
   store = {
     get: (name) =>
       values.has(name) ? { name, value: values.get(name)! } : undefined,
-    set: (name, value) => {
+    set: vi.fn((name, value) => {
       values.set(name, value);
-    },
+    }),
   };
   boundary.allowed = true;
   boundary.unavailable = false;
@@ -133,6 +138,9 @@ describe("auth HTTP and server authorization", () => {
     expect(await requireAdmin()).toMatchObject({ environment: "development" });
     expect((await logout(request({}))).status).toBe(200);
     await expect(requireAdmin()).rejects.toMatchObject({ status: 401 });
+    expect(renderToStaticMarkup(await LoginPage())).toContain(
+      'aria-label="Login admin"',
+    );
   });
   it("rejects wrong credentials generically with no session cookie", async () => {
     for (const body of [
@@ -193,5 +201,74 @@ describe("auth HTTP and server authorization", () => {
     );
     expect(values.size).toBe(0);
     expect(boundary.consumeCalls).toBe(1);
+  });
+});
+
+describe("server-rendered login page", () => {
+  afterEach(() => {
+    expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it("redirects a valid session to the dashboard without refreshing its cookie", async () => {
+    await startAdminSession(parseAuthConfig(process.env), store);
+    vi.mocked(store.set).mockClear();
+
+    await expect(async () => LoginPage()).rejects.toThrow(/^REDIRECT:\/$/);
+  });
+
+  it("renders the form when the session is missing", async () => {
+    expect(renderToStaticMarkup(await LoginPage())).toContain(
+      'aria-label="Login admin"',
+    );
+  });
+
+  it("renders the form when a sealed session has expired", async () => {
+    await startAdminSession(
+      parseAuthConfig(process.env),
+      store,
+      Date.now() - 43_200_000,
+    );
+    vi.mocked(store.set).mockClear();
+
+    expect(renderToStaticMarkup(await LoginPage())).toContain(
+      'aria-label="Login admin"',
+    );
+  });
+
+  it("renders the form when the session cookie is tampered with", async () => {
+    values.set(parseAuthConfig(process.env).cookieName, "invalid-seal");
+
+    expect(renderToStaticMarkup(await LoginPage())).toContain(
+      'aria-label="Login admin"',
+    );
+  });
+
+  it("renders the form when the credential version has changed", async () => {
+    await startAdminSession(parseAuthConfig(process.env), store);
+    vi.mocked(store.set).mockClear();
+    vi.stubEnv("AUTH_CREDENTIAL_VERSION", "fixture-v2");
+
+    expect(renderToStaticMarkup(await LoginPage())).toContain(
+      'aria-label="Login admin"',
+    );
+  });
+
+  it("displays the unavailable state when authentication is unconfigured", async () => {
+    vi.stubEnv("AUTH_SESSION_SECRET", undefined);
+    const cookieRead = vi.spyOn(store, "get");
+
+    const html = renderToStaticMarkup(await LoginPage());
+    expect(html).toContain("Login belum tersedia. Hubungi pemilik aplikasi.");
+    expect(html).not.toContain('aria-label="Login admin"');
+    expect(cookieRead).not.toHaveBeenCalled();
+  });
+
+  it("propagates an unexpected error while reading the session", async () => {
+    const failure = new AuthConfigurationError();
+    vi.spyOn(store, "get").mockImplementation(() => {
+      throw failure;
+    });
+
+    await expect(async () => LoginPage()).rejects.toBe(failure);
   });
 });
