@@ -15,12 +15,14 @@ Target struktur (belum seluruhnya tersedia; lihat [current implementation](../RE
 ├── tsconfig.json
 ├── eslint.config.*
 ├── drizzle.config.ts
-├── drizzle.dev.config.ts  # explicit Dev apply only, guarded
+├── drizzle.dev.config.ts  # legacy Kit config; active Dev apply uses runner below
 ├── drizzle.testing.config.ts  # explicit Testing apply only, guarded; initial applied once
 ├── drizzle.production.config.ts  # explicit Production apply only, guarded; initial applied exactly once
 ├── drizzle/              # actual generated SQL + meta journal/snapshot
 ├── .env.example
 ├── .gitignore
+├── scripts/
+│   └── migrate-development.mjs  # explicit Dev-only mysql2 TLS + official Drizzle migrator
 ├── src/
 │   ├── app/
 │   │   ├── (admin)/
@@ -98,6 +100,12 @@ src/domain/routing/
 
 ## Rule of dependency direction
 
+### Actual Phase 1B source — 2026-10-31
+
+`src/app/(admin)/scenarios/page.tsx` dan `src/app/api/scenarios/{route.ts,[id]/route.ts}` memakai existing server-side admin boundary. HTTP helper `src/lib/http/scenario-api.ts` → `src/application/scenarios/scenario-service.ts` → `src/db/repositories/scenario-repository.ts` → lazy application DB. DTO/Zod contracts berada di `src/lib/validation/scenario.ts`; UI di `src/components/scenarios/`.
+
+`src/db/schema.ts` kini memiliki source depots + scenarios; migration `drizzle/0001_scenarios.sql` beserta snapshot/journal telah diterapkan dan diverifikasi pada Development/Testing melalui approval terpisah, bukan SQL baru pada pembaruan ini. Source di atas merged ke Testing melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; post-merge Quality Gate PASS dan stable Preview READY. Unit fixtures bersifat sintetis/offline; integration Scenario adalah runner live terpisah yang hanya boleh memakai Testing APPLICATION setelah approval. Route Scenario sudah keluar dari placeholder `plannedModules`. Core Browser CRUD dilaporkan OWNER-OBSERVED agregat, dengan detail PENDING pada [assessment Testing](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Order, Generator, Map, freeze dan algoritma tetap future target; Production migration/release belum diotorisasi.
+
 ```text
 UI/API → application → algorithm domain (DistanceMatrix + params/seed)
              └→ infrastructure adapters / repositories
@@ -146,3 +154,9 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 - database: `snake_case`;
 - TS properties: `camelCase`;
 - constants: `UPPER_SNAKE_CASE` bila benar-benar constant.
+
+## Phase 1C local Order source — 2026-11-01
+
+Protected page: src/app/(admin)/orders/page.tsx. UI: src/components/orders/order-manager.tsx and order-form.tsx. Nested API lives under the existing Scenario [id] directory: src/app/api/scenarios/[id]/orders/route.ts and orders/[orderId]/route.ts; [id] represents scenarioId, without introducing a conflicting Next slug. API helper src/lib/http/order-api.ts uses the existing auth/Origin/body/environment guards, then application/orders/order-service.ts and db/repositories/order-repository.ts. Zod/DTOs are in lib/validation/order.ts. All identifiers remain strings at HTTP boundaries. Scenario repository adds only an Order reference precondition; existing authentication/database client/dependencies are unchanged.
+
+Migration `0002_orders`, snapshot and journal append are versioned with Order source. The migration passed in Development and Testing. `tests/integration/order-crud.integration.test.ts` uses the fixture registry and lookup under `tests/fixtures/` for durable receipts and scoped cleanup. Testing live integration remains **NOT EXECUTED**. [Evidence and pending checkpoints](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).

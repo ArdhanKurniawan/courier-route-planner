@@ -111,7 +111,7 @@ Ed25519 verifier, diagnostic endpoint, real keys/tickets, dedicated Windows cust
 
 ### Prosedur penyimpanan WIP — referensi untuk operasi yang diotorisasi terpisah
 
-Inventory historis berasal dari executor report Phase 0D-8B, 18 Oktober 2026, bagian 2. Referensi audit lokal: `PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md` — **NOT PUBLISHED**, disimpan di docs/proses/phase-0/0d/. Ringkasannya berikut membuat inventory dapat dibaca tanpa laporan lokal tersebut:
+Inventory historis berasal dari executor report Phase 0D-8B, 18 Oktober 2026, bagian 2. Referensi audit: `PHASE_0D_RUNTIME_TIDB_ISOLATION_LOCAL_IMPLEMENTATION_REPORT.md` — **NOT PUBLISHED**. Laporan lengkap dipertahankan di arsip lokal eksternal milik owner, di luar repository dan bukan bagian dari normal Git checkout; evidence asli dan verdict historis tidak berubah. Ringkasan terpublikasi berikut mempertahankan provenance, inventory dan keterbatasan yang diperlukan tanpa membutuhkan salinan laporan di repository:
 
 - 9 file baru dalam arsip WIP: `scripts/foundation-sign-ticket.mjs`, `src/app/api/internal/foundation-verify/route.ts`, `src/config/foundation-verifier.ts`, `src/db/foundation-verify.ts`, `src/security/foundation-ticket.ts`, `tests/unit/foundation-ticket.test.ts`, `tests/unit/foundation-verifier-config.test.ts`, `tests/unit/foundation-verify-route.test.ts`, `tests/unit/foundation-verify.test.ts`.
 - 2 existing files yang dimodifikasi: `src/db/client.ts` dan `tests/unit/db-client.test.ts`.

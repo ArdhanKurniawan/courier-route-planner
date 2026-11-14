@@ -2,11 +2,14 @@
 
 **Historical promotion evidence 2026-10-11:** [PR #20 closure](docs/proses/phase-0/0d/PHASE_0D_MAIN_FOUNDATION_PROMOTION_REPORT.md); current-candidate PR Quality and post-merge main Quality PASS. Vercel NOT integrated; public Production/Preview NOT deployed; Phase 0D/Gate 1 OPEN.
 
-**Status:** Phase 0 / Phase 0D / Gate 1 **CLOSED secara administratif — 2026-10-24**, setelah final human acceptance. Foundation Web Admin dan tiga environment diterima dalam scope evidence minimum; CRUD domain/Gate 2 belum dimulai. Lihat [closure report](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md).
-**Tanggal sinkronisasi:** 2026-10-24 (local documentation only; belum dipublikasikan).
+**Status:** Gate 1 **CLOSED secara administratif — 2026-10-24** setelah final human acceptance. Phase 1A–1C dan Phase 2A sudah tersedia di `testing`. Gate 2 masih OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md)
+
+**Tanggal sinkronisasi:** 2026-11-08, berdasarkan baseline Testing `5696902` dan laporan UAT owner.
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
+
+**Phase 1C dan 2A:** Migrasi `0002` Development/Testing, Testing Order CRUD live integration, dan Quality Gate Testing sudah PASS. Owner mengamati alur Order sintetis dari pembuatan, edit koordinat dan perpindahan marker, hingga penghapusan dan daftar kembali kosong. Browser/security QA masih **PARTIAL**. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 ## Approved Target Architecture
 
@@ -39,6 +42,48 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890` mempunyai file tree identik setelah PR #26. Quality Gate kedua SHA PASS; reproduksi Chacha pada laptop kedua Windows 10 PASS berdasarkan evidence owner/human attestation. Production deployment dan minimum smoke 24 Oktober diterima secara composite; pemisahan environment memakai accepted provisioning/configuration evidence dan konektivitas, bukan direct physical runtime SQL identity. Runtime audit 0; full audit 4 Moderate dev-only tetap residual risk. [Gate 1](docs/23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) CLOSED; [closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) mencatat provenance dan limitations.
 
 Historical Preview HTTP tetap PARTIAL, physical runtime SQL identity tetap **NOT VERIFIED**, dan verifier Ed25519 tetap WIP terpisah. Penutupan ini tidak memulai Gate 2 atau memenuhi seluruh future Feature/Database/Release DoD.
+
+### Historical Gate 2 Phase 1A — local candidate 2026-10-25
+
+Local implementation contains single-administrator username/password login and protected Depot CRUD, with private Development configuration. Gate 2 remains OPEN; Order and Scenario CRUD are not implemented. Map, routing and algorithms remain outside this slice; the deferred Ed25519 verifier is not included. Development/Testing verification is not Production acceptance.
+
+- Authentication uses iron-session 9.0.1 and @node-rs/argon2 2.2.2, with environment-backed username/Argon2id hash and no auth tables, public registration or reset feature. GitHub OAuth is DEFERRED by owner decision.
+- Absolute session: 12 hours from successful login, ttl/maxAge 43200, no renewal through activity. Hosted cookies are HttpOnly/Secure/SameSite=Strict/host-only. Logout clears the browser cookie; a copied cookie can remain usable until its original expiry. Credential-version and separate environment secrets remain required.
+- Shared login limiting uses @upstash/ratelimit 2.2.0 and @upstash/redis 1.39.0: one account/environment bucket, 5 attempts per fixed 15-minute window, timeout/error fail-closed. Development uses owner-configured Upstash; actual Preview authentication/limiter QA remains pending.
+- /login and protected /depots provide the MVP entry. /api/depots supports GET/POST, /api/depots/[id] supports GET/PUT/DELETE. All Depot entry points authorize on the server; mutations require exact Origin/JSON, Zod input and the application context/logical-database guard before lazy TiDB acquisition.
+- Five writable fields: name, nullable address, latitude [-90,90], longitude [-180,180], isActive. IDs are decimal strings in HTTP/JSON, never Number; existing eight-column schema/migration unchanged. Uncertain writes return MUTATION_OUTCOME_UNKNOWN and must not be retried automatically. Current schema has no child relation; a future Scenario FK must use RESTRICT and include its own integration proof.
+- Default unit/component tests use synthetic credentials, cookies, Redis/TiDB transport and records: 426/426 PASS in existing offline evidence. No private .env file is required for offline checks. One separately authorized live test:db run passed 1/1 on Testing, including fixture cleanup; the runner remains opt-in and excluded from ordinary test/coverage and CI.
+- [DONE] Owner observed Development login/logout, main Depot CRUD and deactivation, plus server invalid-coordinate HTTP 400 INVALID_INPUT. Independent source review has no unresolved Critical or Important findings. These are existing observations/results, not tests rerun for this documentation correction.
+- [PENDING] Development browser reactivation and delete-cancellation confirmation; actual Preview authentication/limiter QA; final publication and release approval. Root/health/readiness contracts and accepted Gate 1 limitations remain unchanged.
+- [RESIDUAL RISK] One historical intermittent login HTTP 503 remains unexplained. Subsequent login requests succeeded; no root-cause fix or permanent reliability claim is made.
+
+See [security](docs/13_SECURITY.md), [ADR-009 MVP supersession](docs/04_TECH_STACK_ADRS.md#adr-009--auth-sebelum-public-mutation) and [testing boundaries](docs/14_TESTING_QA.md#14-historical-gate-2-phase-1a--depot-and-single-admin-scope-2026-10-25). Local code/test evidence does not establish direct physical runtime SQL identity.
+
+### Gate 2 Phase 1B — Scenario local candidate 2026-10-31
+
+Snapshot source/evidence sebelum publikasi; status terkini dan laporan owner setelah merge ada pada bagian Testing post-merge di bawah.
+
+Baseline owner-approved: `ec754c23521723dd1450e42dbfcc26094f22b701` (housekeeping setelah Phase 1A merge `60b248c9b460cd7be48334a1c5b3fe64092254ea`). Owner melaporkan Development dan Preview login/Depot CRUD berhasil; ini observasi owner, bukan runtime test baru oleh agent. Pending manual checks dalam snapshot 25 Oktober tidak otomatis dianggap selesai.
+
+- [DONE] Protected `/scenarios`, `GET/POST /api/scenarios` dan `GET/PUT/DELETE /api/scenarios/[id]`; API → service → lazy repository, existing admin session/Origin/body/environment guards tetap digunakan. Penolakan autentikasi tidak memperoleh DB.
+- [DONE] Name, Depot, empat distribution patterns, configured customer count, nullable radius bounds dan nullable signed BIGINT seed. ID/seed diserialisasi sebagai string tanpa kehilangan presisi. Status selalu `draft` read-only; tidak ada freeze atau transisi.
+- [DONE] Create/pergantian Depot memakai Depot aktif melalui conditional SQL atomik. Referensi lama yang kemudian nonaktif boleh dipertahankan. FK `scenarios.depot_id → depots.id` memakai RESTRICT; delete Scenario tidak cascade dan future child references harus memakai FK nyata.
+- [DONE] Migration `0001_scenarios` diterapkan terpisah pada Development dan Testing dengan approval masing-masing; Testing invocation tepat satu kali, ledger 0000/0001 dan schema/FK/index readback PASS. Historical CRLF hash 0000 Testing dipertahankan; local SQL LF cocok historical Git blob. Owner melaporkan Development browser QA 8/8 PASS; ini human observation, bukan pengujian ulang agent.
+- [DONE] Dedicated Scenario integration **source** memakai service/repository existing dengan dua Depot dan satu Scenario valid, UUID tag, receipt ID sebelum readback dan cleanup exact-ID child-first. Assertion Depot referenced menguji precondition aplikasi; verifikasi schema/FK terpisah. UI tetap mencakup pagination, validation/loading/empty/error, konfirmasi delete dan lock setelah unknown mutation sampai explicit reload berhasil.
+- [DONE] Repository Depot delete memeriksa satu flag EXISTS tervalidasi pada kolom Scenario berindeks: referensi pada Depot aktif/nonaktif ditolak sebelum DELETE; failed/malformed read fail closed. Tanpa referensi, DELETE existing berjalan sekali. FK RESTRICT tetap mengamankan race; kode provider generic `61100002` dan timeout setelah precheck tetap unknown tanpa retry. TDD: 27 RED → 46/46 GREEN; full offline 548/548, coverage, lint, typecheck/build/post-build typecheck PASS.
+- [HISTORICAL] Live integration pertama **NOT PASS** saat HTTP 400 provider diklasifikasikan unknown; probe berikutnya menangkap `details.code = 61100002` tanpa bukti errno FK khusus. Seluruh fixture integration/probe telah dibersihkan dengan approval terpisah.
+- [DONE] Rerun Testing APPLICATION setelah koreksi: tepat satu invocation, **1/1 PASS**, exit 0; 38 SQL operations, tanpa transport failure atau retry. Referenced Depot ditolak oleh precondition dengan `DEPOT_IN_USE` tanpa DELETE; FK RESTRICT tetap safeguard database.
+- [LIMITATION] Assertion cleanup lulus, tetapi ID fixture tidak tertangkap pada persisted receipt; wrapper tetap **`STOP_NOT_PASS`** dan tidak ada independent post-run absence verification. Physical runtime SQL identity tetap **NOT VERIFIED**; FK concurrency race belum diuji. Lihat [hasil rerun dan batas evidence](docs/14_TESTING_QA.md#18-scenario-integration-rerun--actual-evidence-2026-10-31).
+- [BOUNDARY] Gate 1 CLOSED; Gate 2 OPEN. Order, generator, map, routing, benchmark/freeze dan algoritma belum diimplementasikan. Auth 12 jam, fail-closed limiter dan environment isolation tidak diubah; historical intermittent login 503 tetap residual risk tanpa klaim perbaikan.
+
+### Gate 2 Phase 1B — Testing post-merge (2026-11-01)
+
+[PR #31](https://github.com/ArdhanKurniawan/courier-route-planner/pull/31) merged ke Testing pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. [Post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) SUCCESS; [stable Testing Preview](https://courier-route-planner-git-testing-ardhankurniawans-projects.vercel.app) terikat ke deployment `dpl_96DD4QwZsw27ETQQa98fDSjuVwzz`, READY untuk SHA yang sama. Metadata/deployment read tidak menjalankan Browser QA.
+
+Owner melaporkan Browser QA Scenario CRUD pada stable Preview aman; dicatat sebagai **PASS — OWNER-OBSERVED (agregat core CRUD)**, dilaporkan 1 November 2026. Tanggal/jam pelaksanaan, status HTTP dan detail per case belum diberikan. Persistence/draft, invalid input, Depot aktif/nonaktif, penolakan Depot referenced, logout/session/cookie/Origin/limiter tetap **PENDING untuk detail Browser QA**, tanpa menghapus existing unit/Testing DB integration evidence.
+
+**READY FOR ADMINISTRATIVE CLOSURE — Testing core CRUD**, berdasarkan implementation/review, existing 548/548 offline dan 1/1 Testing integration, exact-commit CI/deployment serta laporan owner tersebut. Ini tidak menyatakan seluruh Browser/security QA, Full Feature/Release DoD atau Production acceptance PASS. Receipt historis tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity **NOT VERIFIED**, FK concurrency race belum diuji dan historical login 503 belum memiliki root cause terkonfirmasi. [Evidence matrix dan batas scope](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Gate 2 OPEN; Order CRUD belum diimplementasikan.
+
 
 ### Historical foundation evidence — 2026-10-11
 

@@ -133,6 +133,16 @@ Boleh defer saat local-only foundation. Wajib sebelum custom production domain d
 
 ---
 
+### MVP supersession — owner decision 2026-10-25
+
+The original GitHub OAuth preference above remains historical. The owner now prioritizes one environment-configured administrator using username/password; GitHub OAuth is DEFERRED. Auth-before-public-mutation and server authorization remain mandatory.
+
+Selected local implementation: iron-session 9.0.1 for sealed cookie sessions, @node-rs/argon2 2.2.2 for library Argon2id verification, and @upstash/ratelimit 2.2.0 + @upstash/redis 1.39.0 for a shared login-attempt counter. No custom crypto, auth tables, registration, multi-user management or reset feature. NextAuth Credentials and Better Auth were evaluated in the preparation plan; neither is installed. Library/native-build and dependency checks do not replace actual runtime verification.
+
+Owner-approved session duration is an absolute 12 hours (43200 seconds) from successful login, with no rolling/sliding/activity renewal or remember-me. Server checks context, credential version and exact expiry on every protected request. Logout deletes the browser cookie; a copied stateless cookie may survive until the original expiry. No Redis session registry is introduced.
+
+Trade-offs: the MVP now takes custody of a password hash; separate per-environment credentials/secret and private human setup are required. The shared limiter adds service availability/quota/cost concerns and a global-bucket login-denial risk. Service provisioning, private setup, Testing DB integration and release remain separately authorized. Missing configuration/service or limiter timeout fails closed, never becomes anonymous access. This decision authorizes the MVP direction/local implementation only; it does not claim deployed authentication PASS.
+
 ## ADR-010 — OSRM bukan MVP core
 
 **Status:** Superseded oleh [ADR-012](#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), 2026-10-02.

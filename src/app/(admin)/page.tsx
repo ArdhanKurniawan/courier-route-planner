@@ -5,7 +5,7 @@ import ComponentCard from "@/components/common/ComponentCard";
 export const metadata: Metadata = { title: "Dashboard" };
 
 const projectStatus = [
-  { title: "Depot", status: "Belum dikonfigurasi" },
+  { title: "Depot", status: "Akses melalui login admin" },
   { title: "Active Scenario", status: "Belum tersedia" },
   { title: "Route Optimization", status: "Belum dijalankan" },
   { title: "Benchmark", status: "Belum tersedia" },
@@ -24,7 +24,7 @@ export default function Dashboard() {
       </div>
       <ComponentCard
         title="Project Status"
-        desc="Status kesiapan fitur. Aplikasi saat ini berupa shell UI; data operasional belum tersedia."
+        desc="Status kesiapan fitur. Pengelolaan Depot memerlukan login admin; data operasional tidak ditampilkan di Dashboard."
       >
         <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {projectStatus.map(({ title, status }) => (
@@ -42,10 +42,10 @@ export default function Dashboard() {
           ))}
         </dl>
       </ComponentCard>
-      <ComponentCard title="Tahap Pengembangan" desc="UI Template Cleanup">
+      <ComponentCard title="Tahap Pengembangan" desc="Gate 2 — Depot CRUD">
         <p className="text-sm leading-6 text-gray-600 dark:text-gray-400">
-          Navigasi modul tersedia sebagai placeholder. Pengelolaan data, peta,
-          optimasi rute, dan eksperimen penelitian belum diimplementasikan.
+          Depot dikelola melalui halaman admin. Scenario, Order, peta, optimasi
+          rute, dan eksperimen penelitian belum diimplementasikan.
         </p>
         <Link
           href="/about"

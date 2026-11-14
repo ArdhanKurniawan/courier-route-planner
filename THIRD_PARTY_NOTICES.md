@@ -40,3 +40,10 @@ Reason: current ApexCharts uses a revenue-based/community licensing model; proje
 - Upstream: https://github.com/recharts/recharts
 - License: MIT according to upstream repository.
 - Intended use: possible charts for research/benchmark result visualization after explicit task/ADR.
+
+## clean-code project skill
+
+- Upstream: [sickn33/agentic-awesome-skills](https://github.com/sickn33/agentic-awesome-skills/tree/main/skills/clean-code).
+- Project skill: [SKILL.md](.agents/skills/clean-code/SKILL.md), with upstream provenance retained.
+- License: [upstream MIT notice](licenses/AGENTIC-AWESOME-SKILLS-MIT.txt).
+- Scope: agent guidance for project work.

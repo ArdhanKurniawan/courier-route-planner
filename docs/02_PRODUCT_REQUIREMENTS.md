@@ -77,6 +77,8 @@ Minimal field:
 - longitude;
 - source (`dummy`/`manual`).
 
+Owner-approved Phase 1C contract (2026-11-01): every Order belongs to exactly one Scenario. Order code is canonical uppercase, at most 64 Unicode characters after normalization, unique within that Scenario with case-insensitive and accent-insensitive comparison. The same code may exist in another Scenario. Manual API creation fixes source=manual; source and Scenario association cannot be changed by editing. Future trusted generator-created dummy Orders remain editable while preserving source=dummy. Scenario deletion is blocked while Orders reference it. Scenario customer_count is configuration, never an Order quota or an automatically updated actual count.
+
 ### FR-005 Map
 
 Map harus:

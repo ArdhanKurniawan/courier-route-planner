@@ -1,5 +1,7 @@
 # 08 — DATABASE DESIGN
 
+**Current source status — 2026-11-01:** Source `depots` + `scenarios` sudah merged ke Testing melalui PR #31 pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`. Migration `0001_scenarios` Development/Testing beserta schema/FK/index verification telah PASS pada checkpoint sebelumnya; tidak ada apply atau SQL baru pada task dokumentasi ini. Post-merge Quality Gate PASS dan stable Testing Preview READY. Laporan core CRUD owner bersifat OWNER-OBSERVED agregat; detail Browser QA dan batas cleanup ada di [assessment Testing](14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Physical runtime SQL identity NOT VERIFIED; FK concurrency race belum diuji. Production migration 0001/release masih memerlukan approval terpisah. Gate 1 CLOSED; Gate 2 OPEN. Paragraf foundation di bawah tetap snapshot historis sebelum Scenario.
+
 **Conceptual target design only.** Pengecualian aktual: **depots saja** di `src/db/schema.ts` dan generated migration `drizzle/0000_dear_rictor.sql`, offline independently verified dan sudah diterapkan sekali pada Dev, Testing (approved 0D-3B), serta Production (approved Checkpoint B, 2026-10-11). Dev LIVE/established; Testing LIVE/migrated once/verified; Production LIVE pada independent Starter, migration invocation 1/retry 0/exit 0. Read-only evidence setiap environment memastikan delapan kolom, PK/index dan masing-masing satu ledger entry cocok dengan source/SQL; BOOLEAN direpresentasikan TiDB sebagai `tinyint(1)` default 1. Production memiliki tepat `depots` dan runner ledger `__drizzle_migrations`, depots row count 0. Semua tabel/relasi lain tetap future conceptual target. Sinkronisasi 2026-10-02 menambahkan frozen matrix storage; Editable Scenario → Immutable Benchmark Case tetap dipertahankan. Phase 0C CLOSED/final independent verification PASS; Vercel NOT integrated/Preview preflight NOT READY; main foundation promotion belum dilakukan/main behavior deferred; Phase 0D/Gate 1 OPEN. [Dev evidence](proses/phase-0/0c/PHASE_0C_DEV_LIVE_VERIFICATION_REPORT.md); [Testing evidence](proses/phase-0/0d/PHASE_0D_TIDB_TESTING_LIVE_FOUNDATION_REPORT.md); [Production evidence](proses/phase-0/0d/PHASE_0D_TIDB_PRODUCTION_LIVE_FOUNDATION_REPORT.md). Closure hanya memakai evidence tersimpan, tanpa DB connection atau migration baru.
 
 ## 1. Design goals
@@ -55,44 +57,56 @@ Stage 1 actual contract:
 
 ## 4. `scenarios`
 
-Editable working dataset.
+Editable working dataset. Source Phase 1B memakai sebelas kolom di bawah; tabel selain `depots`/`scenarios` pada dokumen ini tetap conceptual target.
 
 ```text
-id BIGINT PK
-depot_id BIGINT FK
-name VARCHAR
-distribution_pattern VARCHAR
-customer_count INT
+id BIGINT AUTO_INCREMENT PK NOT NULL
+depot_id BIGINT NOT NULL FK depots.id ON DELETE RESTRICT ON UPDATE RESTRICT
+name VARCHAR(255) NOT NULL
+distribution_pattern VARCHAR(32) NOT NULL
+customer_count INT NOT NULL
 radius_min_m INT NULL
 radius_max_m INT NULL
 generation_seed BIGINT NULL
-status VARCHAR
-created_at
-updated_at
+status VARCHAR(32) NOT NULL DEFAULT 'draft'
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 ```
 
-`customer_count` dapat dihitung dari orders, tetapi disimpan hanya jika diperlukan untuk config generator; actual count harus tetap diverifikasi dari rows.
+`customer_count` adalah configured count, bukan actual Order count; Phase 1B belum membuat Orders. Count/radius integer 0–2147483647 (batas storage, bukan pembatasan desain eksperimen); kedua radius non-null wajib min ≤ max, null berarti unspecified. Pattern: random/clustered/circular/directional; seed nullable signed BIGINT, id/seed memakai decimal string pada API tanpa Number conversion. Status hanya `draft`, diset server dan tidak dapat diubah klien; freeze/transisi ditunda.
+
+Index `scenarios_depot_id_idx` mendukung FK. Create/pergantian depot memerlukan depot aktif melalui conditional insert/update atomik; depot lama yang kemudian nonaktif boleh dipertahankan saat edit. FK mencegah penghapusan depot yang direferensikan. Scenario tanpa child boleh dihapus secara fisik; future Order/benchmark migrations wajib memakai relasi RESTRICT nyata dan proof tersendiri, tanpa cascade atau fabricated history precheck.
+
+Migration `drizzle/0001_scenarios.sql`, snapshot baru dan journal append disiapkan offline, tidak mengubah migration 0000 atau tabel depots. Sebelum live apply: owner mereview target/history, grants migrator, urutan CREATE → FK → index dan approval per environment. DDL dapat berhasil parsial; bila gagal/ambigu STOP, inspeksi state dengan approval baru, tanpa retry otomatis atau drop data. Mitigasi setelah apply adalah rollback release aplikasi yang belum memakai Scenario; jangan drop tabel berisi data sebagai rollback otomatis. Application credential tetap scoped CRUD; tidak digunakan untuk DDL.
 
 ## 5. `orders`
 
+Phase 1C implements Order CRUD. Migration `0002_orders` passed in Development and Testing, with Testing ledger/schema verified after apply. Production apply requires separate approval. [Phase 1C evidence](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
 ```text
-id BIGINT PK
-scenario_id BIGINT FK
-order_code VARCHAR
-customer_name VARCHAR
+id BIGINT AUTO_INCREMENT PK NOT NULL
+scenario_id BIGINT NOT NULL FK scenarios.id ON DELETE RESTRICT ON UPDATE RESTRICT
+order_code VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL
+customer_name VARCHAR(255) NOT NULL
 address TEXT NULL
-latitude DECIMAL/DOUBLE
-longitude DECIMAL/DOUBLE
-source VARCHAR  -- dummy/manual
-created_at
-updated_at
-```
-
-Unique recommendation:
-
-```text
+latitude DOUBLE NOT NULL
+longitude DOUBLE NOT NULL
+source VARCHAR(16) NOT NULL -- manual/dummy
+created_at DATETIME(3) NOT NULL
+updated_at DATETIME(3) NOT NULL
 UNIQUE(scenario_id, order_code)
+INDEX(scenario_id, id)
 ```
+
+IDs remain signed BIGINT internally and decimal strings in JSON. Coordinates are finite and range-validated server-side; address is nullable, with the established 2000-character application limit. Timestamps are supplied by the service, UTC by convention.
+
+Order codes are trimmed and converted with locale-independent uppercase before the 64-Unicode-character limit is checked, including uppercase expansions. The explicit column collation enforces scoped case/accent-insensitive uniqueness; the owner explicitly accepted accent-insensitivity. Duplicate prechecks compare with the database column, not a JavaScript approximation of Unicode collation. No default database collation is assumed. Native collation behavior/framework and target compatibility must be verified in a separately authorized migration preflight; offline schema tests do not prove live behavior. See [TiDB collation contract](https://docs.pingcap.com/tidb/stable/character-set-and-collation/).
+
+Manual HTTP creation owns source=manual. Input rejects source/scenarioId/id/timestamps. Update SQL changes neither source nor scenario_id, so a future trusted source=dummy record stays dummy. No generator is implemented. Actual count is a scoped COUNT(*) returned as a decimal string; Scenario configured customer_count is not changed, enforced as quota, or substituted by page length.
+
+The unique index protects concurrent duplicate writes; the second composite index supports Scenario-scoped cursor pagination without a redundant standalone scenario_id index. Scenario deletion uses an indexed, strictly validated EXISTS precheck and returns SCENARIO_IN_USE/409 when referenced. RESTRICT remains the final race guard. Definitive provider conflict codes may map to 409; generic provider errors/timeouts remain MUTATION_OUTCOME_UNKNOWN without retry. This does not claim live concurrency testing.
+
+Apply 0002 separately to Development and Testing only after target/history/TLS/grants/collation review and explicit approval; the new Scenario-delete precheck expects the Orders table to exist. DDL autocommit/partial failure means STOP without automatic retry/drop/ledger repair. Mitigation is reverting the application release while retaining the table/data, never destructive automatic rollback. Migration 0000/0001 remain byte-identical. No Production apply is authorized.
 
 ## 6. `benchmark_cases`
 

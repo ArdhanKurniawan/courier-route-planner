@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
+import packageJson from "../../package.json";
 import {
   DatabaseConfigError,
   getDevMigrationCredentials,
@@ -20,7 +21,7 @@ afterEach(() => {
 });
 
 describe("Production migration credentials", () => {
-  it("decodes Production credentials and preserves certificate verification", () => {
+  it("decodes Production credentials with certificate and hostname verification", () => {
     expect(
       getProductionMigrationCredentials(
         "production",
@@ -35,7 +36,7 @@ describe("Production migration credentials", () => {
       user: "fixture_user",
       password: "pass@word:fixture",
       database: "courier_route_planner_production",
-      ssl: { rejectUnauthorized: true },
+      ssl: { rejectUnauthorized: true, verifyIdentity: true },
     });
   });
 
@@ -208,19 +209,10 @@ describe("three explicit migration paths", () => {
 });
 
 describe("Production Drizzle configuration", () => {
-  it("uses the offline history and guarded Production credentials", async () => {
-    vi.stubEnv("APP_ENV", "production");
-    vi.stubEnv("DATABASE_URL", productionUrl);
-    const { default: config } = await import("../../drizzle.production.config");
-    expect(config).toMatchObject({
-      dialect: "mysql",
-      schema: "./src/db/schema.ts",
-      out: "./drizzle",
-      dbCredentials: {
-        database: "courier_route_planner_production",
-        ssl: { rejectUnauthorized: true },
-      },
-    });
+  it("routes Production apply to the native TLS runner with the existing env file", () => {
+    expect(packageJson.scripts["db:migrate:production"]).toBe(
+      "node --env-file=.env.migrations.production.local ./scripts/migrate-production.mjs",
+    );
   });
 
   it.each([
@@ -228,15 +220,17 @@ describe("Production Drizzle configuration", () => {
     ["development", devUrl],
     ["testing", testingUrl],
     ["production", testingUrl],
+    ["production", productionUrl],
   ])(
-    "rejects an unsafe Production config before any apply",
+    "keeps the legacy Production Kit config credential-free for %s",
     async (env, url) => {
       vi.stubEnv("APP_ENV", env);
       vi.stubEnv("DATABASE_URL", url);
-      const { DatabaseConfigError: ConfigError } = await import("@/config/db-env");
-      await expect(import("../../drizzle.production.config")).rejects.toThrow(
-        ConfigError,
-      );
+      const { default: config } =
+        await import("../../drizzle.production.config");
+      const { default: offlineConfig } = await import("../../drizzle.config");
+      expect(config).toEqual(offlineConfig);
+      expect(config).not.toHaveProperty("dbCredentials");
     },
   );
 });
