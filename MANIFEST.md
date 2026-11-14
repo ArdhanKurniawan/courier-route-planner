@@ -1,22 +1,22 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-11-13 for Testing security QA and Production migration evidence. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, regenerated 2026-11-14 for the Phase 2B Part C architecture addendum. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 408552 | `637174bf6de3e193d89f5fc0c0915b1e161f4a073a7abc637573d9d3e485d4dd` |
+| `MASTER_GUIDE.md` | 416019 | `7eb37d43e520cc7dec0f40155d01b2713dbe594c7a12a223d418a630035390d5` |
 | `README.md` | 29263 | `1548fcb962729cf5ece8ce59e7ed897254d425997a55fb2729679c8f52ef0cdb` |
 | `THIRD_PARTY_NOTICES.md` | 2518 | `a9722a66fbf7e99a3990e6d419f4a4a80d4a55956af256a910bb698a9f284c7d` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
 | `docs/02_PRODUCT_REQUIREMENTS.md` | 6676 | `48364cbfeba3fa193ffc4492550095f398f9cf66dd795afe76f3c7acb417ef21` |
 | `docs/03_SYSTEM_ARCHITECTURE.md` | 5061 | `ea24394c452b721b42f011f8a677456b3c0302179fa0e69706639eedb3310e17` |
-| `docs/04_TECH_STACK_ADRS.md` | 12958 | `0efb9050052e1cb4d0ef5c73516a92175d9d793d85af47cf9862b81ff9679e39` |
+| `docs/04_TECH_STACK_ADRS.md` | 17936 | `71d6ff8b1a36a8cfdda7881e6b39e75fc2512bf2a3045cc71a721d4008f73711` |
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
-| `docs/07_TIDB_GUIDE.md` | 14825 | `68bda73264910b01233380ee60214e869d0ed4c7e5b28e84551dcb463bc2c96c` |
+| `docs/07_TIDB_GUIDE.md` | 17283 | `bbb6ec3cf9f98235bbcc5b7cf964e2906cb043cb1be0163e48e30d3c975de891` |
 | `docs/08_DATABASE_DESIGN.md` | 15815 | `c3816695aa5f2445ee8307028d8586ba508d7b6092aaa3a97480ce4fc4673019` |
 | `docs/09_REPO_STRUCTURE.md` | 11136 | `fcbd5d7335e095cc98d7ed4e4fe02b16b226bae43cd617120f742606e4e58886` |
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 11353 | `32adad89774bf0926d04c05ca32a675e209e581a4362bc3dc0e661b38acbdb46` |
