@@ -44,9 +44,19 @@ describe("route planner navigation", () => {
     expect(hrefs).not.toContain("/scenarios");
     expect(hrefs).not.toContain("/orders");
     expect(hrefs).not.toContain("/map");
+    expect(hrefs).not.toContain("/dummy-generator");
     expect([...hrefs].sort()).toEqual(
       domainRoutes
-        .filter((href) => !["/depots", "/scenarios", "/orders", "/map"].includes(href))
+        .filter(
+          (href) =>
+            ![
+              "/depots",
+              "/scenarios",
+              "/orders",
+              "/map",
+              "/dummy-generator",
+            ].includes(href),
+        )
         .sort(),
     );
   });

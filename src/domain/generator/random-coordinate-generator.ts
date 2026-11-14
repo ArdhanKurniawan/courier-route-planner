@@ -3,11 +3,8 @@ import { scenarioSeed } from "@/lib/validation/scenario";
 
 export const RANDOM_COORDINATE_VERSION = "random-v1";
 
-const randomCoordinateInput = z
+export const randomCoordinateParameters = z
   .strictObject({
-    version: z.literal(RANDOM_COORDINATE_VERSION),
-    latitude: z.number().finite().min(-90).max(90),
-    longitude: z.number().finite().min(-180).max(180),
     count: z.number().int().min(1).max(100),
     radiusMinM: z.number().int().min(0).max(50_000),
     radiusMaxM: z.number().int().min(1).max(50_000),
@@ -17,6 +14,12 @@ const randomCoordinateInput = z
     path: ["radiusMaxM"],
     message: "Maximum radius must be greater than minimum radius.",
   });
+
+const randomCoordinateInput = randomCoordinateParameters.safeExtend({
+  version: z.literal(RANDOM_COORDINATE_VERSION),
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+});
 
 export type RandomCoordinateInput = z.infer<typeof randomCoordinateInput>;
 export type GeneratedCoordinate = { latitude: number; longitude: number };
@@ -48,8 +51,14 @@ function splitMix64(seed: string) {
   return () => {
     state = BigInt.asUintN(64, state + splitMixIncrement);
     let bits = state;
-    bits = BigInt.asUintN(64, (bits ^ (bits >> shift30)) * splitMixFirstMultiplier);
-    bits = BigInt.asUintN(64, (bits ^ (bits >> shift27)) * splitMixSecondMultiplier);
+    bits = BigInt.asUintN(
+      64,
+      (bits ^ (bits >> shift30)) * splitMixFirstMultiplier,
+    );
+    bits = BigInt.asUintN(
+      64,
+      (bits ^ (bits >> shift27)) * splitMixSecondMultiplier,
+    );
     return Number((bits ^ (bits >> shift31)) >> shift11) / 2 ** 53;
   };
 }

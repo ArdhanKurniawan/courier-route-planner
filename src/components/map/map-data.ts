@@ -66,7 +66,7 @@ async function readJson(path: string, signal: AbortSignal): Promise<unknown> {
   return response.json();
 }
 
-async function readPages<T extends { id: string }>(
+export async function readPages<T extends { id: string }>(
   path: string,
   row: z.ZodType<T>,
   signal: AbortSignal,
