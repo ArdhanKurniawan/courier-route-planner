@@ -4,6 +4,7 @@ import * as L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import type { MapPosition, ScenarioMapData } from "./map-data";
+import type { DummyPreview } from "@/lib/validation/dummy-preview";
 
 const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const attribution =
@@ -23,6 +24,13 @@ const icons = {
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   }),
+  preview: L.divIcon({
+    className:
+      "rounded-full border-2 border-white bg-violet-700 font-bold text-white shadow-md",
+    html: '<span class="grid h-full place-items-center" aria-hidden="true">P</span>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+  }),
 };
 
 function addMarker(
@@ -31,7 +39,7 @@ function addMarker(
   kind: keyof typeof icons,
   label: string,
   lines: (string | null)[],
-  editHref: string,
+  editHref?: string,
 ) {
   const popup = document.createElement("div");
   const heading = document.createElement("strong");
@@ -43,12 +51,16 @@ function addMarker(
     detail.textContent = line;
     popup.append(detail);
   }
-  const edit = document.createElement("a");
-  edit.href = editHref;
-  edit.className =
-    "mt-2 inline-flex min-h-11 items-center font-semibold underline";
-  edit.textContent = kind === "depot" ? "Edit Depot" : "Edit Order";
-  popup.append(edit);
+  const focusTarget = editHref ? document.createElement("a") : popup;
+  if (editHref && focusTarget instanceof HTMLAnchorElement) {
+    focusTarget.href = editHref;
+    focusTarget.className =
+      "mt-2 inline-flex min-h-11 items-center font-semibold underline";
+    focusTarget.textContent = kind === "depot" ? "Edit Depot" : "Edit Order";
+    popup.append(focusTarget);
+  } else {
+    popup.tabIndex = -1;
+  }
   const marker = L.marker(position, {
     icon: icons[kind],
     title: label,
@@ -62,10 +74,10 @@ function addMarker(
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       marker.openPopup();
-      edit.focus();
+      focusTarget.focus();
     });
-    edit.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
+    focusTarget.addEventListener("keydown", (event) => {
+      if (!(event instanceof KeyboardEvent) || event.key !== "Escape") return;
       event.stopPropagation();
       marker.closePopup();
       icon.focus();
@@ -74,44 +86,71 @@ function addMarker(
   marker.bindPopup(popup).addTo(map);
 }
 
-export default function LeafletMap({ data }: { data: ScenarioMapData }) {
+type MapProps =
+  | { data: ScenarioMapData; preview?: never }
+  | { preview: DummyPreview; data?: never };
+
+function drawPreview(map: L.Map, preview: DummyPreview): MapPosition[] {
+  const depot: MapPosition = [preview.depot.latitude, preview.depot.longitude];
+  addMarker(map, depot, "depot", `Depot ${preview.depot.name}`, [
+    depot.join(", "),
+  ]);
+  const points = preview.points.map(({ latitude, longitude }, index) => {
+    // Plot the nearest wrapped longitude so fitBounds stays local at ±180°.
+    const offset = ((longitude - depot[1] + 540) % 360) - 180;
+    const point: MapPosition = [latitude, depot[1] + offset];
+    addMarker(map, point, "preview", `Titik preview ${index + 1}`, [
+      `${latitude}, ${longitude}`,
+    ]);
+    return point;
+  });
+  return [depot, ...points];
+}
+
+function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
+  const positions: MapPosition[] = [];
+  const { depot, orders, scenarioId } = data;
+  const editQuery = `?scenarioId=${scenarioId}&edit=`;
+  if (depot.position) {
+    positions.push(depot.position);
+    addMarker(
+      map,
+      depot.position,
+      "depot",
+      `Depot ${depot.name}`,
+      [depot.address, depot.position.join(", ")],
+      `/depots${editQuery}${depot.id}`,
+    );
+  }
+  for (const order of orders) {
+    if (!order.position) continue;
+    positions.push(order.position);
+    addMarker(
+      map,
+      order.position,
+      "order",
+      `Order ${order.orderCode}`,
+      [order.customerName, order.address, order.position.join(", ")],
+      `/orders${editQuery}${order.id}`,
+    );
+  }
+  return positions;
+}
+
+export default function LeafletMap({ data, preview }: MapProps) {
   const container = useRef<HTMLDivElement>(null);
   const [tileFailed, setTileFailed] = useState(false);
 
   useEffect(() => {
     const element = container.current;
     if (!element) return;
-    const positions: MapPosition[] = [];
     const map = L.map(element, {
       maxZoom: 19,
       scrollWheelZoom: false,
     });
-    const { depot, orders, scenarioId } = data;
-    const editQuery = `?scenarioId=${scenarioId}&edit=`;
-
-    if (depot.position) {
-      positions.push(depot.position);
-      addMarker(
-        map,
-        depot.position,
-        "depot",
-        `Depot ${depot.name}`,
-        [depot.address, depot.position.join(", ")],
-        `/depots${editQuery}${depot.id}`,
-      );
-    }
-    for (const order of orders) {
-      if (!order.position) continue;
-      positions.push(order.position);
-      addMarker(
-        map,
-        order.position,
-        "order",
-        `Order ${order.orderCode}`,
-        [order.customerName, order.address, order.position.join(", ")],
-        `/orders${editQuery}${order.id}`,
-      );
-    }
+    const positions = preview
+      ? drawPreview(map, preview)
+      : drawScenario(map, data);
 
     if (positions.length === 1) map.setView(positions[0], 14);
     else if (positions.length > 1)
@@ -136,14 +175,18 @@ export default function LeafletMap({ data }: { data: ScenarioMapData }) {
       tiles.off("tileerror", onTileError);
       map.remove();
     };
-  }, [data]);
+  }, [data, preview]);
 
   return (
     <div className="space-y-2">
       <div
         ref={container}
         role="region"
-        aria-label="Peta Depot dan Order"
+        aria-label={
+          preview
+            ? "Peta preview Depot dan titik dummy"
+            : "Peta Depot dan Order"
+        }
         className="relative isolate z-0 h-[26rem] overflow-hidden rounded-xl border border-gray-200 sm:h-[30rem] xl:h-[34rem] dark:border-gray-800"
       />
       {tileFailed && (
@@ -151,7 +194,10 @@ export default function LeafletMap({ data }: { data: ScenarioMapData }) {
           role="status"
           className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
         >
-          Sebagian tile peta gagal dimuat. Daftar Order tetap tersedia.
+          Sebagian tile peta gagal dimuat.{" "}
+          {preview
+            ? "Daftar koordinat tetap tersedia."
+            : "Daftar Order tetap tersedia."}
         </p>
       )}
     </div>
