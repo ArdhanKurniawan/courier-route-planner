@@ -13,7 +13,7 @@ const { requireAdmin, createConnection } = vi.hoisted(() => ({
 vi.mock("@/lib/security/admin", () => ({ requireAdmin }));
 vi.mock("mysql2", () => ({ createConnection }));
 
-const branch = "feature/gate-2-phase-2b-save-regenerate";
+const branch = "testing";
 const origin = "https://preview.example.test";
 const host = "testing-db.example.test";
 const database = "courier_route_planner_testing";
@@ -25,7 +25,7 @@ const sha = "a".repeat(40);
 const projectId = "prj_fixture";
 const deploymentId = "dpl_fixtureApproved";
 const permitKey = Buffer.alloc(32, 7).toString("base64url");
-const approval = { sha, projectId, host, port: 4000, username, principal };
+const approval = { projectId, host, port: 4000, username, principal };
 const env = {
   VERCEL: "1",
   VERCEL_ENV: "preview",
@@ -134,8 +134,11 @@ describe("temporary Testing TCP/TLS diagnostic", () => {
     ["VERCEL_ENV", "production"],
     ["VERCEL_TARGET_ENV", "production"],
     ["APP_ENV", "production"],
-    ["VERCEL_GIT_COMMIT_REF", "testing"],
-    ["VERCEL_GIT_COMMIT_SHA", "b".repeat(40)],
+    ["VERCEL_GIT_COMMIT_REF", undefined],
+    ["VERCEL_GIT_COMMIT_REF", "feature/gate-2-phase-2b-save-regenerate"],
+    ["VERCEL_GIT_COMMIT_REF", "main"],
+    ["VERCEL_GIT_COMMIT_SHA", undefined],
+    ["VERCEL_GIT_COMMIT_SHA", "invalid"],
     ["VERCEL_PROJECT_ID", "prj_other"],
     ["VERCEL_DEPLOYMENT_ID", undefined],
     ["TIDB_DIAGNOSTIC_APPROVAL", "invalid"],
@@ -175,6 +178,12 @@ describe("temporary Testing TCP/TLS diagnostic", () => {
 
   it("rejects the approved permit on a different deployment of the same commit", async () => {
     vi.stubEnv("VERCEL_DEPLOYMENT_ID", "dpl_fixtureOther");
+    expect((await request()).status).toBe(404);
+    expect(createConnection).not.toHaveBeenCalled();
+  });
+
+  it("rejects a permit signed for a different commit", async () => {
+    vi.stubEnv("VERCEL_GIT_COMMIT_SHA", "b".repeat(40));
     expect((await request()).status).toBe(404);
     expect(createConnection).not.toHaveBeenCalled();
   });

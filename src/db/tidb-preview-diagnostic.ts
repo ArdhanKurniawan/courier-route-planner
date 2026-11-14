@@ -9,12 +9,11 @@ import { z } from "zod";
 import { parseDatabaseConfig } from "@/config/db-env";
 import { HttpError } from "@/lib/http/request-security";
 
-const branch = "feature/gate-2-phase-2b-save-regenerate";
 const database = "courier_route_planner_testing";
 const tokenPattern = /^[A-Za-z0-9_-]{43}$/u;
+const commitSha = /^[0-9a-f]{40}$/u;
 const databaseTracing = ["mysql2:connect", "mysql2:query"].map(tracingChannel);
 const approvalSchema = z.strictObject({
-  sha: z.string().regex(/^[0-9a-f]{40}$/u),
   projectId: z.string().regex(/^prj_[A-Za-z0-9]+$/u),
   host: z
     .string()
@@ -51,7 +50,9 @@ export function readDiagnosticApproval(
     env.VERCEL_ENV !== "preview" ||
     env.VERCEL_TARGET_ENV !== "preview" ||
     env.APP_ENV !== "testing" ||
-    env.VERCEL_GIT_COMMIT_REF !== branch ||
+    env.VERCEL_GIT_COMMIT_REF !== "testing" ||
+    !env.VERCEL_GIT_COMMIT_SHA ||
+    !commitSha.test(env.VERCEL_GIT_COMMIT_SHA) ||
     !env.VERCEL_DEPLOYMENT_ID ||
     !/^dpl_[A-Za-z0-9]+$/u.test(env.VERCEL_DEPLOYMENT_ID) ||
     !env.TIDB_DIAGNOSTIC_PERMIT_KEY ||
@@ -66,7 +67,6 @@ export function readDiagnosticApproval(
     );
     if (
       !approval.success ||
-      approval.data.sha !== env.VERCEL_GIT_COMMIT_SHA ||
       approval.data.projectId !== env.VERCEL_PROJECT_ID ||
       isIP(approval.data.host) !== 0
     )
@@ -84,7 +84,7 @@ export function readDiagnosticApproval(
         JSON.stringify([
           "tidb-testing-diagnostic",
           approval.data.projectId,
-          approval.data.sha,
+          env.VERCEL_GIT_COMMIT_SHA,
           env.VERCEL_DEPLOYMENT_ID,
           expires,
           approval.data.host,
