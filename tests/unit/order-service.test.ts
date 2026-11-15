@@ -7,6 +7,7 @@ import {
 } from "../fixtures/order";
 import { createOrderService } from "@/application/orders/order-service";
 import type { OrderRepository } from "@/db/repositories/order-repository";
+import { OrderError } from "@/lib/validation/order";
 const sid = row.scenarioId,
   id = row.id;
 function fixture() {
@@ -22,6 +23,28 @@ function fixture() {
   return { repo, service: createOrderService(repo, () => orderDate) };
 }
 describe("Order application behavior", () => {
+  it("routes only dummy edit and delete through the Scenario operation guard", async () => {
+    const { repo } = fixture();
+    const pending = new OrderError("DUMMY_OPERATION_PENDING");
+    const guarded = {
+      update: vi.fn<OrderRepository["update"]>().mockRejectedValue(pending),
+      remove: vi.fn<OrderRepository["remove"]>().mockRejectedValue(pending),
+    };
+    const service = createOrderService(repo, () => orderDate, guarded);
+    await expect(service.updateOrder(sid, id, orderInput)).resolves.toEqual(
+      dto,
+    );
+    await expect(service.deleteOrder(sid, id)).resolves.toBeUndefined();
+    expect(guarded.update).not.toHaveBeenCalled();
+    expect(guarded.remove).not.toHaveBeenCalled();
+    repo.findById.mockResolvedValue({ ...row, source: "dummy" });
+    await expect(service.updateOrder(sid, id, orderInput)).rejects.toBe(
+      pending,
+    );
+    await expect(service.deleteOrder(sid, id)).rejects.toBe(pending);
+    expect(repo.update).toHaveBeenCalledOnce();
+    expect(repo.remove).toHaveBeenCalledOnce();
+  });
   it("lists an actual count separately from the configured Scenario count", async () => {
     const f = fixture();
     f.repo.count.mockResolvedValue(BigInt("77"));
@@ -89,7 +112,10 @@ describe("Order application behavior", () => {
   });
   it("does not leak malformed or foreign repository rows", async () => {
     const f = fixture();
-    f.repo.findById.mockResolvedValue({ ...row, scenarioId: sid + BigInt("1") });
+    f.repo.findById.mockResolvedValue({
+      ...row,
+      scenarioId: sid + BigInt("1"),
+    });
     await expect(f.service.getOrder(sid, id)).rejects.toMatchObject({
       code: "UNAVAILABLE",
     });

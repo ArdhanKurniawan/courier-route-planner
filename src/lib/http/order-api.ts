@@ -1,6 +1,7 @@
 import { ZodError } from "zod";
 import { assertDepotEnvironment } from "@/config/depot-env";
 import { createOrderRepository } from "@/db/repositories/order-repository";
+import { guardedDummyOrderMutations } from "@/db/guarded-dummy-order-mutations";
 import { createOrderService } from "@/application/orders/order-service";
 import { OrderError, parseOrderQuery } from "@/lib/validation/order";
 import { HttpError, errorResponse } from "./request-security";
@@ -9,7 +10,11 @@ export type OrderContext = {
 };
 export function orderService() {
   assertDepotEnvironment();
-  return createOrderService(createOrderRepository());
+  const dummyMutations =
+    process.env.APP_ENV === "production"
+      ? undefined
+      : guardedDummyOrderMutations();
+  return createOrderService(createOrderRepository(), undefined, dummyMutations);
 }
 export function orderQuery(request: Request) {
   try {
@@ -47,7 +52,8 @@ export async function runOrderRequest(operation: () => Promise<Response>) {
         new HttpError(
           error.code === "NOT_FOUND"
             ? 404
-            : error.code === "ORDER_CODE_CONFLICT"
+            : error.code === "ORDER_CODE_CONFLICT" ||
+                error.code === "DUMMY_OPERATION_PENDING"
               ? 409
               : 503,
           error.code,

@@ -18,6 +18,7 @@ it("imports the approved Depot/Scenario schema without DB configuration or netwo
     const schema = await import("@/db/schema");
     expect(Object.keys(schema).sort()).toEqual([
       "depots",
+      "dummyOrderOperations",
       "orders",
       "scenarios",
     ]);
