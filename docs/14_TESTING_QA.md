@@ -414,3 +414,22 @@ Verifikasi read-only pascamigrasi mengonfirmasi tepat tiga entri ledger dengan h
 Tahap berikutnya adalah review PR `testing` → `main`, Quality Gate PR, dan smoke test setelah deployment.
 
 Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Redirect ke home (`/`) dijadwalkan setelah release ke `main` dan sebelum Phase 2B. [Roadmap](18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
+
+## 23. Live Acceptance Phase 2B di Testing (2026-11-15)
+
+Owner menerima Live Acceptance Save & Regenerate pada Vercel Testing Preview dengan baseline `287ec06` ([PR #48](https://github.com/ArdhanKurniawan/courier-route-planner/pull/48)). Quality Gate baseline lulus. Deployment Preview lama diisolasi sebelum migrasi. Runner Testing menerapkan `0003_dummy_order_operations` sekali dengan exit code `0`. Pemeriksaan read-only mengonfirmasi entri 0003 tunggal dengan hash dan timestamp yang cocok, ledger 0000–0002 utuh, serta kolom, primary key, unique constraints, dan foreign key sesuai migrasi.
+
+| Status | Cakupan bukti |
+|---|---|
+| PASS | Owner memverifikasi sesi admin dan memperoleh HTTP 200 dengan `data: null` dari GET status operasi untuk ID Scenario probe. Jalur ini menjalankan pembacaan ledger melalui koneksi mysql2 dengan verifikasi TLS di runtime Vercel Testing. |
+| PASS | Owner memilih Scenario fixture dan Depot terkait. Preview `random-v1` dengan seed 42, tiga pelanggan, dan radius 50–500 m menghasilkan tiga titik. |
+| PASS | Pada fixture awal, Save menyimpan tiga Order dummy yang terlihat di Orders. Regenerate mengganti ketiga Order dummy, lalu Map menampilkan tiga marker dari batch pengganti. |
+| PASS | Pada fixture terpisah, Regenerate mengganti tiga Order dummy dengan empat. Owner melihat Order manual dengan kode, koordinat, dan atribut tampilan yang sama sebelum dan sesudah penggantian. |
+| PASS | Pembacaan TiDB mengonfirmasi batch terkait hanya tercatat pada Scenario fixture. SC1 (`90001`) tetap terhubung ke Depot awal dan memiliki nol Order pada pemeriksaan pascapengujian. |
+| PASS | Dua operasi pada sesi pengujian Order manual berstatus `confirmed`. Ledger mencatat Save 3 dan Regenerate 4 dengan 3 penggantian, tanpa operasi aktif. Catatan terminal dipertahankan sesuai ADR untuk mencegah replay. |
+| PASS | Verifikasi read-only setelah cleanup menemukan nol Order, nol Scenario, dan nol Depot fixture yang tersisa. |
+| TIDAK DIUJI LIVE | Fault injection `COMMIT_UNKNOWN` belum dijalankan di Vercel Testing karena mekanisme terisolasi tidak tersedia. Penanganan kehilangan ACK COMMIT tercakup dalam [tes offline writer](../tests/unit/dummy-order-writer.test.ts). |
+
+Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy masih menjadi item checklist Gate 3 dan belum diobservasi dalam UAT ini. [Checklist Gate 3](23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+
+Acceptance ini berlaku untuk Testing. Writer transaksi saat ini menolak koneksi dari Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, kesiapan skema Production, dan evaluasi keterbatasan recovery live.

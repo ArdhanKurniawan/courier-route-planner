@@ -95,7 +95,7 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 3 — Dataset + map
 
-Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Phase 2B Dummy Generator masih pending. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Live Acceptance Phase 2B untuk Preview, Save & Regenerate, Orders, Map, dan cleanup fixture sudah lulus di Testing. Keterbatasan fault injection `COMMIT_UNKNOWN` live tercatat dalam bukti Phase 2B. [Bukti UAT Phase 2A](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08) · [Bukti Live Acceptance Phase 2B](14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 - [ ] markers correct;
 - [ ] OSM attribution;

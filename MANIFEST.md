@@ -1,38 +1,38 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-11-14 for the Phase 2B Part C architecture addendum. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, regenerated 2026-11-15 for Phase 2B Live Acceptance and diagnostic cleanup. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 416260 | `372e97eb914e4e6ef32f15c3b4b08cf7b32c1457b0afeb9f8ef04501b5cda4e3` |
+| `MASTER_GUIDE.md` | 419303 | `d9d4bb70919796c7b218aa47e1b5ee6c1d5958034b794b4acd7bcfa4b3e0899c` |
 | `README.md` | 29263 | `1548fcb962729cf5ece8ce59e7ed897254d425997a55fb2729679c8f52ef0cdb` |
 | `THIRD_PARTY_NOTICES.md` | 2518 | `a9722a66fbf7e99a3990e6d419f4a4a80d4a55956af256a910bb698a9f284c7d` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
 | `docs/01_PROJECT_CHARTER.md` | 3825 | `5488f0e6cadce72debf77084cfb1d0825deaa3c4520e9649f313aeac8da0caef` |
 | `docs/02_PRODUCT_REQUIREMENTS.md` | 6676 | `48364cbfeba3fa193ffc4492550095f398f9cf66dd795afe76f3c7acb417ef21` |
 | `docs/03_SYSTEM_ARCHITECTURE.md` | 5061 | `ea24394c452b721b42f011f8a677456b3c0302179fa0e69706639eedb3310e17` |
-| `docs/04_TECH_STACK_ADRS.md` | 19605 | `a6501af7df0ca06af7763f0cab06cb65acec3597d8ae0d46fbd5b86ff0c88a18` |
+| `docs/04_TECH_STACK_ADRS.md` | 19172 | `5372e38c79b6167e88a0776d7d1e36ed3e15ac464160c7ad716632a81248d740` |
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
-| `docs/07_TIDB_GUIDE.md` | 17524 | `b3e3568a248a20a64ed22ac679841ca0b928710a8d61c91919f28e4a624d4e56` |
+| `docs/07_TIDB_GUIDE.md` | 15467 | `42871120db1234f93f4db857d0e19000b9f3c4837611e880250aebd465657d91` |
 | `docs/08_DATABASE_DESIGN.md` | 15815 | `c3816695aa5f2445ee8307028d8586ba508d7b6092aaa3a97480ce4fc4673019` |
 | `docs/09_REPO_STRUCTURE.md` | 11136 | `fcbd5d7335e095cc98d7ed4e4fe02b16b226bae43cd617120f742606e4e58886` |
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 11353 | `32adad89774bf0926d04c05ca32a675e209e581a4362bc3dc0e661b38acbdb46` |
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 9763 | `900243ed1775a85fecb76b326621bde33d98210964ad04640f7f7b8e8294950b` |
 | `docs/13_SECURITY.md` | 5349 | `2d515cbd746045942a113f1d8251fb2c6756ce90c99019865a9e196586990aea` |
-| `docs/14_TESTING_QA.md` | 56730 | `6fe3de53878f21c2a35401c5652013586da1f4dea5be99d4ed6cde098d2b95bf` |
+| `docs/14_TESTING_QA.md` | 59514 | `8a8d056d5b5016e80908c222fe5b4a31512d133459e6b16ccc798c54f7d894f8` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25966 | `b77e1c42a26a2c02c02523bec7559558f07931991ecfe9a3f94fff31d9764b8b` |
-| `docs/18_ROADMAP_BACKLOG.md` | 11026 | `4f2b4b40ccb7626c45932b5a9aae81937933c38039a35128c5b06064cdc755ff` |
+| `docs/18_ROADMAP_BACKLOG.md` | 11371 | `99ae4f66ba4e0fb84aa1f3551534b65f1b18f5617ce9ea4a302b3dd94de28b24` |
 | `docs/19_DEFINITION_OF_DONE.md` | 11548 | `08d4426f755142fa2e900637e60bde30c0c25e20502e1b61e32fabf9d2470ccf` |
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 19239 | `b72283baaf9f912c913a1b78d925a4a683dee3ee94da0a0a3182499a30143b63` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 19502 | `7087d7c7f3896b7a603e91cabd0a3fb6b3d6e144e56ddb39849a11e79d99d5dc` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

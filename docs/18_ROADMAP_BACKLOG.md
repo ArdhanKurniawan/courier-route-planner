@@ -85,7 +85,7 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 ## Phase 2 — Map & dataset
 
 - **Phase 2A Map — implemented di Testing** (#36–#37). Leaflet menampilkan marker Depot dan Order menurut Scenario. Aksi Edit membuka CRUD existing, dan reload Map membaca koordinat terbaru. Owner memverifikasi alur inti dengan satu Order sintetis. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
-- **Phase 2B Dummy Generator — pending.** Prioritasnya generator random deterministik dari seed dan QA dataset Scenario. Pola clustered, circular, dan directional bersifat opsional.
+- **Phase 2B Dummy Generator — Live Acceptance lulus di Testing.** Generator random deterministik, Preview, Save & Regenerate, Orders, dan Map sudah tersedia. Migrasi `0003_dummy_order_operations`, proteksi Order manual, verifikasi ledger, dan cleanup fixture lulus. Fault injection `COMMIT_UNKNOWN` belum diuji live. Promosi Production masih menunggu persetujuan terpisah. Pola clustered, circular, dan directional bersifat opsional. [Bukti Live Acceptance](14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 ## Phase 3 — Benchmark Input Foundation
 
