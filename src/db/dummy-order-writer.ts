@@ -3,6 +3,7 @@ import { buildDummyPreview } from "@/application/generator/dummy-dataset";
 import { CoordinateGenerationError } from "@/domain/generator/random-coordinate-generator";
 import {
   openDummyConnection,
+  openDummyRecoveryConnection,
   type DummyConnection,
 } from "@/db/dummy-order-connection";
 import {
@@ -183,7 +184,7 @@ async function insertBatch(
 
 export async function getActiveDummyOperation(
   scenarioId: string,
-  open = openDummyConnection,
+  open = openDummyRecoveryConnection,
 ) {
   try {
     return await withDummyConnection(open, async (connection) => {
@@ -206,7 +207,7 @@ function missingOperation() {
 export async function reconcileDummyOperation(
   scenarioId: string,
   operationId: string,
-  open = openDummyConnection,
+  open = openDummyRecoveryConnection,
 ) {
   try {
     return await withDummyTransaction(async (connection) => {

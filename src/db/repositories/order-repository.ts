@@ -69,6 +69,13 @@ const projection = {
   createdAt: orders.createdAt,
   updatedAt: orders.updatedAt,
 };
+// Apply the source restriction in SQL even when the service has already read the row.
+const manualOrderScope = (scenarioId: bigint, id: bigint) =>
+  and(
+    eq(orders.scenarioId, scenarioId),
+    eq(orders.id, id),
+    eq(orders.source, "manual"),
+  );
 function sqlCode(error: unknown) {
   let value = error;
   for (
@@ -264,7 +271,7 @@ export function createOrderRepository(
                 longitude: input.longitude,
                 updatedAt: input.updatedAt,
               })
-              .where(and(eq(orders.scenarioId, scenarioId), eq(orders.id, id))),
+              .where(manualOrderScope(scenarioId, id)),
           ).rowsAffected,
       );
     },
@@ -274,7 +281,7 @@ export function createOrderRepository(
           affected.parse(
             await db
               .delete(orders)
-              .where(and(eq(orders.scenarioId, scenarioId), eq(orders.id, id))),
+              .where(manualOrderScope(scenarioId, id)),
           ).rowsAffected,
       ),
   };

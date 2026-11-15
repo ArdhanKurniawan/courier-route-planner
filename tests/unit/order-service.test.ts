@@ -80,19 +80,35 @@ describe("Order application behavior", () => {
     },
   );
   it("preserves a dummy source and succeeds for an unchanged update", async () => {
-    const f = fixture();
-    f.repo.findById.mockResolvedValue({
+    const { repo } = fixture();
+    const guarded = { update: vi.fn(async () => 0), remove: vi.fn() };
+    const service = createOrderService(repo, () => orderDate, guarded);
+    repo.findById.mockResolvedValue({
       ...row,
       source: "dummy",
     });
-    expect(await f.service.updateOrder(sid, id, orderInput)).toMatchObject({
+    expect(await service.updateOrder(sid, id, orderInput)).toMatchObject({
       source: "dummy",
     });
-    expect(f.repo.update).toHaveBeenCalledWith(
+    expect(guarded.update).toHaveBeenCalledWith(
       sid,
       id,
       expect.not.objectContaining({ source: expect.anything() }),
     );
+    expect(repo.update).not.toHaveBeenCalled();
+  });
+  it("fails closed when a dummy mutation is requested without a guarded writer", async () => {
+    const { repo, service } = fixture();
+    repo.findById.mockResolvedValue({ ...row, source: "dummy" });
+
+    await expect(service.updateOrder(sid, id, orderInput)).rejects.toMatchObject({
+      code: "UNAVAILABLE",
+    });
+    await expect(service.deleteOrder(sid, id)).rejects.toMatchObject({
+      code: "UNAVAILABLE",
+    });
+    expect(repo.update).not.toHaveBeenCalled();
+    expect(repo.remove).not.toHaveBeenCalled();
   });
   it("returns not found before mutation for cross-Scenario/missing Order", async () => {
     const f = fixture();
@@ -135,6 +151,6 @@ describe("Order application behavior", () => {
       code: "MUTATION_OUTCOME_UNKNOWN",
     });
     expect(f.repo.remove).toHaveBeenCalledTimes(1);
-    expect(f.repo.findById).not.toHaveBeenCalled();
+    expect(f.repo.findById).toHaveBeenCalledExactlyOnceWith(sid, id);
   });
 });

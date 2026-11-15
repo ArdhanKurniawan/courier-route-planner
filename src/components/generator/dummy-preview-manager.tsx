@@ -318,7 +318,9 @@ function PreviewForm({
   );
 }
 
-export default function DummyPreviewManager() {
+export default function DummyPreviewManager({
+  allowPreview = true,
+}: { allowPreview?: boolean }) {
   const [list, setList] = useState<ScenarioList>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [selected, setSelected] = useState("");
@@ -363,13 +365,16 @@ export default function DummyPreviewManager() {
       </div>
     );
   const eligible = list.data.filter(isPreviewEligible);
-  const visible = showRecoveryScenarios ? list.data : eligible;
+  const visible = !allowPreview || showRecoveryScenarios ? list.data : eligible;
   const scenario = visible.find(({ id }) => id === selected);
 
   return (
     <div className="space-y-4">
-      {eligible.length === 0 && <p>Belum ada Scenario draft berpola random.</p>}
-      {eligible.length < list.data.length && (
+      {allowPreview && eligible.length === 0 && (
+        <p>Belum ada Scenario draft berpola random.</p>
+      )}
+      {!allowPreview && visible.length === 0 && <p>Belum ada Scenario.</p>}
+      {allowPreview && eligible.length < list.data.length && (
         <label className="flex min-h-11 items-center gap-2">
           <input
             type="checkbox"
@@ -407,7 +412,7 @@ export default function DummyPreviewManager() {
         </div>
       )}
       {scenario &&
-        (isPreviewEligible(scenario) ? (
+        (allowPreview && isPreviewEligible(scenario) ? (
           <PreviewForm
             key={scenario.id}
             scenario={scenario}

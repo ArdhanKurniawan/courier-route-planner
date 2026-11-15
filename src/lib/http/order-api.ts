@@ -10,11 +10,11 @@ export type OrderContext = {
 };
 export function orderService() {
   assertDepotEnvironment();
-  const dummyMutations =
-    process.env.APP_ENV === "production"
-      ? undefined
-      : guardedDummyOrderMutations();
-  return createOrderService(createOrderRepository(), undefined, dummyMutations);
+  return createOrderService(
+    createOrderRepository(),
+    undefined,
+    guardedDummyOrderMutations(),
+  );
 }
 export function orderQuery(request: Request) {
   try {

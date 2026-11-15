@@ -7,6 +7,7 @@ import type { Connection as PromiseConnection } from "mysql2/promise";
 import { z } from "zod";
 import { assertDepotEnvironment } from "@/config/depot-env";
 import { parseDatabaseConfig } from "@/config/db-env";
+import { getDummyGeneratorMode } from "@/config/dummy-generator-mode";
 import { DatabaseTransportError } from "@/db/client";
 
 type Parameter = string | number | null;
@@ -62,12 +63,6 @@ function databaseOptions(): ConnectionOptions & {
   database: string;
   user: string;
 } {
-  // Production promotion requires separate acceptance of the deployed writer.
-  if (
-    process.env.APP_ENV === "production" ||
-    process.env.VERCEL_ENV === "production"
-  )
-    throw new DatabaseTransportError();
   assertDepotEnvironment();
   const url = new URL(parseDatabaseConfig(process.env.DATABASE_URL).url);
   if (isIP(url.hostname)) throw new DatabaseTransportError();
@@ -106,9 +101,22 @@ async function waitForHandshake(connection: PromiseConnection) {
   }
 }
 
-export async function openDummyConnection(): Promise<DummyConnection> {
+export function openDummyConnection(): Promise<DummyConnection> {
+  return openConnection("mutation");
+}
+
+export function openDummyRecoveryConnection(): Promise<DummyConnection> {
+  return openConnection("recovery");
+}
+
+async function openConnection(
+  purpose: "mutation" | "recovery",
+): Promise<DummyConnection> {
   let abort: (() => void) | undefined;
   try {
+    const mode = getDummyGeneratorMode();
+    if (mode === "disabled" || (mode === "recovery" && purpose === "mutation"))
+      throw new DatabaseTransportError();
     assertPrivateTransport();
     const options = databaseOptions();
     // Keep ownership of the transport even when the Promise handshake rejects.

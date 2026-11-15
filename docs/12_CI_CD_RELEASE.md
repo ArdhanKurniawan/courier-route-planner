@@ -114,6 +114,15 @@ Sebelum testing → main:
 - [ ] production domain known;
 - [ ] rollback path known.
 
+### Checkpoint aktivasi writer Phase 2B
+
+Pada kandidat lokal ini, Phase 2B Production **NOT RELEASED**. `DUMMY_GENERATOR_PRODUCTION_MODE` default `disabled` dan belum diaktifkan di Production. [Kontrak mode writer](04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
+
+- [ ] Verifikasi resource TiDB fisik, TLS hostname, dan principal serta grant APPLICATION dari deployment Production yang akan dipakai. Identitas fisik runtime kandidat masih **NOT VERIFIED**.
+- [ ] Dapatkan persetujuan owner terpisah untuk menerapkan `0003` di Production. Konfirmasi titik pemulihan, lalu verifikasi ledger migrasi, tabel, primary key, unique constraints, dan foreign key restriktif setelah apply.
+- [ ] Identifikasi dan isolasi deployment lama yang masih dapat menerima mutasi ke resource Production yang sama. Verifikasi juga akses melalui URL langsung deployment. Perubahan alias atau mode pada deployment baru saja tidak menutup jalur tulis lama.
+- [ ] Setelah checkpoint di atas lulus, dapatkan persetujuan owner terpisah sebelum deploy dengan `DUMMY_GENERATOR_PRODUCTION_MODE=enabled`. Verifikasi mode deployment aktif dan lakukan smoke sesuai lingkup yang disetujui.
+
 ## 8. Post-deploy smoke
 
 Minimal:
@@ -130,6 +139,8 @@ Minimal:
 ## 9. Rollback principle
 
 Code rollback di Vercel relatif mudah melalui previous deployment/revert commit. Database rollback **tidak otomatis**.
+
+Untuk menghentikan mutasi dummy baru sambil mempertahankan GET status dan PATCH rekonsiliasi, deploy konfigurasi `recovery` yang disetujui dan isolasi deployment lain yang masih bisa menerima mutasi. Revert kode atau redeploy tidak membatalkan `0003`, perubahan Order yang sudah commit, maupun status operation ledger. Pertahankan schema dan ledger untuk rekonsiliasi. Jika hasilnya masih ambigu, biarkan reservasi aktif. Pemulihan database mengikuti prosedur dan persetujuan terpisah.
 
 Karena itu schema change harus backward-compatible sebisa mungkin.
 

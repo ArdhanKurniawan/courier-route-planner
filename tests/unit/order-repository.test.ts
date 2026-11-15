@@ -225,13 +225,17 @@ describe("Order repository over synthetic TiDB HTTP", () => {
       }),
     ).toBe(0);
     expect(f.queries[0]).toMatch(/order_code.*id.*<>/i);
-    expect(f.queries[1]).toMatch(/update.*where.*scenario_id.*and.*id/i);
+    expect(f.queries[1]).toMatch(
+      /update.*where.*scenario_id.*and.*id.*and.*`source` = 'manual'/i,
+    );
     expect(f.queries[1].split(/where/i)[0]).not.toContain("source");
   });
   it("deletes only the scoped Order and preserves affected-row semantics", async () => {
     const f = fixture([{ rowsAffected: 0 }]);
     expect(await f.repo.remove(sid, id)).toBe(0);
-    expect(f.queries[0]).toMatch(/delete.*where.*scenario_id.*and.*id/i);
+    expect(f.queries[0]).toMatch(
+      /delete.*where.*scenario_id.*and.*id.*and.*`source` = 'manual'/i,
+    );
   });
   it.each([1062, "1062", "ER_DUP_ENTRY"])(
     "maps definitive duplicate code %s without message matching",
