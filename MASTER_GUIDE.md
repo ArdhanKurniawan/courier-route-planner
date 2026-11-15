@@ -4,9 +4,11 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-11-14. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Regenerated 2026-11-15. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
 Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA for the Phase 1C and 2A release passed based on the owner's Testing Preview evidence received on 2026-11-13. Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+
+Live Acceptance Phase 2B untuk Dummy Generator, Save & Regenerate, Orders, dan Map lulus di Testing pada 2026-11-15. Migrasi 0003 dan cleanup fixture terverifikasi. Fault injection COMMIT_UNKNOWN belum diuji pada runtime live. Writer saat ini menolak koneksi Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, dan kesiapan skema. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 Production migrations `0001` and `0002` were applied and verified on 2026-11-13. The mysql2 and Drizzle runner from Testing baseline `eba494b` completed in one invocation with exit code `0`. A read-only check verified the ledger and schema. Release review and post-deployment smoke testing are pending. [Production migration evidence](docs/14_TESTING_QA.md#migrasi-production-dan-status-rilis-2026-11-13)
 
@@ -1619,11 +1621,11 @@ Resource sequence yang disetujui: **Dev-first**; Dev telah diprovision manusia d
 
 ### Addendum Phase 2B Part C — koneksi transaksi khusus Dummy Generator
 
-**Status:** Owner menyetujui secara bersyarat desain writer dan preflight read-only. Mutasi TiDB Testing memerlukan otorisasi terpisah. PoC loopback 6/6 membuktikan perilaku klien pada simulasi. TLS, rollback, dan locking pada TiDB Testing masih memerlukan bukti aktual.
+**Status:** Desain writer disetujui owner. PoC loopback 6/6 sebelumnya membuktikan perilaku klien pada simulasi. Konektivitas runtime, Save & Regenerate, dan verifikasi ledger lulus di Testing dengan otorisasi owner. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
-**Keputusan:** Pengecualian ADR-013 berlaku untuk preflight sementara dan writer batch Save & Regenerate melalui facade Promise `mysql2` pada server-side Node.js. Setiap batch membuka satu koneksi khusus dan menjalankan perintah secara berurutan. Implementasi awal memakai koneksi tanpa pool global. CRUD existing tetap memakai Drizzle ORM dan `@tidbcloud/serverless` melalui HTTP. Probe mengimpor `mysql2` 3.24.5 sebagai runtime dependency. Evaluasi lockfile, advisori, lisensi, dan ukuran bundle fungsi yang mengimpor driver ketika menyiapkan writer. Desain ini menggunakan schema dan constraint yang sudah ada.
+**Keputusan:** Pengecualian ADR-013 berlaku untuk writer batch Save & Regenerate dan jalur status operasi melalui facade Promise `mysql2` pada server-side Node.js. Setiap transaksi membuka koneksi khusus dan menjalankan perintah secara berurutan. Implementasi memakai koneksi tanpa pool global. Drizzle ORM dan `@tidbcloud/serverless` menangani pembacaan CRUD dan mutasi Order manual melalui HTTP. `mysql2` tetap menjadi dependency runtime untuk writer.
 
-**Koneksi dan preflight:** Gunakan target environment yang disetujui dan principal APPLICATION dengan privilege minimum. Jalur diagnosis hanya berjalan pada deployment Preview yang dipilih, dengan `APP_ENV=testing`, serta hostname dan port yang cocok dengan resource Testing yang disetujui sebelum koneksi. Verifikasi sertifikat dan hostname dengan `rejectUnauthorized: true` dan `verifyIdentity: true`. Jalankan `SELECT 1`, `DATABASE()`, dan `CURRENT_USER()` pada satu koneksi. Cocokkan database dan principal terhadap referensi Testing yang disetujui secara independen di dalam proses, lalu tutup dan amati penutupan socket. Jalur diagnosis harus terlindungi dan hanya melaporkan verdict atau kategori error yang disanitasi. Preflight ini menguji koneksi tanpa membuka transaksi.
+**Koneksi dan preflight:** Writer memakai target environment yang disetujui dan principal APPLICATION dengan privilege minimum. Verifikasi sertifikat dan hostname menggunakan `rejectUnauthorized: true` dan `verifyIdentity: true`. GET status operasi yang terautentikasi membuktikan koneksi dari runtime Preview Testing melalui pembacaan ledger. Part D menghapus jalur diagnosis sementara setelah penerimaan live di Testing.
 
 **Kontrak writer**
 
@@ -1632,7 +1634,15 @@ Resource sequence yang disetujui: **Dev-first**; Dev telah diprovision manusia d
 3. Hapus hanya baris dummy yang terverifikasi, dengan predikat Scenario, `source = 'dummy'`, dan ID yang ditinjau. Validasi jumlah baris terpengaruh. Insert pengganti sebagai `dummy` dengan kode deterministik dan verifikasi jumlah insert. Gunakan parameter SQL atau ORM dan constraint unik `(scenario_id, order_code)` sebagai pengaman terakhir untuk benturan kode, termasuk dengan Order manual yang dibuat bersamaan. Seluruh perubahan berhasil bersama setelah `COMMIT`. Kegagalan statement atau validasi hasil sebelum commit memicu rollback pada sesi yang sama jika transport masih dapat digunakan. Batasi waktu koneksi, lock, query, commit, rollback, dan penutupan. Putuskan socket yang dimiliki jika perintah masih tertunda saat timeout atau transport tidak dapat digunakan. Catat hanya kategori aman dan bedakan rollback terkonfirmasi dari rollback yang belum bisa dikonfirmasi.
 4. Baca kembali ID Order hasil insert dengan current read sebelum `COMMIT`. Validasi set lengkap dengan ID BIGINT presisi penuh, tanpa mengasumsikan ID berurutan. Konfirmasi `COMMIT` tetap berlaku jika penutupan socket kemudian gagal. Jika hasil `COMMIT` tidak terkonfirmasi, pertahankan error utama, tutup koneksi, dan hentikan percobaan. Baca dataset lewat koneksi terpisah dalam satu snapshot konsisten. Kecocokan set ID khusus percobaan dan isi Order yang diharapkan memberi bukti positif bahwa pengganti tersimpan. Jika snapshot masih menunjukkan dataset lama, sudah berubah lagi, atau hasil baca tidak meyakinkan, status tetap belum diketahui. Percobaan baru memerlukan rekonsiliasi, preview baru, dan konfirmasi eksplisit. Tidak ada retry mutasi otomatis.
 
-**Bukti sebelum Save & Regenerate:** Verifikasi konektivitas read-only dari runtime Preview. Dengan approval terpisah dan fixture sintetis milik run, gunakan koneksi observasi independen untuk membuktikan hasil utuh setelah commit, rollback setelah insert ditolak, penanganan koneksi putus maupun respons commit hilang, konflik antarbatches dan edit dummy, serta preservasi Order manual dan Scenario lain. Verifikasi cleanup berdasarkan ID fixture dan readback.
+**Bukti Testing:** Konektivitas Preview, Save & Regenerate, preservasi Order manual, isolasi terhadap Scenario pembanding, dan cleanup fixture berdasarkan ID diterima owner. Pengujian transaksi terisolasi terdahulu mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Fault injection `COMMIT_UNKNOWN` belum dijalankan pada runtime live karena mekanisme terisolasi tidak tersedia. Evaluasi keterbatasan ini sebelum promosi Production. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
+
+### Amendemen Part C — Status Operasi Persisten
+
+Owner menyetujui migrasi additive `0003_dummy_order_operations` untuk disiapkan secara offline. UUID operasi adalah primary key. `active_scenario_id` memakai FK restriktif dan unique constraint nullable untuk memblokir satu Scenario selama hasil belum diverifikasi. Riwayat terminal menyimpan UUID dan versi per Scenario untuk mencegah replay. Riwayat memakai ID Scenario asli tanpa menahan penghapusan Scenario setelah verifikasi.
+
+Reservasi dan hash dataset awal di-commit sebelum mutasi Order. Transaksi batch memakai lock Scenario yang sama, memeriksa ulang reservasi dan revision, lalu menyimpan hash dataset pengganti dan jumlah Order bersama DELETE dan INSERT. Hash mencakup urutan, ID presisi penuh, dan seluruh isi Order dummy. ACK di server tetap meninggalkan reservasi aktif agar kehilangan respons HTTP dapat direkonsiliasi. Verifikasi eksplisit memakai koneksi terpisah dan current read di bawah lock yang sama, lalu melepas reservasi hanya jika bukti commit atau rollback cocok. Timeout dan restart tidak membuka blokir. Versi persistennya juga mengusangkan preview lama setelah rollback dengan dataset yang identik.
+
+Edit dan hapus Order dummy di Development/Testing memakai writer TCP yang memegang lock Scenario dan memeriksa ledger sebelum mutasi. Order manual dan pembacaan CRUD tetap memakai Drizzle HTTP. Jalur TCP menolak `NO_BACKSLASH_ESCAPES` sebelum statement berparameter dikirim. Migrasi 0003 dan TCP/TLS Preview lulus di Testing setelah jalur tulis dari deployment lama diisolasi. Fault injection `COMMIT_UNKNOWN` tetap menjadi keterbatasan bukti live.
 
 ---
 
@@ -1948,15 +1958,11 @@ Credential disimpan pada `DATABASE_URL` server-side.
 
 Stage 1 lokal menyediakan pure Zod parser, lazy `src/db/client.ts` dengan `server-only`, schema `depots`, dan readiness. Import/typegen/build tidak membaca URL atau menjalankan query. Setiap HTTP operation mendapat fresh abort signal 5000 ms, termasuk pembacaan body; no retry, logger/debug nonaktif.
 
-Stable Drizzle Kit CLI memakai `mysql2` sesuai [ADR-013](docs/04_TECH_STACK_ADRS.md#adr-013--mysql2-as-drizzle-kit-migration-cli-dev-only-adapter). Runtime CRUD memakai adapter HTTP. [Addendum Phase 2B Part C](docs/04_TECH_STACK_ADRS.md#addendum-phase-2b-part-c--koneksi-transaksi-khusus-dummy-generator) menambahkan pengecualian untuk preflight Preview sementara dan writer batch Dummy Generator.
+Stable Drizzle Kit CLI memakai `mysql2` sesuai [ADR-013](docs/04_TECH_STACK_ADRS.md#adr-013--mysql2-as-drizzle-kit-migration-cli-dev-only-adapter). Pembacaan CRUD memakai adapter HTTP. [Addendum Phase 2B Part C](docs/04_TECH_STACK_ADRS.md#addendum-phase-2b-part-c--koneksi-transaksi-khusus-dummy-generator) mendokumentasikan pengecualian untuk writer batch Dummy Generator dan jalur status operasinya.
 
 ### Preflight TCP pada Testing Preview Phase 2B Part C
 
-1. Gunakan alur feature branch → Draft PR → `testing`. Setelah owner me-review dan merge PR, jalankan preflight pada alias Testing Preview yang sudah dilindungi Vercel Authentication. Pakai `APP_ENV=testing`, `DATABASE_URL`, `AUTH_ORIGIN`, dan konfigurasi login existing. Vercel harus mengekspos project ID, deployment ID, branch, dan commit SHA ke runtime.
-2. Siapkan hanya dua binding sementara khusus Preview branch `testing` sebelum deployment yang akan diuji. Isi `TIDB_DIAGNOSTIC_APPROVAL` dengan JSON berisi `projectId`, `host`, `port` (angka), `username`, dan `principal` (`CURRENT_USER()` lengkap). Ambil identitas Testing APPLICATION dari bukti owner yang independen dari `DATABASE_URL` yang diuji. Simpan `TIDB_DIAGNOSTIC_PERMIT_KEY` sebagai 32 byte acak dalam base64url. Simpan semua nilai secara privat. Binding diterapkan pada deployment baru. Jika binding baru dibuat setelah deployment merge, redeploy hanya Testing Preview dari commit yang sama.
-3. Setelah Preview `READY`, verifikasi alias Testing mengarah ke project, branch, commit SHA, dan deployment ID yang dipilih. Buat permit secara lokal dengan HMAC-SHA256, menggunakan key yang didekode base64url. Pesannya adalah hasil `JSON.stringify(["tidb-testing-diagnostic", projectId, sha, deploymentId, expires, host, port, username, principal])`. SHA dan deployment ID diambil dari deployment aktual. `expires` memakai Unix seconds dengan masa berlaku paling lama 900 detik. Permit berbentuk `<expires>.<signature base64url>`. Login sebagai admin pada alias Testing dan jalankan satu `POST /api/diagnostics/tidb-testing` dari origin yang sama dengan header `x-tidb-diagnostic-permit`. Permit disimpan privat dan dapat dipakai kembali hingga kedaluwarsa pada deployment serta binding yang ditandatangani.
-4. Catat hanya status HTTP dan kategori hasil. HTTP 200 dengan `data.status = "ok"` menunjukkan target dan principal cocok, TLS dan SELECT lulus, serta socket ditutup. Untuk 503 atau hasil ambigu, berhenti tanpa retry. Jika preflight PASS, siapkan pengujian atomicity dengan fixture sintetis terisolasi, rencana cleanup, dan approval terpisah.
-5. Setelah probe, kedaluwarsakan permit dan hapus dua binding sementara. Buka PR cleanup ke `testing` untuk menghapus route, modul, dan tes khusus probe. Kembalikan mysql2 ke dev dependency jika belum ada writer runtime yang direview. Sebelum rilis ke `main`, verifikasi build kandidat tanpa route, HTTP 404 pada Testing Preview pengganti, dan nonaktifkan atau hapus deployment yang pernah dapat menjalankan probe. Pertahankan working tree dan PoC yang relevan.
+Owner memverifikasi koneksi pada baseline Testing `287ec06` setelah migrasi 0003. GET status operasi dummy yang terautentikasi mengembalikan HTTP 200 dengan `data: null` untuk ID Scenario probe. Jalur ini membaca ledger melalui koneksi mysql2 dengan verifikasi TLS. Part D menghapus endpoint diagnostik sementara, modulnya, dan tes khususnya. Writer batch dan jalur status operasi tetap memakai mysql2 sebagai dependency runtime. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 ## 3. Environment design
 
@@ -3556,6 +3562,25 @@ Tahap berikutnya adalah review PR `testing` → `main`, Quality Gate PR, dan smo
 
 Temuan UX owner: `/login` masih dapat menampilkan form pada sesi admin aktif. Redirect ke home (`/`) dijadwalkan setelah release ke `main` dan sebelum Phase 2B. [Roadmap](docs/18_ROADMAP_BACKLOG.md#phase-1--admin-baseline)
 
+## 23. Live Acceptance Phase 2B di Testing (2026-11-15)
+
+Owner menerima Live Acceptance Save & Regenerate pada Vercel Testing Preview dengan baseline `287ec06` ([PR #48](https://github.com/ArdhanKurniawan/courier-route-planner/pull/48)). Quality Gate baseline lulus. Deployment Preview lama diisolasi sebelum migrasi. Runner Testing menerapkan `0003_dummy_order_operations` sekali dengan exit code `0`. Pemeriksaan read-only mengonfirmasi entri 0003 tunggal dengan hash dan timestamp yang cocok, ledger 0000–0002 utuh, serta kolom, primary key, unique constraints, dan foreign key sesuai migrasi.
+
+| Status | Cakupan bukti |
+|---|---|
+| PASS | Owner memverifikasi sesi admin dan memperoleh HTTP 200 dengan `data: null` dari GET status operasi untuk ID Scenario probe. Jalur ini menjalankan pembacaan ledger melalui koneksi mysql2 dengan verifikasi TLS di runtime Vercel Testing. |
+| PASS | Owner memilih Scenario fixture dan Depot terkait. Preview `random-v1` dengan seed 42, tiga pelanggan, dan radius 50–500 m menghasilkan tiga titik. |
+| PASS | Pada fixture awal, Save menyimpan tiga Order dummy yang terlihat di Orders. Regenerate mengganti ketiga Order dummy, lalu Map menampilkan tiga marker dari batch pengganti. |
+| PASS | Pada fixture terpisah, Regenerate mengganti tiga Order dummy dengan empat. Owner melihat Order manual dengan kode, koordinat, dan atribut tampilan yang sama sebelum dan sesudah penggantian. |
+| PASS | Pembacaan TiDB mengonfirmasi batch terkait hanya tercatat pada Scenario fixture. SC1 (`90001`) tetap terhubung ke Depot awal dan memiliki nol Order pada pemeriksaan pascapengujian. |
+| PASS | Dua operasi pada sesi pengujian Order manual berstatus `confirmed`. Ledger mencatat Save 3 dan Regenerate 4 dengan 3 penggantian, tanpa operasi aktif. Catatan terminal dipertahankan sesuai ADR untuk mencegah replay. |
+| PASS | Verifikasi read-only setelah cleanup menemukan nol Order, nol Scenario, dan nol Depot fixture yang tersisa. |
+| TIDAK DIUJI LIVE | Fault injection `COMMIT_UNKNOWN` belum dijalankan di Vercel Testing karena mekanisme terisolasi tidak tersedia. Penanganan kehilangan ACK COMMIT tercakup dalam [tes offline writer](tests/unit/dummy-order-writer.test.ts). |
+
+Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy masih menjadi item checklist Gate 3 dan belum diobservasi dalam UAT ini. [Checklist Gate 3](docs/23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+
+Acceptance ini berlaku untuk Testing. Writer transaksi saat ini menolak koneksi dari Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, kesiapan skema Production, dan evaluasi keterbatasan recovery live.
+
 ---
 
 # SOURCE: docs/15_RESEARCH_BENCHMARK_PROTOCOL.md
@@ -4343,7 +4368,7 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 ## Phase 2 — Map & dataset
 
 - **Phase 2A Map — implemented di Testing** (#36–#37). Leaflet menampilkan marker Depot dan Order menurut Scenario. Aksi Edit membuka CRUD existing, dan reload Map membaca koordinat terbaru. Owner memverifikasi alur inti dengan satu Order sintetis. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
-- **Phase 2B Dummy Generator — pending.** Prioritasnya generator random deterministik dari seed dan QA dataset Scenario. Pola clustered, circular, dan directional bersifat opsional.
+- **Phase 2B Dummy Generator — Live Acceptance lulus di Testing.** Generator random deterministik, Preview, Save & Regenerate, Orders, dan Map sudah tersedia. Migrasi `0003_dummy_order_operations`, proteksi Order manual, verifikasi ledger, dan cleanup fixture lulus. Fault injection `COMMIT_UNKNOWN` belum diuji live. Promosi Production masih menunggu persetujuan terpisah. Pola clustered, circular, dan directional bersifat opsional. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 ## Phase 3 — Benchmark Input Foundation
 
@@ -5506,7 +5531,7 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 ## Gate 3 — Dataset + map
 
-Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Phase 2B Dummy Generator masih pending. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta perpindahan marker setelah koordinat Order diedit. Live Acceptance Phase 2B untuk Preview, Save & Regenerate, Orders, Map, dan cleanup fixture sudah lulus di Testing. Keterbatasan fault injection `COMMIT_UNKNOWN` live tercatat dalam bukti Phase 2B. [Bukti UAT Phase 2A](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08) · [Bukti Live Acceptance Phase 2B](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
 
 - [ ] markers correct;
 - [ ] OSM attribution;
