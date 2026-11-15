@@ -43,6 +43,50 @@ const testingLedger = () => {
   return rows;
 };
 
+// Pin the SQL hashes and journal timestamps independently of Drizzle.
+const ordersEntry: LedgerRow = {
+  id: 3,
+  hash: "78ca3ee6092934f6d6d1583f76fff71fb0a546dc1921c99c87df40d0f7a349a2",
+  created_at: 1793514725884,
+};
+const dummyOperationsEntry: LedgerRow = {
+  id: 4,
+  hash: "37bf2a6115126b82fba46214711f16b75814b752a22a5cea3535fd5e62ebb4ab",
+  created_at: 1794716866549,
+};
+const asRecorded = (row: LedgerRow): LedgerRow => ({
+  ...row,
+  created_at: String(row.created_at),
+});
+const ledgerInsert = expect.stringMatching(
+  /^insert into `__drizzle_migrations`/i,
+);
+const scenariosWrites = [
+  expect.stringMatching(/^CREATE TABLE `scenarios`/),
+  expect.stringMatching(
+    /^ALTER TABLE `scenarios` .*FOREIGN KEY \(`depot_id`\)/,
+  ),
+  expect.stringMatching(/^CREATE INDEX `scenarios_depot_id_idx`/),
+  ledgerInsert,
+];
+const ordersWrites = [
+  expect.stringMatching(/^CREATE TABLE `orders`/),
+  expect.stringMatching(
+    /^ALTER TABLE `orders` .*FOREIGN KEY \(`scenario_id`\)/,
+  ),
+  expect.stringMatching(/^CREATE INDEX `orders_scenario_id_id_idx`/),
+  ledgerInsert,
+];
+const dummyOperationsWrites = [
+  expect.stringMatching(
+    /^CREATE TABLE `dummy_order_operations`[\s\S]*UNIQUE\(`active_scenario_id`\)[\s\S]*UNIQUE\(`scenario_id`,`operation_version`\)/,
+  ),
+  expect.stringMatching(
+    /^ALTER TABLE `dummy_order_operations` .*FOREIGN KEY \(`active_scenario_id`\) REFERENCES `scenarios`\(`id`\)/,
+  ),
+  ledgerInsert,
+];
+
 // Only the mysql2 transport is replaced. The installed Drizzle driver, migrator,
 // SQL splitter, hashing, timestamp selection and ledger insert remain real.
 class FakeStream extends EventEmitter {
@@ -122,6 +166,15 @@ class FakeConnection extends EventEmitter {
     // mysql2 end() may resolve before the underlying socket closes.
     setImmediate(() => this.connection.stream.destroy());
   }
+}
+
+function migrationWrites(connection: FakeConnection) {
+  // Drizzle ensures its ledger table exists even when no migration is pending.
+  return connection.queries.filter(
+    (sql) =>
+      /^(?:CREATE|ALTER|DROP|INSERT)\b/i.test(sql) &&
+      !/^create table if not exists `__drizzle_migrations`/i.test(sql),
+  );
 }
 
 let connection: FakeConnection;
@@ -312,24 +365,16 @@ describe("Testing migration runner", () => {
     );
   });
 
-  it("applies only 0002 with the historical CRLF ledger row preserved", async () => {
+  it("applies pending 0002 and 0003 in order while preserving the historical CRLF ledger row", async () => {
     expect(await runTestingMigration(testingEnvironment)).toBe(0);
-    expect(
-      connection.queries.filter((sql) =>
-        /^(CREATE TABLE|ALTER TABLE|CREATE INDEX) /.test(sql),
-      ),
-    ).toEqual([
-      expect.stringMatching(/^CREATE TABLE `orders`/),
-      expect.stringMatching(/^ALTER TABLE `orders`/),
-      expect.stringMatching(/^CREATE INDEX `orders_scenario_id_id_idx`/),
+    expect(migrationWrites(connection)).toEqual([
+      ...ordersWrites,
+      ...dummyOperationsWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...testingLedger(),
-      {
-        id: 3,
-        hash: "78ca3ee6092934f6d6d1583f76fff71fb0a546dc1921c99c87df40d0f7a349a2",
-        created_at: 1793514725884,
-      },
+      ordersEntry,
+      dummyOperationsEntry,
     ]);
   });
 
@@ -337,9 +382,9 @@ describe("Testing migration runner", () => {
     connection.failAfterLedgerWrite = true;
     expect(await runTestingMigration(testingEnvironment)).toBe(1);
     expect(mysql.createConnection).toHaveBeenCalledTimes(1);
-    expect(
-      connection.queries.filter((sql) => sql.startsWith("insert into")),
-    ).toHaveLength(1);
+    expect(migrationWrites(connection)).toEqual(ordersWrites);
+    expect(connection.ledger).toEqual([...testingLedger(), ordersEntry]);
+    expect(connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();
     expect(JSON.stringify(error.mock.calls)).not.toMatch(
       /fixture_password|mysql:\/\//,
@@ -372,14 +417,17 @@ describe("Production migration runner", () => {
         ssl: { rejectUnauthorized: true, verifyIdentity: true },
       }),
     );
-    expect(
-      connection.queries.filter((sql) => /^CREATE TABLE `/.test(sql)),
-    ).toEqual([
-      expect.stringMatching(/^CREATE TABLE `scenarios`/),
-      expect.stringMatching(/^CREATE TABLE `orders`/),
+    expect(migrationWrites(connection)).toEqual([
+      ...scenariosWrites,
+      ...ordersWrites,
+      ...dummyOperationsWrites,
     ]);
-    expect(connection.ledger).toHaveLength(3);
-    expect(connection.ledger[0]).toEqual(initial[0]);
+    expect(connection.ledger).toEqual([
+      ...initial,
+      { ...initialLedger()[1], created_at: 1793441266963 },
+      ordersEntry,
+      dummyOperationsEntry,
+    ]);
     expect(connection.stream.closed).toBe(true);
   });
 
@@ -433,59 +481,48 @@ describe("Production migration runner", () => {
 });
 
 describe("installed Drizzle migration parity through the Development runner", () => {
-  it("selects only pending 0002 and preserves hashes, breakpoints and ledger history", async () => {
+  it("applies only pending 0002 and 0003 with their DDL, hashes, and journal timestamps in order", async () => {
     expect(await runDevelopmentMigration(environment)).toBe(0);
-    const ddl = connection.queries.filter((s) =>
-      /^(?:CREATE TABLE `orders`|ALTER TABLE `orders`|CREATE INDEX `orders_)/.test(
-        s,
-      ),
-    );
-    expect(ddl).toHaveLength(3);
-    expect(ddl[0]).toMatch(/^CREATE TABLE `orders`/);
-    expect(ddl[1]).toContain("FOREIGN KEY (`scenario_id`)");
-    expect(ddl[2]).toContain("`orders_scenario_id_id_idx`");
-    expect(connection.queries.join("\n")).not.toContain(
-      "CREATE TABLE `depots`",
-    );
-    expect(connection.queries.join("\n")).not.toContain(
-      "CREATE TABLE `scenarios`",
-    );
+    expect(migrationWrites(connection)).toEqual([
+      ...ordersWrites,
+      ...dummyOperationsWrites,
+    ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
-      {
-        id: 3,
-        hash: "78ca3ee6092934f6d6d1583f76fff71fb0a546dc1921c99c87df40d0f7a349a2",
-        created_at: 1793514725884,
-      },
+      ordersEntry,
+      dummyOperationsEntry,
     ]);
   });
 
-  it("does not reapply a migration already recorded by Drizzle", async () => {
-    connection.ledger.push({
-      id: 3,
-      hash: "78ca3ee6092934f6d6d1583f76fff71fb0a546dc1921c99c87df40d0f7a349a2",
-      created_at: "1793514725884",
-    });
+  it("applies only 0003 when the ledger already contains 0000 through 0002", async () => {
+    connection.ledger.push(asRecorded(ordersEntry));
     expect(await runDevelopmentMigration(environment)).toBe(0);
-    expect(connection.ledger).toHaveLength(3);
-    expect(
-      connection.queries.some((s) => s.startsWith("CREATE TABLE `orders`")),
-    ).toBe(false);
-    expect(connection.queries.some((s) => s.startsWith("insert into"))).toBe(
-      false,
-    );
+    expect(migrationWrites(connection)).toEqual(dummyOperationsWrites);
+    expect(connection.ledger).toEqual([
+      ...initialLedger(),
+      asRecorded(ordersEntry),
+      dummyOperationsEntry,
+    ]);
+  });
+
+  it("does not run migration DDL or insert a ledger row when 0003 is already recorded", async () => {
+    const recorded = [
+      ...initialLedger(),
+      asRecorded(ordersEntry),
+      asRecorded(dummyOperationsEntry),
+    ];
+    connection.ledger.push(...recorded.slice(2));
+    expect(await runDevelopmentMigration(environment)).toBe(0);
+    expect(migrationWrites(connection)).toEqual([]);
+    expect(connection.ledger).toEqual(recorded);
+    expect(connection.stream.closed).toBe(true);
   });
 
   it("stops after failed DDL without retry or custom ledger repair", async () => {
     connection.failAtForeignKey = true;
     expect(await runDevelopmentMigration(environment)).toBe(1);
     expect(mysql.createConnection).toHaveBeenCalledTimes(1);
-    expect(
-      connection.queries.filter((s) => s.startsWith("ALTER TABLE `orders`")),
-    ).toHaveLength(1);
-    expect(
-      connection.queries.some((s) => s.startsWith("CREATE INDEX `orders_")),
-    ).toBe(false);
+    expect(migrationWrites(connection)).toEqual(ordersWrites.slice(0, 2));
     expect(connection.ledger).toEqual(initialLedger());
     expect(connection.queries).toContain("rollback"); // Drizzle control flow, not a DDL rollback guarantee.
     expect(connection.connection.stream.closed).toBe(true);
@@ -493,22 +530,50 @@ describe("installed Drizzle migration parity through the Development runner", ()
     expect(JSON.stringify(error.mock.calls)).not.toContain("fixture_password");
   });
 
-  it("reports failure after a lost ledger acknowledgement without mutation retry", async () => {
-    connection.failAfterLedgerWrite = true;
-    expect(await runDevelopmentMigration(environment)).toBe(1);
-    expect(connection.ledger).toHaveLength(3); // The outcome can already be committed.
-    expect(
-      connection.queries.filter((s) => s.startsWith("insert into")),
-    ).toHaveLength(1);
-    expect(mysql.createConnection).toHaveBeenCalledTimes(1);
-    expect(info).not.toHaveBeenCalled();
-    expect(JSON.stringify(error.mock.calls)).not.toContain("mysql://");
-  });
+  it.each([
+    {
+      migration: "0002",
+      recorded: [],
+      entry: ordersEntry,
+      writes: ordersWrites,
+    },
+    {
+      migration: "0003",
+      recorded: [asRecorded(ordersEntry)],
+      entry: dummyOperationsEntry,
+      writes: dummyOperationsWrites,
+    },
+  ])(
+    "stops after a lost $migration ledger acknowledgement without mutation retry",
+    async ({ recorded, entry, writes }) => {
+      connection.ledger.push(...recorded);
+      connection.failAfterLedgerWrite = true;
+      expect(await runDevelopmentMigration(environment)).toBe(1);
+      expect(migrationWrites(connection)).toEqual(writes);
+      expect(connection.ledger).toEqual([
+        ...initialLedger(),
+        ...recorded,
+        entry,
+      ]);
+      expect(mysql.createConnection).toHaveBeenCalledTimes(1);
+      expect(connection.stream.closed).toBe(true);
+      expect(info).not.toHaveBeenCalled();
+      expect(JSON.stringify(error.mock.calls)).not.toContain("mysql://");
+    },
+  );
 
   it("does not report success when connection closure fails", async () => {
     connection.failClosing = true;
     expect(await runDevelopmentMigration(environment)).toBe(1);
-    expect(connection.ledger).toHaveLength(3);
+    expect(connection.ledger).toEqual([
+      ...initialLedger(),
+      ordersEntry,
+      dummyOperationsEntry,
+    ]);
+    expect(migrationWrites(connection)).toEqual([
+      ...ordersWrites,
+      ...dummyOperationsWrites,
+    ]);
     expect(connection.connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();
     expect(JSON.stringify(error.mock.calls)).not.toContain("mysql://");
