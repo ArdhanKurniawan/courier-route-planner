@@ -104,6 +104,8 @@ Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta pe
 - [ ] primary random generator covered; optional clustered/circular/directional tested if implemented;
 - [ ] marker/map component independent of OSRM HTTP client; Table matrix foundation proceeds at Gate 4.
 
+Kandidat lokal Phase 2B Part E dan E.1 memiliki bukti tes offline. Edit generated Order masih **PENDING** pada UAT, dan fault injection `COMMIT_UNKNOWN` live belum diuji. Production tetap **NOT RELEASED**. [Bukti offline](14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1) · [Checkpoint aktivasi](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
+
 ## Gate 4 — Research input foundation
 
 - [ ] scenario freeze;

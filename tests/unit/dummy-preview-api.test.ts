@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
 import { requireAdmin } from "@/lib/security/admin";
 import { createDatabase, getDatabase } from "@/db/client";
 import { fakeDatabaseUrl } from "../fixtures/tidb-http";
@@ -123,6 +124,33 @@ beforeEach(() => {
   } as Awaited<ReturnType<typeof requireAdmin>>);
 });
 afterEach(() => vi.unstubAllEnvs());
+
+it.each([undefined, "recovery"])(
+  "rejects Production Preview before any ledger read in mode %s",
+  async (mode) => {
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("APP_ENV", "production");
+    vi.stubEnv("DUMMY_GENERATOR_PRODUCTION_MODE", mode);
+    vi.stubEnv("DATABASE_URL", fakeDatabaseUrl.replace("_dev", "_production"));
+
+    const response = await preview();
+    expect(response.status).toBe(503);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(getDatabase).not.toHaveBeenCalled();
+  },
+);
+
+it("shows the authenticated Production page as closed before activation", async () => {
+  vi.stubEnv("VERCEL", "1");
+  vi.stubEnv("VERCEL_ENV", "production");
+  vi.stubEnv("APP_ENV", "production");
+  vi.stubEnv("DUMMY_GENERATOR_PRODUCTION_MODE", undefined);
+  const page = renderToStaticMarkup(await DummyGeneratorPage());
+
+  expect(page).toContain("Dummy Generator belum diaktifkan.");
+  expect(page).not.toContain("Memuat daftar Scenario");
+});
 
 describe("read-only dummy preview API", () => {
   it("uses one scoped read and returns deterministic coordinates and revision", async () => {

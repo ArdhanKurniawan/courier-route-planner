@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createConnection } from "mysql2";
 import { createDatabase, getDatabase } from "@/db/client";
 import { HttpError } from "@/lib/http/request-security";
 import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
@@ -11,6 +12,7 @@ import {
   countWire,
 } from "../fixtures/order";
 const boundary = vi.hoisted(() => ({ status: 0 }));
+vi.mock("mysql2", () => ({ createConnection: vi.fn() }));
 vi.mock("@/lib/security/admin", () => ({
   requireAdmin: async () => {
     if (boundary.status)
@@ -71,6 +73,295 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 afterEach(() => vi.unstubAllEnvs());
+
+describe("Production Order mutation boundary", () => {
+  const database = "courier_route_planner_production";
+  const dummy = orderWire();
+  dummy.rows[0][7] = "dummy";
+
+  function production(mode?: string) {
+    vi.stubEnv("APP_ENV", "production");
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("VERCEL_TARGET_ENV", "production");
+    vi.stubEnv("DUMMY_GENERATOR_PRODUCTION_MODE", mode);
+    vi.stubEnv(
+      "DATABASE_URL",
+      `mysql://fake_app:fake@production.invalid:4000/${database}`,
+    );
+
+    const query = vi.fn<
+      (
+        options: { sql: string; timeout: number },
+        values: unknown[],
+      ) => Promise<unknown>
+    >(() => {
+      throw new Error("Unexpected synthetic MySQL query");
+    });
+    const end = vi.fn().mockResolvedValue(undefined);
+    const destroy = vi.fn();
+    vi.mocked(createConnection).mockReturnValue({
+      destroy,
+      on: vi.fn(),
+      stream: { encrypted: true, authorized: true, destroy },
+      promise: () => ({
+        connect: vi.fn().mockResolvedValue(undefined),
+        query,
+        end,
+      }),
+    } as unknown as ReturnType<typeof createConnection>);
+    query
+      .mockResolvedValueOnce([
+        [
+          {
+            db: database,
+            principal: "fake_app@%",
+            foreignKeys: 1,
+            autocommit: 1,
+            sqlMode: "STRICT_TRANS_TABLES",
+          },
+        ],
+      ])
+      .mockResolvedValueOnce([
+        [
+          {
+            grants:
+              "GRANT SELECT, INSERT, UPDATE, DELETE ON `courier\\_route\\_planner\\_production`.* TO 'fake_app'@'%'",
+          },
+        ],
+      ])
+      .mockResolvedValueOnce([{}])
+      .mockResolvedValueOnce([
+        [
+          {
+            id: sid,
+            depotId: "20",
+            name: "Synthetic Scenario",
+            distributionPattern: "random",
+            status: "draft",
+            customerCount: "3",
+            radiusMinM: null,
+            radiusMaxM: null,
+            generationSeed: null,
+            updatedAt: "2026-01-01 00:00:00.000000",
+          },
+        ],
+      ]);
+    return { query, end, destroy };
+  }
+
+  const methods = ["PUT", "DELETE"] as const;
+  const mutate = (method: (typeof methods)[number]) =>
+    item[method](req(method, method === "PUT" ? orderInput : {}), ctx());
+  const httpWrites = () =>
+    queries.filter((sql) => /^(update|delete)\b/i.test(sql));
+
+  describe.each(methods)("%s", (method) => {
+    const dummyWrite =
+      method === "PUT" ? "UPDATE orders SET" : "DELETE FROM orders";
+
+    it.each(["disabled", "recovery", "Enabled", undefined])(
+      "denies a dummy write in mode %s with no HTTP write or TCP connection",
+      async (mode) => {
+        production(mode);
+        replies = [
+          flag("1"),
+          dummy,
+          flag("0"),
+          { rowsAffected: 1 },
+          flag("1"),
+          dummy,
+        ];
+
+        const response = await mutate(method);
+
+        expect(response.status).toBe(503);
+        expect(await response.json()).toMatchObject({
+          error: { code: "UNAVAILABLE" },
+        });
+        expect(httpWrites()).toEqual([]);
+        expect(createConnection).not.toHaveBeenCalled();
+      },
+    );
+
+    it("denies invalid target bindings before any mutation", async () => {
+      production("enabled");
+      vi.stubEnv("VERCEL_TARGET_ENV", "preview");
+      replies = [flag("1"), dummy];
+      expect((await mutate(method)).status).toBe(503);
+      expect(httpWrites()).toEqual([]);
+      expect(createConnection).not.toHaveBeenCalled();
+
+      vi.stubEnv("VERCEL_TARGET_ENV", "production");
+      vi.stubEnv(
+        "DATABASE_URL",
+        "mysql://fake_app:fake@testing.invalid:4000/courier_route_planner_testing",
+      );
+      queries = [];
+      expect((await mutate(method)).status).toBe(503);
+      expect(queries).toEqual([]);
+      expect(createConnection).not.toHaveBeenCalled();
+    });
+
+    it("in enabled mode writes dummy rows only after both locks on one TLS connection", async () => {
+      const { query, end } = production("enabled");
+      replies = [flag("1"), dummy, flag("1"), dummy];
+      query
+        .mockResolvedValueOnce([[]])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockResolvedValueOnce([{}]);
+
+      expect((await mutate(method)).status).toBe(method === "PUT" ? 200 : 204);
+      expect(createConnection).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          database,
+          ssl: { rejectUnauthorized: true, verifyIdentity: true },
+        }),
+      );
+      expect(query.mock.calls.map(([options]) => options.sql).slice(2)).toEqual(
+        [
+          "BEGIN PESSIMISTIC",
+          expect.stringMatching(/FROM scenarios.*FOR UPDATE NOWAIT/),
+          expect.stringMatching(
+            /FROM dummy_order_operations.*active_scenario_id.*FOR UPDATE NOWAIT/,
+          ),
+          expect.stringContaining(dummyWrite),
+          "COMMIT",
+        ],
+      );
+      expect(query.mock.calls[5][0].sql).toMatch(
+        /WHERE scenario_id = CAST\(\? AS SIGNED\) AND id = CAST\(\? AS SIGNED\) AND source = 'dummy'$/,
+      );
+      expect(query.mock.calls[5][1].slice(-2)).toEqual([sid, id]);
+      expect(end).toHaveBeenCalledOnce();
+      expect(httpWrites()).toEqual([]);
+    });
+
+    it("rolls back and rejects an active ledger operation before Order DML", async () => {
+      const { query, end } = production("enabled");
+      replies = [flag("1"), dummy];
+      query
+        .mockResolvedValueOnce([
+          [
+            {
+              operationId: "00000000-0000-4000-8000-000000000011",
+              operationVersion: "1",
+              scenarioId: sid,
+              activeScenarioId: sid,
+              requestHash: "a".repeat(64),
+              beforeHash: "b".repeat(64),
+              afterHash: null,
+              status: "pending",
+              savedCount: 0,
+              replacedCount: 0,
+            },
+          ],
+        ])
+        .mockResolvedValueOnce([{}]);
+
+      const response = await mutate(method);
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({
+        error: { code: "DUMMY_OPERATION_PENDING" },
+      });
+      expect(query.mock.calls.slice(4).map(([options]) => options.sql)).toEqual(
+        [expect.stringContaining("FROM dummy_order_operations"), "ROLLBACK"],
+      );
+      expect(end).toHaveBeenCalledOnce();
+      expect(httpWrites()).toEqual([]);
+    });
+
+    it("preserves manual CRUD in disabled mode through source-scoped HTTP SQL", async () => {
+      production("disabled");
+      replies =
+        method === "PUT"
+          ? [
+              flag("1"),
+              orderWire(),
+              flag("0"),
+              { rowsAffected: 0 },
+              flag("1"),
+              orderWire(),
+            ]
+          : [flag("1"), orderWire(), { rowsAffected: 1 }];
+
+      expect((await mutate(method)).status).toBe(method === "PUT" ? 200 : 204);
+      expect(httpWrites()).toEqual([
+        expect.stringMatching(
+          /where.*scenario_id.*and.*id.*and.*`source` = 'manual'/i,
+        ),
+      ]);
+      expect(createConnection).not.toHaveBeenCalled();
+    });
+
+    it("rejects a manual-to-dummy race at the SQL write without a fallback", async () => {
+      production("disabled");
+      replies =
+        method === "PUT"
+          ? [
+              flag("1"),
+              orderWire(),
+              flag("0"),
+              { rowsAffected: 0 },
+              flag("1"),
+              dummy,
+            ]
+          : [flag("1"), orderWire(), { rowsAffected: 0 }];
+
+      const response = await mutate(method);
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({
+        error: { code: "NOT_FOUND" },
+      });
+      expect(httpWrites()).toEqual([
+        expect.stringMatching(/where.*`source` = 'manual'/i),
+      ]);
+      expect(createConnection).not.toHaveBeenCalled();
+    });
+
+    it("rejects a dummy-to-manual race without switching to the HTTP path", async () => {
+      const { query } = production("enabled");
+      replies = [flag("1"), dummy, flag("1"), orderWire()];
+      query
+        .mockResolvedValueOnce([[]])
+        .mockResolvedValueOnce([{ affectedRows: 0 }])
+        .mockResolvedValueOnce([{}]);
+
+      const response = await mutate(method);
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({
+        error: { code: "NOT_FOUND" },
+      });
+      expect(query.mock.calls[5][0].sql).toMatch(/WHERE .*source = 'dummy'$/);
+      expect(httpWrites()).toEqual([]);
+    });
+
+    it("does not retry or fall back if the guarded COMMIT acknowledgement is lost", async () => {
+      const { query, destroy } = production("enabled");
+      replies = [flag("1"), dummy];
+      query
+        .mockResolvedValueOnce([[]])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockRejectedValueOnce(new Error("TCP acknowledgement lost"));
+
+      const response = await mutate(method);
+      expect(response.status).toBe(503);
+      expect(await response.json()).toMatchObject({
+        error: { code: "MUTATION_OUTCOME_UNKNOWN" },
+      });
+      expect(query.mock.calls.slice(5).map(([options]) => options.sql)).toEqual(
+        [
+          expect.stringContaining(dummyWrite),
+          "COMMIT",
+        ],
+      );
+      expect(createConnection).toHaveBeenCalledOnce();
+      expect(destroy).toHaveBeenCalled();
+      expect(httpWrites()).toEqual([]);
+    });
+  });
+});
+
 describe("Scenario-scoped protected Order API", () => {
   it.each([401, 403, 503])(
     "denies all five handlers on auth %i before DB",

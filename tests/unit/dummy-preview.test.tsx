@@ -102,6 +102,25 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it("allows status checks for all Scenarios while preview generation is paused", async () => {
+  const { request } = mockRequests();
+  render(<DummyPreviewManager allowPreview={false} />);
+
+  await screen.findByRole("option", { name: "Frozen" });
+  await choose();
+
+  expect(
+    await screen.findByText("Tidak ada operasi dummy tertunda."),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Generate Preview" }),
+  ).not.toBeInTheDocument();
+  expect(request).toHaveBeenCalledWith(
+    "/api/scenarios/10/dummy-orders",
+    expect.objectContaining({ method: "GET" }),
+  );
+});
+
 it("paginates eligible Scenarios and renders draft markers, coordinate fallback, and keyboard popup", async () => {
   let resize: (() => void) | undefined;
   const observe = vi.fn();

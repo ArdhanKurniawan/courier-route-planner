@@ -432,4 +432,18 @@ Owner menerima Live Acceptance Save & Regenerate pada Vercel Testing Preview den
 
 Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy masih menjadi item checklist Gate 3 dan belum diobservasi dalam UAT ini. [Checklist Gate 3](23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
 
-Acceptance ini berlaku untuk Testing. Writer transaksi saat ini menolak koneksi dari Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, kesiapan skema Production, dan evaluasi keterbatasan recovery live.
+## 24. Verifikasi lokal Phase 2B Part E dan E.1
+
+Testing Live Acceptance pada bagian sebelumnya tetap tercatat sebagai bukti untuk baseline `287ec06`. Part E dan E.1 menambahkan mode Production dan guard PUT/DELETE Order dummy pada kandidat lokal. [Kontrak mode dan guard](04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
+
+| Pemeriksaan lokal Part E dan E.1 | Hasil yang tercatat |
+|---|---|
+| Focused tests | 158/158 PASS |
+| Full offline suite dan coverage | 938/938 PASS pada masing-masing run |
+| ESLint, typecheck, `db:check`, build dan post-build typecheck | PASS. Build standar lulus pada percobaan akhir setelah kegagalan worker CSS Turbopack. |
+
+Tes offline mencakup penolakan berdasarkan mode, guard saat ledger aktif, mutasi manual yang dibatasi `source` pada SQL, perubahan `source` di antara pembacaan dan penulisan, dan penanganan kehilangan respons COMMIT tanpa retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live belum diuji, dan edit generated Order tetap **PENDING** pada UAT. [Checklist Gate 3](23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+
+Tombol Edit dan Hapus masih dapat muncul untuk Order dummy di mode `disabled` dan `recovery`. Server menolak mutasinya. Ini temuan UI Minor yang tidak memblokir Draft PR.
+
+Phase 2B di Production tetap **NOT RELEASED**, aktivasi writer belum dilakukan, dan identitas database fisik dari deployment kandidat **NOT VERIFIED**. Migrasi `0003` di Production dan aktivasi writer memerlukan persetujuan terpisah. Isolasi deployment lama yang masih dapat menulis sebelum aktivasi. [Checklist rilis](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)

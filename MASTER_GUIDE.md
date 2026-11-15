@@ -8,7 +8,7 @@ Derived from the source list below, in order. Regenerated 2026-11-15. Relative M
 
 Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA for the Phase 1C and 2A release passed based on the owner's Testing Preview evidence received on 2026-11-13. Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
-Live Acceptance Phase 2B untuk Dummy Generator, Save & Regenerate, Orders, dan Map lulus di Testing pada 2026-11-15. Migrasi 0003 dan cleanup fixture terverifikasi. Fault injection COMMIT_UNKNOWN belum diuji pada runtime live. Writer saat ini menolak koneksi Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, dan kesiapan skema. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15)
+Live Acceptance Phase 2B untuk Dummy Generator, Save & Regenerate, Orders, dan Map lulus di Testing pada 2026-11-15. Migrasi `0003` dan cleanup fixture terverifikasi di Testing. Fault injection `COMMIT_UNKNOWN` live belum diuji. Part E dan E.1 masih kandidat lokal. Phase 2B di Production **NOT RELEASED** dan writer belum diaktifkan. Mode Production default `disabled`. Mode `recovery` membuka status dan rekonsiliasi ledger. Mode `enabled` memerlukan konfigurasi eksplisit, kesiapan database Production, dan persetujuan aktivasi. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15) · [Kontrak writer Part E](docs/04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
 
 Production migrations `0001` and `0002` were applied and verified on 2026-11-13. The mysql2 and Drizzle runner from Testing baseline `eba494b` completed in one invocation with exit code `0`. A read-only check verified the ledger and schema. Release review and post-deployment smoke testing are pending. [Production migration evidence](docs/14_TESTING_QA.md#migrasi-production-dan-status-rilis-2026-11-13)
 
@@ -1644,6 +1644,26 @@ Reservasi dan hash dataset awal di-commit sebelum mutasi Order. Transaksi batch 
 
 Edit dan hapus Order dummy di Development/Testing memakai writer TCP yang memegang lock Scenario dan memeriksa ledger sebelum mutasi. Order manual dan pembacaan CRUD tetap memakai Drizzle HTTP. Jalur TCP menolak `NO_BACKSLASH_ESCAPES` sebelum statement berparameter dikirim. Migrasi 0003 dan TCP/TLS Preview lulus di Testing setelah jalur tulis dari deployment lama diisolasi. Fault injection `COMMIT_UNKNOWN` tetap menjadi keterbatasan bukti live.
 
+### Addendum Part E — Production-Safe Writer
+
+Part E dan E.1 adalah kandidat lokal. Phase 2B di Production **NOT RELEASED** dan writer Production belum diaktifkan. Addendum ini menetapkan perilaku kandidat setelah Part C. [Bukti verifikasi offline](docs/14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1)
+
+**Konfigurasi dan akses.** `DUMMY_GENERATOR_PRODUCTION_MODE` hanya berlaku di Production. Mode `recovery` atau `enabled` memerlukan `APP_ENV=production`, `VERCEL=1`, `VERCEL_ENV=production`, dan `VERCEL_TARGET_ENV=production` jika variabel terakhir tersedia. Nilai mode kosong atau tidak dikenal, atau indikator Production yang tidak konsisten, menghasilkan `disabled`. Development dan Testing tetap mengikuti guard environment dan target yang berlaku.
+
+| Mode | GET status / PATCH rekonsiliasi ledger | POST Preview dan Save/Regenerate | PUT/DELETE Order dummy |
+|---|---|---|---|
+| `disabled` (default) | Ditolak | Ditolak | Ditolak |
+| `recovery` | Diizinkan untuk operasi yang sudah tercatat. PATCH hanya dapat mencatat hasil rekonsiliasi yang terbukti. | Ditolak | Ditolak |
+| `enabled` | Diizinkan | Diizinkan | Diizinkan melalui transaksi dengan guard ledger |
+
+Semua handler memerlukan sesi admin. POST, PATCH, PUT, dan DELETE juga memeriksa Origin. Koneksi mysql2 memvalidasi target database logis, sertifikat TLS dan hostname, database aktif, serta kecocokan `CURRENT_USER()` dan grant APPLICATION pada sesi. Identitas resource database fisik dari deployment Production kandidat masih **NOT VERIFIED** dan memerlukan verifikasi terpisah sebelum aktivasi.
+
+**Mutasi Order.** CRUD manual memakai Drizzle HTTP. Edit dan hapus menggunakan predikat Scenario, ID, dan `source = 'manual'` saat statement dijalankan. Edit dan hapus dummy memakai predikat `source = 'dummy'` pada koneksi transaksi mysql2 yang mengunci Scenario dan memeriksa operasi ledger aktif sebelum menulis. Reservasi batch, perubahan status, dan rekonsiliasi menggunakan kunci Scenario yang sama. Operasi aktif memblokir edit dan hapus dummy agar bukti dataset tetap dapat direkonsiliasi.
+
+**Recovery batch.** Setelah hasil COMMIT ambigu, reservasi yang belum terselesaikan tetap memblokir mutasi dummy. Pembacaan independen di bawah kunci membandingkan jumlah dan hash dataset, termasuk ID dan isi baris, dengan bukti ledger sebelum melepas reservasi. Jika buktinya belum konklusif, blokir tetap berlaku. PUT/DELETE dummy melaporkan kehilangan respons COMMIT atau ROLLBACK sebagai `MUTATION_OUTCOME_UNKNOWN` tanpa fallback ke HTTP. Writer tidak melakukan retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live belum diuji.
+
+**Aktivasi Production.** Migrasi `0003` memerlukan persetujuan owner terpisah. Verifikasi ledger migrasi dan schema lengkap, termasuk foreign key restriktif dan unique constraint pada `active_scenario_id`, sebelum menggunakan writer atau rekonsiliasi di Production. Isolasi jalur tulis deployment lama, termasuk endpoint pada URL langsung. Aktivasi `enabled` memerlukan persetujuan tersendiri setelah verifikasi. Gunakan `recovery` untuk menghentikan mutasi dummy baru sambil menyelesaikan operasi yang tertunda. [Checklist aktivasi dan rollback](docs/12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
+
 ---
 
 # SOURCE: docs/05_NEXTJS_FOR_PHP_DEVS.md
@@ -2982,6 +3002,15 @@ Sebelum testing → main:
 - [ ] production domain known;
 - [ ] rollback path known.
 
+### Checkpoint aktivasi writer Phase 2B
+
+Pada kandidat lokal ini, Phase 2B Production **NOT RELEASED**. `DUMMY_GENERATOR_PRODUCTION_MODE` default `disabled` dan belum diaktifkan di Production. [Kontrak mode writer](docs/04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
+
+- [ ] Verifikasi resource TiDB fisik, TLS hostname, dan principal serta grant APPLICATION dari deployment Production yang akan dipakai. Identitas fisik runtime kandidat masih **NOT VERIFIED**.
+- [ ] Dapatkan persetujuan owner terpisah untuk menerapkan `0003` di Production. Konfirmasi titik pemulihan, lalu verifikasi ledger migrasi, tabel, primary key, unique constraints, dan foreign key restriktif setelah apply.
+- [ ] Identifikasi dan isolasi deployment lama yang masih dapat menerima mutasi ke resource Production yang sama. Verifikasi juga akses melalui URL langsung deployment. Perubahan alias atau mode pada deployment baru saja tidak menutup jalur tulis lama.
+- [ ] Setelah checkpoint di atas lulus, dapatkan persetujuan owner terpisah sebelum deploy dengan `DUMMY_GENERATOR_PRODUCTION_MODE=enabled`. Verifikasi mode deployment aktif dan lakukan smoke sesuai lingkup yang disetujui.
+
 ## 8. Post-deploy smoke
 
 Minimal:
@@ -2998,6 +3027,8 @@ Minimal:
 ## 9. Rollback principle
 
 Code rollback di Vercel relatif mudah melalui previous deployment/revert commit. Database rollback **tidak otomatis**.
+
+Untuk menghentikan mutasi dummy baru sambil mempertahankan GET status dan PATCH rekonsiliasi, deploy konfigurasi `recovery` yang disetujui dan isolasi deployment lain yang masih bisa menerima mutasi. Revert kode atau redeploy tidak membatalkan `0003`, perubahan Order yang sudah commit, maupun status operation ledger. Pertahankan schema dan ledger untuk rekonsiliasi. Jika hasilnya masih ambigu, biarkan reservasi aktif. Pemulihan database mengikuti prosedur dan persetujuan terpisah.
 
 Karena itu schema change harus backward-compatible sebisa mungkin.
 
@@ -3579,7 +3610,21 @@ Owner menerima Live Acceptance Save & Regenerate pada Vercel Testing Preview den
 
 Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy masih menjadi item checklist Gate 3 dan belum diobservasi dalam UAT ini. [Checklist Gate 3](docs/23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
 
-Acceptance ini berlaku untuk Testing. Writer transaksi saat ini menolak koneksi dari Production. Pengaktifan memerlukan perubahan terpisah, persetujuan, kesiapan skema Production, dan evaluasi keterbatasan recovery live.
+## 24. Verifikasi lokal Phase 2B Part E dan E.1
+
+Testing Live Acceptance pada bagian sebelumnya tetap tercatat sebagai bukti untuk baseline `287ec06`. Part E dan E.1 menambahkan mode Production dan guard PUT/DELETE Order dummy pada kandidat lokal. [Kontrak mode dan guard](docs/04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
+
+| Pemeriksaan lokal Part E dan E.1 | Hasil yang tercatat |
+|---|---|
+| Focused tests | 158/158 PASS |
+| Full offline suite dan coverage | 938/938 PASS pada masing-masing run |
+| ESLint, typecheck, `db:check`, build dan post-build typecheck | PASS. Build standar lulus pada percobaan akhir setelah kegagalan worker CSS Turbopack. |
+
+Tes offline mencakup penolakan berdasarkan mode, guard saat ledger aktif, mutasi manual yang dibatasi `source` pada SQL, perubahan `source` di antara pembacaan dan penulisan, dan penanganan kehilangan respons COMMIT tanpa retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live belum diuji, dan edit generated Order tetap **PENDING** pada UAT. [Checklist Gate 3](docs/23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+
+Tombol Edit dan Hapus masih dapat muncul untuk Order dummy di mode `disabled` dan `recovery`. Server menolak mutasinya. Ini temuan UI Minor yang tidak memblokir Draft PR.
+
+Phase 2B di Production tetap **NOT RELEASED**, aktivasi writer belum dilakukan, dan identitas database fisik dari deployment kandidat **NOT VERIFIED**. Migrasi `0003` di Production dan aktivasi writer memerlukan persetujuan terpisah. Isolasi deployment lama yang masih dapat menulis sebelum aktivasi. [Checklist rilis](docs/12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
 
 ---
 
@@ -5539,6 +5584,8 @@ Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta pe
 - [ ] edit generated order;
 - [ ] primary random generator covered; optional clustered/circular/directional tested if implemented;
 - [ ] marker/map component independent of OSRM HTTP client; Table matrix foundation proceeds at Gate 4.
+
+Kandidat lokal Phase 2B Part E dan E.1 memiliki bukti tes offline. Edit generated Order masih **PENDING** pada UAT, dan fault injection `COMMIT_UNKNOWN` live belum diuji. Production tetap **NOT RELEASED**. [Bukti offline](docs/14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1) · [Checkpoint aktivasi](docs/12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
 
 ## Gate 4 — Research input foundation
 

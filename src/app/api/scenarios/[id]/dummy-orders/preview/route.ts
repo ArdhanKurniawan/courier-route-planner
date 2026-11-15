@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { buildDummyPreview } from "@/application/generator/dummy-dataset";
+import { getDummyGeneratorMode } from "@/config/dummy-generator-mode";
 import { readDummyPreviewSnapshot } from "@/db/dummy-order-queries";
 import { pendingOperation } from "@/db/dummy-operation-ledger";
 import { DatabaseTransportError } from "@/db/client";
@@ -26,6 +27,8 @@ export async function POST(
   try {
     const config = await requireAdmin();
     assertSameOrigin(request, config.origin);
+    if (getDummyGeneratorMode() !== "enabled")
+      throw new HttpError(503, "PREVIEW_UNAVAILABLE", "Preview unavailable.");
     const scenarioId = parseScenarioId((await context.params).id);
     const parameters = randomCoordinateParameters.parse(
       await readJson(request, 4096),

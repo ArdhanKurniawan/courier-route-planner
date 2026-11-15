@@ -37,6 +37,16 @@ export function createOrderService(
     if (!(await repo.hasScenario(scenarioId)))
       throw new OrderError("NOT_FOUND");
   }
+  async function mutationTarget(scenarioId: bigint, id: bigint) {
+    const source = await read(async () => {
+      const row = await repo.findById(scenarioId, id);
+      if (!row) throw new OrderError("NOT_FOUND");
+      return scoped(row, scenarioId, id).source;
+    });
+    if (source === "manual") return { source, mutations: repo };
+    if (!dummyMutations) throw new OrderError("UNAVAILABLE");
+    return { source, mutations: dummyMutations };
+  }
   return {
     listOrders: (scenarioId: bigint, query: OrderListQuery) =>
       read(async () => {
@@ -90,22 +100,16 @@ export function createOrderService(
     },
     updateOrder: async (scenarioId: bigint, id: bigint, raw: unknown) => {
       const input = parseOrderInput(raw);
-      const source = await read(async () => {
-        const row = await repo.findById(scenarioId, id);
-        if (!row) throw new OrderError("NOT_FOUND");
-        scoped(row, scenarioId, id);
-        return row.source;
-      });
-      const mutations =
-        source === "dummy" && dummyMutations ? dummyMutations : repo;
+      const { source, mutations } = await mutationTarget(scenarioId, id);
       const affected = await write(() =>
         mutations.update(scenarioId, id, { ...input, updatedAt: clock() }),
       );
       try {
         const row = await repo.findById(scenarioId, id);
-        if (!row && affected === 0) throw new OrderError("NOT_FOUND");
-        if (!row) throw Error();
-        return scoped(row, scenarioId, id);
+        const order = row && scoped(row, scenarioId, id);
+        if (order?.source === source) return order;
+        if (affected === 0) throw new OrderError("NOT_FOUND");
+        throw Error();
       } catch (error) {
         if (error instanceof OrderError && error.code === "NOT_FOUND")
           throw error;
@@ -113,15 +117,7 @@ export function createOrderService(
       }
     },
     deleteOrder: async (scenarioId: bigint, id: bigint) => {
-      const source = dummyMutations
-        ? await read(async () => {
-            const row = await repo.findById(scenarioId, id);
-            if (!row) throw new OrderError("NOT_FOUND");
-            return scoped(row, scenarioId, id).source;
-          })
-        : undefined;
-      const mutations =
-        source === "dummy" && dummyMutations ? dummyMutations : repo;
+      const { mutations } = await mutationTarget(scenarioId, id);
       if ((await write(() => mutations.remove(scenarioId, id))) === 0)
         throw new OrderError("NOT_FOUND");
     },

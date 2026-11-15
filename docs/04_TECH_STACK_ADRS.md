@@ -266,3 +266,23 @@ Owner menyetujui migrasi additive `0003_dummy_order_operations` untuk disiapkan 
 Reservasi dan hash dataset awal di-commit sebelum mutasi Order. Transaksi batch memakai lock Scenario yang sama, memeriksa ulang reservasi dan revision, lalu menyimpan hash dataset pengganti dan jumlah Order bersama DELETE dan INSERT. Hash mencakup urutan, ID presisi penuh, dan seluruh isi Order dummy. ACK di server tetap meninggalkan reservasi aktif agar kehilangan respons HTTP dapat direkonsiliasi. Verifikasi eksplisit memakai koneksi terpisah dan current read di bawah lock yang sama, lalu melepas reservasi hanya jika bukti commit atau rollback cocok. Timeout dan restart tidak membuka blokir. Versi persistennya juga mengusangkan preview lama setelah rollback dengan dataset yang identik.
 
 Edit dan hapus Order dummy di Development/Testing memakai writer TCP yang memegang lock Scenario dan memeriksa ledger sebelum mutasi. Order manual dan pembacaan CRUD tetap memakai Drizzle HTTP. Jalur TCP menolak `NO_BACKSLASH_ESCAPES` sebelum statement berparameter dikirim. Migrasi 0003 dan TCP/TLS Preview lulus di Testing setelah jalur tulis dari deployment lama diisolasi. Fault injection `COMMIT_UNKNOWN` tetap menjadi keterbatasan bukti live.
+
+### Addendum Part E — Production-Safe Writer
+
+Part E dan E.1 adalah kandidat lokal. Phase 2B di Production **NOT RELEASED** dan writer Production belum diaktifkan. Addendum ini menetapkan perilaku kandidat setelah Part C. [Bukti verifikasi offline](14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1)
+
+**Konfigurasi dan akses.** `DUMMY_GENERATOR_PRODUCTION_MODE` hanya berlaku di Production. Mode `recovery` atau `enabled` memerlukan `APP_ENV=production`, `VERCEL=1`, `VERCEL_ENV=production`, dan `VERCEL_TARGET_ENV=production` jika variabel terakhir tersedia. Nilai mode kosong atau tidak dikenal, atau indikator Production yang tidak konsisten, menghasilkan `disabled`. Development dan Testing tetap mengikuti guard environment dan target yang berlaku.
+
+| Mode | GET status / PATCH rekonsiliasi ledger | POST Preview dan Save/Regenerate | PUT/DELETE Order dummy |
+|---|---|---|---|
+| `disabled` (default) | Ditolak | Ditolak | Ditolak |
+| `recovery` | Diizinkan untuk operasi yang sudah tercatat. PATCH hanya dapat mencatat hasil rekonsiliasi yang terbukti. | Ditolak | Ditolak |
+| `enabled` | Diizinkan | Diizinkan | Diizinkan melalui transaksi dengan guard ledger |
+
+Semua handler memerlukan sesi admin. POST, PATCH, PUT, dan DELETE juga memeriksa Origin. Koneksi mysql2 memvalidasi target database logis, sertifikat TLS dan hostname, database aktif, serta kecocokan `CURRENT_USER()` dan grant APPLICATION pada sesi. Identitas resource database fisik dari deployment Production kandidat masih **NOT VERIFIED** dan memerlukan verifikasi terpisah sebelum aktivasi.
+
+**Mutasi Order.** CRUD manual memakai Drizzle HTTP. Edit dan hapus menggunakan predikat Scenario, ID, dan `source = 'manual'` saat statement dijalankan. Edit dan hapus dummy memakai predikat `source = 'dummy'` pada koneksi transaksi mysql2 yang mengunci Scenario dan memeriksa operasi ledger aktif sebelum menulis. Reservasi batch, perubahan status, dan rekonsiliasi menggunakan kunci Scenario yang sama. Operasi aktif memblokir edit dan hapus dummy agar bukti dataset tetap dapat direkonsiliasi.
+
+**Recovery batch.** Setelah hasil COMMIT ambigu, reservasi yang belum terselesaikan tetap memblokir mutasi dummy. Pembacaan independen di bawah kunci membandingkan jumlah dan hash dataset, termasuk ID dan isi baris, dengan bukti ledger sebelum melepas reservasi. Jika buktinya belum konklusif, blokir tetap berlaku. PUT/DELETE dummy melaporkan kehilangan respons COMMIT atau ROLLBACK sebagai `MUTATION_OUTCOME_UNKNOWN` tanpa fallback ke HTTP. Writer tidak melakukan retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live belum diuji.
+
+**Aktivasi Production.** Migrasi `0003` memerlukan persetujuan owner terpisah. Verifikasi ledger migrasi dan schema lengkap, termasuk foreign key restriktif dan unique constraint pada `active_scenario_id`, sebelum menggunakan writer atau rekonsiliasi di Production. Isolasi jalur tulis deployment lama, termasuk endpoint pada URL langsung. Aktivasi `enabled` memerlukan persetujuan tersendiri setelah verifikasi. Gunakan `recovery` untuk menghentikan mutasi dummy baru sambil menyelesaikan operasi yang tertunda. [Checklist aktivasi dan rollback](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
