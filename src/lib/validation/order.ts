@@ -61,6 +61,7 @@ export class OrderError extends Error {
     readonly code:
       | "NOT_FOUND"
       | "ORDER_CODE_CONFLICT"
+      | "DUMMY_OPERATION_PENDING"
       | "UNAVAILABLE"
       | "MUTATION_OUTCOME_UNKNOWN",
   ) {
@@ -68,6 +69,8 @@ export class OrderError extends Error {
       {
         NOT_FOUND: "Order or Scenario not found.",
         ORDER_CODE_CONFLICT: "Order code already exists in this Scenario.",
+        DUMMY_OPERATION_PENDING:
+          "Resolve the pending Dummy Generator operation before editing or deleting dummy Orders.",
         UNAVAILABLE: "Order unavailable.",
         MUTATION_OUTCOME_UNKNOWN:
           "Mutation outcome unknown. Refresh before another attempt.",

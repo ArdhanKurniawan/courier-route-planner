@@ -85,3 +85,44 @@ export const orders = mysqlTable(
     index("orders_scenario_id_id_idx").on(table.scenarioId, table.id),
   ],
 );
+
+export const dummyOrderOperations = mysqlTable(
+  "dummy_order_operations",
+  {
+    operationId: varchar("operation_id", { length: 36 }).primaryKey(),
+    scenarioId: bigint("scenario_id", { mode: "bigint" }).notNull(),
+    operationVersion: bigint("operation_version", { mode: "bigint" }).notNull(),
+    // Terminal receipts retain their original Scenario ID without preventing deletion.
+    activeScenarioId: bigint("active_scenario_id", {
+      mode: "bigint",
+    }).references(() => scenarios.id, {
+      onDelete: "restrict",
+      onUpdate: "restrict",
+    }),
+    requestHash: varchar("request_hash", { length: 64 }).notNull(),
+    beforeHash: varchar("before_hash", { length: 64 }).notNull(),
+    afterHash: varchar("after_hash", { length: 64 }),
+    status: varchar("status", {
+      length: 16,
+      enum: [
+        "pending",
+        "committed",
+        "commit_unknown",
+        "rollback_unknown",
+        "confirmed",
+        "rolled_back",
+      ],
+    }).notNull(),
+    savedCount: int("saved_count").notNull(),
+    replacedCount: int("replaced_count").notNull(),
+  },
+  (table) => [
+    uniqueIndex("dummy_order_ops_active_scenario_unique").on(
+      table.activeScenarioId,
+    ),
+    uniqueIndex("dummy_order_ops_scenario_version_unique").on(
+      table.scenarioId,
+      table.operationVersion,
+    ),
+  ],
+);

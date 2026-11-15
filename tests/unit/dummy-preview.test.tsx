@@ -48,6 +48,7 @@ function result(selected = scenario, seed = parameters.seed) {
         { latitude: 0.001, longitude: 179.9997 },
       ],
       revision: "a".repeat(64),
+      dummyCount: 0,
     },
   });
 }
@@ -79,6 +80,7 @@ function mockRequests(
         ],
         nextCursor: null,
       });
+    if (init.method === "GET") return Response.json({ data: null });
     return post(path, init);
   });
   vi.stubGlobal("fetch", request);
@@ -272,7 +274,7 @@ it("handles loading, list failure, retry, and no eligible Scenario", async () =>
 
 it("refreshes the cached Scenario after its Depot changes", async () => {
   const reassigned = { ...scenario, depotId: "200" };
-  const request = vi
+  const previewOrList = vi
     .fn(async () => result(reassigned))
     .mockResolvedValueOnce(
       Response.json({ data: [scenario], nextCursor: null }),
@@ -281,7 +283,11 @@ it("refreshes the cached Scenario after its Depot changes", async () => {
     .mockResolvedValueOnce(
       Response.json({ data: [reassigned], nextCursor: null }),
     );
-  vi.stubGlobal("fetch", request);
+  vi.stubGlobal("fetch", (path: string, init: RequestInit) => {
+    if (path.endsWith("/dummy-orders") && init.method === "GET")
+      return Promise.resolve(Response.json({ data: null }));
+    return previewOrList();
+  });
   render(<DummyPreviewManager />);
   await choose();
   generate();
@@ -295,7 +301,7 @@ it("refreshes the cached Scenario after its Depot changes", async () => {
   await screen.findByLabelText("Jumlah pelanggan");
   generate();
   expect(await screen.findByText("2 titik preview")).toBeVisible();
-  expect(request.mock.calls).toHaveLength(4);
+  expect(previewOrList.mock.calls).toHaveLength(4);
 });
 
 it("reports invalid input and exhaustion, then allows retry without rendering partial points", async () => {

@@ -77,6 +77,25 @@ function fill() {
   });
 }
 describe("Order admin UI", () => {
+  it("shows a definitive Dummy Generator block when deleting a protected dummy Order", async () => {
+    rows = [{ ...dto, source: "dummy" }];
+    mutation = Response.json(
+      { error: { code: "DUMMY_OPERATION_PENDING" } },
+      { status: 409 },
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    view();
+    await choose();
+    fireEvent.click(screen.getByRole("button", { name: "Hapus QA-001" }));
+    expect(
+      await screen.findByText(
+        /verifikasi operasi tertunda di dummy generator/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/status perubahan belum pasti/i),
+    ).not.toBeInTheDocument();
+  });
   it("waits for a Scenario selection and displays configured and actual counts separately", async () => {
     view();
     await screen.findByRole("option", { name: "Synthetic Scenario" });

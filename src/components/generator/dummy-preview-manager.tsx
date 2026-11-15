@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
+import DummySaveControls from "@/components/generator/dummy-save-controls";
 import { readPages } from "@/components/map/map-data";
 import { randomCoordinateParameters } from "@/domain/generator/random-coordinate-generator";
 import {
@@ -61,6 +62,9 @@ const messages: Record<string, string> = {
     "Titik unik tidak mencukupi. Perluas radius atau kurangi jumlah pelanggan.",
   UNAUTHORIZED: "Sesi admin berakhir. Masuk kembali untuk membuat preview.",
   FORBIDDEN: "Permintaan preview ditolak.",
+  DUMMY_LIMIT: "Jumlah Order dummy existing melebihi batas penggantian.",
+  OPERATION_PENDING:
+    "Verifikasi operasi sebelumnya sebelum membuat preview baru.",
 };
 const errorEnvelope = z.object({ error: z.object({ code: z.string() }) });
 const previewEnvelope = z.object({ data: dummyPreview });
@@ -142,9 +146,13 @@ function PreviewResults({ data }: { data: DummyPreview }) {
 function PreviewForm({
   scenario,
   reloadScenarios,
+  saving,
+  setSaving,
 }: {
   scenario: PreviewScenarioOption;
   reloadScenarios: () => void;
+  saving: boolean;
+  setSaving: (value: boolean) => void;
 }) {
   const [values, setValues] = useState<FormValues>(() => ({
     count: String(scenario.customerCount),
@@ -168,7 +176,7 @@ function PreviewForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    if (pending.current || saving) return;
     const integer = (value: string) =>
       /^\d+$/u.test(value) ? Number(value) : NaN;
     const parsed = randomCoordinateParameters.safeParse({
@@ -253,6 +261,7 @@ function PreviewForm({
                 step={key === "seed" ? undefined : 1}
                 {...bounds}
                 required
+                disabled={saving}
                 value={values[key]}
                 onChange={(event) => change(key, event.currentTarget.value)}
                 aria-invalid={Boolean(errors[key])}
@@ -273,7 +282,7 @@ function PreviewForm({
         </div>
         <button
           type="submit"
-          disabled={state.status === "loading"}
+          disabled={state.status === "loading" || saving}
           className={`${actionClass} bg-brand-600 text-white disabled:opacity-60`}
         >
           Generate Preview
@@ -299,6 +308,12 @@ function PreviewForm({
         </div>
       )}
       {state.status === "ready" && <PreviewResults data={state.data} />}
+      <DummySaveControls
+        scenarioId={scenario.id}
+        preview={state.status === "ready" ? state.data : undefined}
+        setBusy={setSaving}
+        invalidate={() => setState({ status: "idle" })}
+      />
     </div>
   );
 }
@@ -307,6 +322,8 @@ export default function DummyPreviewManager() {
   const [list, setList] = useState<ScenarioList>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [selected, setSelected] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [showRecoveryScenarios, setShowRecoveryScenarios] = useState(false);
 
   useEffect(() => {
     const request = new AbortController();
@@ -345,44 +362,73 @@ export default function DummyPreviewManager() {
         </button>
       </div>
     );
-  const eligible = list.data.filter(
-    ({ distributionPattern, status }) =>
-      distributionPattern === "random" && status === "draft",
-  );
-  if (eligible.length === 0)
-    return <p>Belum ada Scenario draft berpola random.</p>;
-  const scenario = eligible.find(({ id }) => id === selected);
+  const eligible = list.data.filter(isPreviewEligible);
+  const visible = showRecoveryScenarios ? list.data : eligible;
+  const scenario = visible.find(({ id }) => id === selected);
 
   return (
     <div className="space-y-4">
-      <div className="max-w-md">
-        <label
-          htmlFor="preview-scenario"
-          className="mb-1 block text-sm font-medium"
-        >
-          Scenario
+      {eligible.length === 0 && <p>Belum ada Scenario draft berpola random.</p>}
+      {eligible.length < list.data.length && (
+        <label className="flex min-h-11 items-center gap-2">
+          <input
+            type="checkbox"
+            checked={showRecoveryScenarios}
+            disabled={saving}
+            onChange={(event) =>
+              setShowRecoveryScenarios(event.currentTarget.checked)
+            }
+          />
+          Sertakan Scenario lain untuk verifikasi operasi
         </label>
-        <select
-          id="preview-scenario"
-          className={controlClass}
-          value={scenario?.id ?? ""}
-          onChange={(event) => setSelected(event.currentTarget.value)}
-        >
-          <option value="">Pilih Scenario</option>
-          {eligible.map(({ id, name }) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
-      {scenario && (
-        <PreviewForm
-          key={scenario.id}
-          scenario={scenario}
-          reloadScenarios={reloadScenarios}
-        />
       )}
+      {visible.length > 0 && (
+        <div className="max-w-md">
+          <label
+            htmlFor="preview-scenario"
+            className="mb-1 block text-sm font-medium"
+          >
+            Scenario
+          </label>
+          <select
+            id="preview-scenario"
+            className={controlClass}
+            value={scenario?.id ?? ""}
+            disabled={saving}
+            onChange={(event) => setSelected(event.currentTarget.value)}
+          >
+            <option value="">Pilih Scenario</option>
+            {visible.map(({ id, name }) => (
+              <option key={id} value={id}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+      {scenario &&
+        (isPreviewEligible(scenario) ? (
+          <PreviewForm
+            key={scenario.id}
+            scenario={scenario}
+            reloadScenarios={reloadScenarios}
+            saving={saving}
+            setSaving={setSaving}
+          />
+        ) : (
+          <DummySaveControls
+            key={scenario.id}
+            scenarioId={scenario.id}
+            setBusy={setSaving}
+          />
+        ))}
     </div>
   );
+}
+
+function isPreviewEligible({
+  distributionPattern,
+  status,
+}: PreviewScenarioOption) {
+  return distributionPattern === "random" && status === "draft";
 }

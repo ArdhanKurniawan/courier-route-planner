@@ -122,6 +122,8 @@ describe("Scenario-scoped protected Order API", () => {
       { rowsAffected: 0 },
       flag("1"),
       orderWire(),
+      flag("1"),
+      orderWire(),
       { rowsAffected: 1 },
     ];
     const created = await collection!.POST(req("POST", orderInput), ctx());
@@ -266,7 +268,7 @@ describe("Scenario-scoped protected Order API", () => {
     },
   );
   it("rejects cross-Scenario access without moving or modifying another record", async () => {
-    replies = [flag("0"), flag("0"), { rowsAffected: 0 }];
+    replies = [flag("0"), flag("0"), flag("0")];
     const read = await item!.GET(req(), ctx("2"));
     expect(read.status).toBe(404);
     expect(await read.json()).toMatchObject({ error: { code: "NOT_FOUND" } });

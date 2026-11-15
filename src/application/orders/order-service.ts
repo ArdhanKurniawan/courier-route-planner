@@ -10,6 +10,7 @@ import {
 export function createOrderService(
   repo: OrderRepository,
   clock: () => Date = () => new Date(),
+  dummyMutations?: Pick<OrderRepository, "update" | "remove">,
 ) {
   async function read<T>(operation: () => Promise<T>) {
     try {
@@ -89,13 +90,16 @@ export function createOrderService(
     },
     updateOrder: async (scenarioId: bigint, id: bigint, raw: unknown) => {
       const input = parseOrderInput(raw);
-      await read(async () => {
+      const source = await read(async () => {
         const row = await repo.findById(scenarioId, id);
         if (!row) throw new OrderError("NOT_FOUND");
         scoped(row, scenarioId, id);
+        return row.source;
       });
+      const mutations =
+        source === "dummy" && dummyMutations ? dummyMutations : repo;
       const affected = await write(() =>
-        repo.update(scenarioId, id, { ...input, updatedAt: clock() }),
+        mutations.update(scenarioId, id, { ...input, updatedAt: clock() }),
       );
       try {
         const row = await repo.findById(scenarioId, id);
@@ -109,7 +113,16 @@ export function createOrderService(
       }
     },
     deleteOrder: async (scenarioId: bigint, id: bigint) => {
-      if ((await write(() => repo.remove(scenarioId, id))) === 0)
+      const source = dummyMutations
+        ? await read(async () => {
+            const row = await repo.findById(scenarioId, id);
+            if (!row) throw new OrderError("NOT_FOUND");
+            return scoped(row, scenarioId, id).source;
+          })
+        : undefined;
+      const mutations =
+        source === "dummy" && dummyMutations ? dummyMutations : repo;
+      if ((await write(() => mutations.remove(scenarioId, id))) === 0)
         throw new OrderError("NOT_FOUND");
     },
   };

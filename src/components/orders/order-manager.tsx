@@ -357,6 +357,7 @@ function OrdersForScenario({
             [403, "FORBIDDEN"],
             [404, "NOT_FOUND"],
             [409, "ORDER_CODE_CONFLICT"],
+            [409, "DUMMY_OPERATION_PENDING"],
             [413, "PAYLOAD_TOO_LARGE"],
             [415, "UNSUPPORTED_MEDIA_TYPE"],
             [503, "UNAVAILABLE"],
@@ -371,13 +372,15 @@ function OrdersForScenario({
           setError(uncertainMessage);
         } else
           setError(
-            response.status === 409
-              ? "Kode Order sudah digunakan pada Scenario ini."
-              : response.status === 400
-                ? "Data ditolak server. Periksa kode, nama dan koordinat."
-                : response.status === 404
-                  ? "Order atau Scenario tidak ditemukan. Muat ulang daftar."
-                  : "Perubahan belum dapat disimpan.",
+            payload?.error?.code === "DUMMY_OPERATION_PENDING"
+              ? "Verifikasi operasi tertunda di Dummy Generator sebelum mengubah Order dummy."
+              : response.status === 409
+                ? "Kode Order sudah digunakan pada Scenario ini."
+                : response.status === 400
+                  ? "Data ditolak server. Periksa kode, nama dan koordinat."
+                  : response.status === 404
+                    ? "Order atau Scenario tidak ditemukan. Muat ulang daftar."
+                    : "Perubahan belum dapat disimpan.",
           );
         return false;
       }
