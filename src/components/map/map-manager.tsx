@@ -2,13 +2,15 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   readScenarioMap,
   readScenarioOptions,
   type ScenarioMapData,
   type ScenarioOption,
 } from "./map-data";
+import { mapRouteFailure, type MapRouteOutcome } from "./map-route";
+import { MapRoutePanel, type MapRouteState } from "./map-route-panel";
 
 const LeafletMap = dynamic(() => import("./leaflet-map"), {
   ssr: false,
@@ -40,7 +42,56 @@ function LoadError({ message, retry }: { message: string; retry: () => void }) {
   );
 }
 
-function MapResults({ data }: { data: ScenarioMapData }) {
+function MapResults({
+  data,
+  reload,
+}: { data: ScenarioMapData; reload: () => void }) {
+  const [route, setRoute] = useState<MapRouteState>({ status: "idle" });
+  const activeWorker = useRef<Worker | null>(null);
+  const routePositions = route.status === "ready"
+    ? route.route.stops.map(({ position }) => position)
+    : undefined;
+
+  useEffect(
+    () => () => {
+      const worker = activeWorker.current;
+      activeWorker.current = null;
+      worker?.terminate();
+    },
+    [],
+  );
+
+  function optimize() {
+    if (activeWorker.current || data.orders.length === 0) return;
+    setRoute({ status: "loading" });
+    const failure: MapRouteOutcome = {
+      status: "error",
+      message: mapRouteFailure,
+    };
+    try {
+      // Turbopack bootstraps this worker with importScripts.
+      const worker = new Worker(
+        new URL("./map-route-worker.ts", import.meta.url),
+      );
+      activeWorker.current = worker;
+      function finish(outcome: MapRouteOutcome) {
+        if (activeWorker.current !== worker) return;
+        activeWorker.current = null;
+        worker.terminate();
+        setRoute(outcome);
+      }
+      worker.onmessage = (event: MessageEvent<MapRouteOutcome>) =>
+        finish(event.data);
+      worker.onerror = () => finish(failure);
+      worker.onmessageerror = () => finish(failure);
+      worker.postMessage(data);
+    } catch {
+      activeWorker.current?.terminate();
+      activeWorker.current = null;
+      setRoute(failure);
+    }
+  }
+
   const validOrders = data.orders.filter(
     (order) => order.position !== null,
   ).length;
@@ -54,6 +105,13 @@ function MapResults({ data }: { data: ScenarioMapData }) {
         <li>{validOrders} koordinat valid</li>
         <li>{data.orders.length - validOrders} koordinat tidak valid</li>
       </ul>
+
+      <MapRoutePanel
+        state={route}
+        hasOrders={data.orders.length > 0}
+        optimize={optimize}
+        reload={reload}
+      />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
         <div className="min-w-0 space-y-2">
@@ -79,9 +137,15 @@ function MapResults({ data }: { data: ScenarioMapData }) {
               </span>{" "}
               Order
             </span>
+            {routePositions && (
+              <span>
+                <span aria-hidden="true" className="mr-1 inline-block w-5 align-middle border-t-2 border-dashed border-violet-600 dark:border-violet-400" />{" "}
+                Rute demo
+              </span>
+            )}
           </div>
           {data.depot.position || validOrders > 0 ? (
-            <LeafletMap data={data} />
+            <LeafletMap data={data} routePositions={routePositions} />
           ) : (
             <p className="rounded-xl border border-dashed border-gray-300 p-6 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
               Tidak ada koordinat valid untuk ditampilkan pada peta.
@@ -187,6 +251,11 @@ function SelectedScenarioMap({ scenarioId }: { scenarioId: string }) {
     return () => controller.abort();
   }, [scenarioId, attempt]);
 
+  function reload() {
+    setMap({ status: "loading" });
+    setAttempt((current) => current + 1);
+  }
+
   if (map.status === "loading")
     return (
       <p role="status" className="text-sm">
@@ -197,13 +266,10 @@ function SelectedScenarioMap({ scenarioId }: { scenarioId: string }) {
     return (
       <LoadError
         message="Data peta gagal dimuat."
-        retry={() => {
-          setMap({ status: "loading" });
-          setAttempt((current) => current + 1);
-        }}
+        retry={reload}
       />
     );
-  return <MapResults data={map.data} />;
+  return <MapResults data={map.data} reload={reload} />;
 }
 
 export default function MapManager({
