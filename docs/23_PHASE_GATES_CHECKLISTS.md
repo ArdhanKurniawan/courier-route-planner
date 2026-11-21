@@ -100,11 +100,11 @@ Phase 2A Map sudah di `testing`. Owner mengamati marker Depot dan Order serta pe
 - [ ] markers correct;
 - [ ] OSM attribution;
 - [ ] seeded generator deterministic;
-- [ ] edit generated order;
+- [x] edit generated order;
 - [ ] primary random generator covered; optional clustered/circular/directional tested if implemented;
 - [ ] marker/map component independent of OSRM HTTP client; Table matrix foundation proceeds at Gate 4.
 
-Kandidat lokal Phase 2B Part E dan E.1 memiliki bukti tes offline. Edit generated Order masih **PENDING** pada UAT, dan fault injection `COMMIT_UNKNOWN` live belum diuji. Production tetap **NOT RELEASED**. [Bukti offline](14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1) · [Checkpoint aktivasi](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
+UAT Part E.5 di Testing mengonfirmasi edit dan hapus generated Order serta perpindahan marker setelah edit. Part E.6 mencatat kontrak GET detail setelah cleanup sebagai **PASS — OWNER-OBSERVED**. Fault injection live `COMMIT_UNKNOWN` tetap **NOT TESTED** dan Phase 2B Production tetap **NOT RELEASED**. [Bukti Part E.5 dan E.6](14_TESTING_QA.md#25-kontrak-get-setelah-cleanup-phase-2b-part-e5) · [Bukti offline](14_TESTING_QA.md#24-verifikasi-lokal-phase-2b-part-e-dan-e1) · [Checkpoint aktivasi](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
 
 ## Gate 4 — Research input foundation
 
