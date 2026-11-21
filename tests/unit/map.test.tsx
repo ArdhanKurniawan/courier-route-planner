@@ -6,9 +6,10 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { Map as LeafletMap } from "leaflet";
+import { Browser, Map as LeafletMap, Polyline, type LatLng, type LatLngBounds } from "leaflet";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import MapManager from "@/components/map/map-manager";
+import type { ScenarioMapData } from "@/components/map/map-data";
 
 const scenarioA = { id: "10", depotId: "100", name: "Scenario A" };
 const scenarioB = { id: "20", depotId: "200", name: "Scenario B" };
@@ -45,6 +46,8 @@ const orderB = {
 const scenarioList = "/api/scenarios?limit=100";
 const ordersA = "/api/scenarios/10/orders?limit=100";
 const ordersB = "/api/scenarios/20/orders?limit=100";
+const leafletSvg = Browser.svg;
+const optimizeLabel = "Optimasi Rute (NN + 2-Opt)";
 
 function page<T>(data: T[], nextCursor: string | null = null) {
   return { data, nextCursor };
@@ -79,7 +82,32 @@ async function selectScenario(name: string, id: string) {
   });
 }
 
+function mockRouteWorker() {
+  const worker = {
+    postMessage: vi.fn<(data: ScenarioMapData) => void>(),
+    terminate: vi.fn(),
+    onmessage: null as ((event: MessageEvent) => void) | null,
+    onerror: null as (() => void) | null,
+  };
+  const create = vi.fn<(url: URL, options?: WorkerOptions) => typeof worker>(
+    function () { return worker; },
+  );
+  vi.stubGlobal("Worker", create);
+  return {
+    create,
+    worker,
+    async complete() {
+      const { calculateMapRoute } = await import("@/components/map/map-route");
+      const [data] = worker.postMessage.mock.calls[0];
+      act(() => worker.onmessage?.(new MessageEvent("message", {
+        data: calculateMapRoute(data),
+      })));
+    },
+  };
+}
+
 afterEach(() => {
+  Object.defineProperty(Browser, "svg", { value: leafletSvg });
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -313,5 +341,135 @@ describe("Admin Map", () => {
     expect(
       screen.getByRole("link", { name: "OpenStreetMap" }),
     ).toBeInTheDocument();
+  });
+
+  it("shows a closed Haversine route and its distance comparison without more requests or resetting markers", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    const removeOverlay = vi.spyOn(Polyline.prototype, "onRemove");
+    const fetchMock = mockReads();
+    const calculation = mockRouteWorker();
+    render(<MapManager />);
+    await screen.findByRole("option", { name: "Scenario A" });
+    expect(screen.queryByRole("button", { name: optimizeLabel })).not.toBeInTheDocument();
+    await selectScenario("Scenario A", "10");
+    const marker = await screen.findByRole("button", { name: "Order QA-A" });
+    const requestsBeforeOptimization = fetchMock.mock.calls.length;
+    const optimize = screen.getByRole("button", { name: optimizeLabel });
+    fireEvent.click(optimize);
+    expect(optimize).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Menghitung rute");
+    expect(calculation.worker.postMessage).toHaveBeenCalledOnce();
+    expect(calculation.create.mock.calls[0][1]?.type ?? "classic").toBe("classic");
+    await calculation.complete();
+
+    expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
+    expect(screen.getByText("Jarak NN awal")).toBeInTheDocument();
+    expect(screen.getByText("Jarak Hybrid")).toBeInTheDocument();
+    expect(screen.getByText("Selisih jarak")).toBeInTheDocument();
+    const stops = within(screen.getByRole("list", { name: "Urutan kunjungan" }));
+    expect(stops.getAllByRole("listitem").map((stop) => stop.textContent)).toEqual([
+      "Depot Gudang A", "QA-A — Pelanggan A", "Kembali ke Depot Gudang A",
+    ]);
+    const layer = overlay.mock.contexts[0] as Polyline;
+    expect(layer.getLatLngs()).toEqual([[
+      expect.objectContaining({ lat: depotA.latitude, lng: depotA.longitude }),
+      expect.objectContaining({ lat: orderA.latitude, lng: orderA.longitude }),
+      expect.objectContaining({ lat: depotA.latitude, lng: depotA.longitude }),
+    ]]);
+    expect(screen.getByRole("button", { name: "Order QA-A" })).toBe(marker);
+    expect(fetchMock.mock.calls).toHaveLength(requestsBeforeOptimization);
+    expect(fetchMock.mock.calls.every(([, init]) => !init.method || init.method === "GET")).toBe(true);
+    expect(calculation.worker.terminate).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole("button", { name: "Muat ulang data peta" }));
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
+    expect(removeOverlay).toHaveBeenCalledOnce();
+    expect(await screen.findByRole("button", { name: optimizeLabel })).toBeEnabled();
+    expect(fetchMock.mock.calls.length).toBeGreaterThan(requestsBeforeOptimization);
+  });
+
+  it("refuses a partial route when one Order coordinate is missing", async () => {
+    mockReads({
+      [ordersA]: page([orderA, { ...orderA, id: "1001", orderCode: "QA-MISSING", longitude: undefined }]),
+    });
+    const calculation = mockRouteWorker();
+    render(<MapManager />);
+    await selectScenario("Scenario A", "10");
+    fireEvent.click(await screen.findByRole("button", { name: optimizeLabel }));
+    await calculation.complete();
+    expect(screen.getByRole("alert")).toHaveTextContent(/koordinat Order QA-MISSING/i);
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Order QA-A" })).toBeInTheDocument();
+  });
+
+  it("draws the short local crossing when locations straddle the antimeridian", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    const fit = vi.spyOn(LeafletMap.prototype, "fitBounds");
+    mockReads({
+      "/api/depots/100": { data: { ...depotA, longitude: 179.9 } },
+      [ordersA]: page([{ ...orderA, longitude: -179.9 }]),
+    });
+    const calculation = mockRouteWorker();
+    render(<MapManager initialScenarioId="10" />);
+    await screen.findByRole("button", { name: "Order QA-A" });
+    fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
+    await calculation.complete();
+
+    const [bounds] = fit.mock.calls[0] as [LatLngBounds];
+    expect(bounds.getEast() - bounds.getWest()).toBeCloseTo(0.2);
+    const layer = overlay.mock.contexts[0] as Polyline;
+    const [stops] = layer.getLatLngs() as LatLng[][];
+    expect(stops.map(({ lng }) => lng)).toEqual([179.9, 180.1, 179.9]);
+  });
+
+  it("splits a short connection at the world edges when the Depot is far from the crossing", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    mockReads({
+      "/api/depots/100": { data: { ...depotA, latitude: 0, longitude: 0 } },
+      [ordersA]: page([
+        { ...orderA, latitude: 0, longitude: 179.9 },
+        { ...orderA, id: "1001", orderCode: "QA-WEST", latitude: 0, longitude: -179.9 },
+      ]),
+    });
+    const calculation = mockRouteWorker();
+    render(<MapManager initialScenarioId="10" />);
+    fireEvent.click(await screen.findByRole("button", { name: optimizeLabel }));
+    await calculation.complete();
+
+    const layer = overlay.mock.contexts[0] as Polyline;
+    const segments = layer.getLatLngs() as LatLng[][];
+    expect(segments.map((stops) => stops.map(({ lng }) => lng))).toEqual([
+      [0, 179.9, 180],
+      [-180, -179.9, 0],
+    ]);
+  });
+
+  it("shows the empty state when the Scenario has no Orders", async () => {
+    mockReads({ [ordersA]: page([]) });
+    render(<MapManager />);
+    await selectScenario("Scenario A", "10");
+    expect(await screen.findByRole("button", { name: optimizeLabel })).toBeDisabled();
+    expect(screen.getByText("Tambahkan Order untuk menghitung rute.")).toBeInTheDocument();
+  });
+
+  it("cancels pending optimization when the Scenario changes", async () => {
+    mockReads();
+    const { worker } = mockRouteWorker();
+    render(<MapManager />);
+    await selectScenario("Scenario A", "10");
+    fireEvent.click(await screen.findByRole("button", { name: optimizeLabel }));
+    const lateReply = worker.onmessage;
+    expect(lateReply).not.toBeNull();
+    await selectScenario("Scenario B", "20");
+    expect(worker.terminate).toHaveBeenCalledOnce();
+    act(() => lateReply?.(new MessageEvent("message", {
+      data: { status: "error", message: "Hasil Scenario lama" },
+    })));
+    expect(await screen.findByRole("button", { name: "Order QA-B" })).toBeInTheDocument();
+    expect(screen.queryByText("Hasil Scenario lama")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: optimizeLabel })).toBeEnabled();
   });
 });

@@ -87,8 +87,8 @@ function addMarker(
 }
 
 type MapProps =
-  | { data: ScenarioMapData; preview?: never }
-  | { preview: DummyPreview; data?: never };
+  | { data: ScenarioMapData; preview?: never; routePositions?: MapPosition[] }
+  | { preview: DummyPreview; data?: never; routePositions?: never };
 
 function drawPreview(map: L.Map, preview: DummyPreview): MapPosition[] {
   const depot: MapPosition = [preview.depot.latitude, preview.depot.longitude];
@@ -105,6 +105,46 @@ function drawPreview(map: L.Map, preview: DummyPreview): MapPosition[] {
     return point;
   });
   return [depot, ...points];
+}
+
+function inDepotWorld(
+  position: MapPosition,
+  depotLongitude: number | undefined,
+): MapPosition {
+  if (depotLongitude === undefined) return position;
+  const [latitude, longitude] = position;
+  const offset = longitude - depotLongitude;
+  if (offset >= 180) return [latitude, longitude - 360];
+  if (offset < -180) return [latitude, longitude + 360];
+  return position;
+}
+
+function routeInDepotWorld(
+  positions: MapPosition[],
+  depotLongitude: number,
+): MapPosition[][] {
+  const lines: MapPosition[][] = [[]];
+  for (const position of positions) {
+    const next = inDepotWorld(position, depotLongitude);
+    const line = lines[lines.length - 1];
+    const previous = line.at(-1);
+    const gap = previous ? next[1] - previous[1] : 0;
+    if (previous && Math.abs(gap) > 180) {
+      // Continue the short connection on the opposite edge of this world copy.
+      const direction = gap < 0 ? 1 : -1;
+      const boundary = direction * 180;
+      const exit = depotLongitude + boundary;
+      const enter = depotLongitude - boundary;
+      const unwrappedNext = next[1] + direction * 360;
+      const fraction = (exit - previous[1]) / (unwrappedNext - previous[1]);
+      const latitude = previous[0] + fraction * (next[0] - previous[0]);
+      line.push([latitude, exit]);
+      lines.push([[latitude, enter], next]);
+    } else {
+      line.push(next);
+    }
+  }
+  return lines;
 }
 
 function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
@@ -124,10 +164,11 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
   }
   for (const order of orders) {
     if (!order.position) continue;
-    positions.push(order.position);
+    const position = inDepotWorld(order.position, depot.position?.[1]);
+    positions.push(position);
     addMarker(
       map,
-      order.position,
+      position,
       "order",
       `Order ${order.orderCode}`,
       [order.customerName, order.address, order.position.join(", ")],
@@ -137,8 +178,9 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
   return positions;
 }
 
-export default function LeafletMap({ data, preview }: MapProps) {
+export default function LeafletMap({ data, preview, routePositions }: MapProps) {
   const container = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<L.Map | null>(null);
   const [tileFailed, setTileFailed] = useState(false);
 
   useEffect(() => {
@@ -148,6 +190,7 @@ export default function LeafletMap({ data, preview }: MapProps) {
       maxZoom: 19,
       scrollWheelZoom: false,
     });
+    mapInstance.current = map;
     const positions = preview
       ? drawPreview(map, preview)
       : drawScenario(map, data);
@@ -171,11 +214,27 @@ export default function LeafletMap({ data, preview }: MapProps) {
     resizeObserver?.observe(element);
 
     return () => {
+      mapInstance.current = null;
       resizeObserver?.disconnect();
       tiles.off("tileerror", onTileError);
       map.remove();
     };
   }, [data, preview]);
+
+  useEffect(() => {
+    const map = mapInstance.current;
+    const depotLongitude = data?.depot.position?.[1];
+    if (!map || !routePositions || depotLongitude === undefined) return;
+    const route = L.polyline(routeInDepotWorld(routePositions, depotLongitude), {
+      color: "#7c3aed",
+      weight: 4,
+      dashArray: "8 6",
+      interactive: false,
+    }).addTo(map);
+    return () => {
+      route.remove();
+    };
+  }, [data, preview, routePositions]);
 
   return (
     <div className="space-y-2">
