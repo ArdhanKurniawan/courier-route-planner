@@ -1,12 +1,12 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-11-15 for Phase 2B Live Acceptance and diagnostic cleanup. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, regenerated 2026-11-21 for Phase 2B Testing Acceptance closure. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9905 | `0aced4c8e9322778c76e69f2c28d004d1f1a1c22f16dc4dc565e45c7c3348580` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 427863 | `ed3dbc889bd6e27045d11fcb0bf82f783a37174f9a66bc4a75ea5a99989c35b0` |
+| `MASTER_GUIDE.md` | 429396 | `179c57747012afefb8edf13b1d430c29dac861d8aa2fa7b8e2f2900af2dda46c` |
 | `README.md` | 29263 | `1548fcb962729cf5ece8ce59e7ed897254d425997a55fb2729679c8f52ef0cdb` |
 | `THIRD_PARTY_NOTICES.md` | 2518 | `a9722a66fbf7e99a3990e6d419f4a4a80d4a55956af256a910bb698a9f284c7d` |
 | `docs/00_START_HERE.md` | 3326 | `e9f6b62b7cdbba81a7e9f1b342fb1d885e9beff6bb38323913282ad4def31377` |
@@ -23,7 +23,7 @@ Actual filesystem bytes and SHA-256, regenerated 2026-11-15 for Phase 2B Live Ac
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 11422 | `c4d394cf980567bcc38df2be52e7cf9f162f72835eb8d28ce78af98f7da19779` |
 | `docs/13_SECURITY.md` | 5349 | `2d515cbd746045942a113f1d8251fb2c6756ce90c99019865a9e196586990aea` |
-| `docs/14_TESTING_QA.md` | 62506 | `5a43e53f60ec5981e7c2140840e5041e96c5c90dd57d2d4ac50a84a991bc03f0` |
+| `docs/14_TESTING_QA.md` | 63601 | `8e753996397e9c7f341ca767e0af43b994802c06c6718118ce3d5ae91e3d41e0` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25966 | `b77e1c42a26a2c02c02523bec7559558f07931991ecfe9a3f94fff31d9764b8b` |
@@ -32,7 +32,7 @@ Actual filesystem bytes and SHA-256, regenerated 2026-11-15 for Phase 2B Live Ac
 | `docs/20_TEAM_LEARNING_PLAN.md` | 2213 | `09fbe77ba4edcc886a3c53262755f569e11b5e04365e71bb0215e5e1425a7374` |
 | `docs/21_AI_OPERATING_MODEL.md` | 2517 | `954f9633efe045e84c2aca754d14b9662c53c13225110cf3ed38e5cca2adf391` |
 | `docs/22_PROMPT_LIBRARY.md` | 19409 | `fb3fc418ce2c29fc6d76ca794a6f223ac9cf858444d3393b1473660615c21f08` |
-| `docs/23_PHASE_GATES_CHECKLISTS.md` | 19868 | `c3e8bb1136d5e4895cc10ef829a501689ad8ea29a6663337a125f0ee9fec51cc` |
+| `docs/23_PHASE_GATES_CHECKLISTS.md` | 20061 | `4855dd6d39c8d522c1173e4c31576d10eca03740fc43cd747f04aa440c8fdd45` |
 | `docs/24_TROUBLESHOOTING.md` | 2222 | `7fd9c7a22cf06d1cc29fa67b6f62b8fbaa7c3ced524a122465ab0389b9dec2e1` |
 | `docs/25_COST_GUARDRAILS.md` | 2187 | `29e56256ea95cb423fb0ad93eb1fbcab2d8b71a0ddf473dc4b04e7ee9d354ee5` |
 | `docs/26_GLOSSARY.md` | 2840 | `90c6c7b4c1e1616653cbaf04759c55c33b0ef0ce7fba83bd1c2efff4a16f4edc` |

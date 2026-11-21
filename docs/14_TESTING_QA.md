@@ -430,7 +430,7 @@ Owner menerima Live Acceptance Save & Regenerate pada Vercel Testing Preview den
 | PASS | Verifikasi read-only setelah cleanup menemukan nol Order, nol Scenario, dan nol Depot fixture yang tersisa. |
 | TIDAK DIUJI LIVE | Fault injection `COMMIT_UNKNOWN` belum dijalankan di Vercel Testing karena mekanisme terisolasi tidak tersedia. Penanganan kehilangan ACK COMMIT tercakup dalam [tes offline writer](../tests/unit/dummy-order-writer.test.ts). |
 
-Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy masih menjadi item checklist Gate 3 dan belum diobservasi dalam UAT ini. [Checklist Gate 3](23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+Pengujian transaksi terisolasi sebelumnya di TiDB Testing mencakup rollback setelah INSERT ditolak dan konflik kunci antarkoneksi. Bukti UAT di atas mencakup alur admin di Vercel Testing. Edit Order dummy belum diobservasi pada sesi 15 November ini. Sesi Part E.5 berikutnya mencatat bukti edit dan hapus pada [bagian 25](#25-kontrak-get-setelah-cleanup-phase-2b-part-e5).
 
 ## 24. Verifikasi lokal Phase 2B Part E dan E.1
 
@@ -442,7 +442,7 @@ Testing Live Acceptance pada bagian sebelumnya tetap tercatat sebagai bukti untu
 | Full offline suite dan coverage | 938/938 PASS pada masing-masing run |
 | ESLint, typecheck, `db:check`, build dan post-build typecheck | PASS. Build standar lulus pada percobaan akhir setelah kegagalan worker CSS Turbopack. |
 
-Tes offline mencakup penolakan berdasarkan mode, guard saat ledger aktif, mutasi manual yang dibatasi `source` pada SQL, perubahan `source` di antara pembacaan dan penulisan, dan penanganan kehilangan respons COMMIT tanpa retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live belum diuji, dan edit generated Order tetap **PENDING** pada UAT. [Checklist Gate 3](23_PHASE_GATES_CHECKLISTS.md#gate-3--dataset--map)
+Tes offline mencakup penolakan berdasarkan mode, guard saat ledger aktif, mutasi manual yang dibatasi `source` pada SQL, perubahan `source` di antara pembacaan dan penulisan, dan penanganan kehilangan respons COMMIT tanpa retry mutasi otomatis. Fault injection `COMMIT_UNKNOWN` live tetap **NOT TESTED**. Bukti UAT edit dan hapus generated Order pada Part E.5 tercatat di [bagian 25](#25-kontrak-get-setelah-cleanup-phase-2b-part-e5).
 
 Tombol Edit dan Hapus masih dapat muncul untuk Order dummy di mode `disabled` dan `recovery`. Server menolak mutasinya. Ini temuan UI Minor yang tidak memblokir Draft PR.
 
@@ -452,8 +452,23 @@ Phase 2B di Production tetap **NOT RELEASED**, aktivasi writer belum dilakukan, 
 
 Pascamerge Testing pada `707a2ef` mencatat PASS untuk Save tiga Order dummy dan satu manual, edit dan hapus Order dummy, perpindahan marker Map, serta Regenerate dengan satu Order manual tetap tersedia. Pemeriksaan read-only TiDB Testing setelah cleanup mengonfirmasi Depot `330001`, Scenario `270001`, dan Order fixture berjumlah nol. Ledger fixture mencatat dua operasi `confirmed` dan nol operasi aktif. SC1 tetap tersedia dengan nol Order.
 
-GET detail Depot dan Scenario yang telah dihapus mengembalikan `503 UNAVAILABLE`. Probe read-only menunjukkan SELECT TiDB HTTP untuk ID yang sudah tidak ada mengembalikan metadata `types` tanpa `rows`. Validasi transport menolak payload tersebut sebelum repository dapat mengembalikan `null`. Jalur ini sudah ada sebelum Part E.
+Sebelum fix Part E.6, GET detail Depot dan Scenario yang telah dihapus mengembalikan `503 UNAVAILABLE`. Probe read-only menunjukkan SELECT TiDB HTTP untuk ID yang sudah tidak ada mengembalikan metadata `types` tanpa `rows`. Validasi transport menolak payload tersebut sebelum repository dapat mengembalikan `null`. Jalur ini sudah ada sebelum Part E.
 
-Perbaikan lokal Part E.6 memakai `SELECT EXISTS` dengan tepat satu flag tervalidasi untuk GET detail. Flag negatif menghasilkan `404 NOT_FOUND`. Flag positif memerlukan tepat satu detail yang valid untuk ID yang sama. Jika detail hilang di antara kedua SELECT, API mengembalikan `503 UNAVAILABLE`. Tes offline memakai transport sintetis dan mencakup respons rusak, kegagalan transport, dan BIGINT di atas batas integer aman JavaScript.
+Perbaikan Part E.6 memakai `SELECT EXISTS` dengan tepat satu flag tervalidasi untuk GET detail. Flag negatif menghasilkan `404 NOT_FOUND`. Flag positif memerlukan tepat satu detail yang valid untuk ID yang sama. Jika detail hilang di antara kedua SELECT, API mengembalikan `503 UNAVAILABLE`. Tes offline memakai transport sintetis dan mencakup respons rusak, kegagalan transport, dan BIGINT di atas batas integer aman JavaScript.
 
-**PENDING LIVE VERIFICATION.** Setelah fix tersedia di Testing, verifikasi HTTP 404 dengan kode `NOT_FOUND` untuk Depot `330001` dan Scenario `270001`, serta HTTP 200 untuk record pembanding yang masih ada. Bukti cleanup dan acceptance fitur pada Part E.5 tetap berlaku. Phase 2B Production **NOT RELEASED**.
+**PASS — OWNER-OBSERVED (Testing).** Pada 21 November 2026 sekitar 22.00–22.01 WIB, owner memeriksa kontrak GET berikut pada [stable Testing alias](https://courier-route-planner-git-testing-ardhankurniawans-projects.vercel.app).
+
+| GET | Hasil |
+|---|---|
+| `/api/scenarios/270001` | HTTP 404 `NOT_FOUND` |
+| `/api/depots/330001` | HTTP 404 `NOT_FOUND` |
+| `/api/scenarios/90001` | HTTP 200 |
+| `/api/depots/150001` | HTTP 200 |
+
+Keempat respons bertipe `application/json` dan memuat `Cache-Control: private, no-store`.
+
+GitHub mencatat [PR #51](https://github.com/ArdhanKurniawan/courier-route-planner/pull/51) dan [PR #53](https://github.com/ArdhanKurniawan/courier-route-planner/pull/53) merged ke `testing`. [Quality Gate 44915404284](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/44915404284) selesai **SUCCESS** untuk push ke `testing` pada SHA `bfa597501b09480bca9b5150ad1a26799abed913`.
+
+Bukti browser owner mencatat respons HTTP pada stable Testing alias. Pemetaan alias ke deployment ID dan SHA memerlukan metadata Vercel tersendiri dan belum diverifikasi pada checkpoint ini.
+
+Fault injection live `COMMIT_UNKNOWN` tetap **NOT TESTED**. Identitas SQL fisik Production **NOT VERIFIED**. Migrasi `0003` Production **NOT APPLIED**, writer Production **NOT ACTIVATED**, dan Phase 2B Production **NOT RELEASED**.
