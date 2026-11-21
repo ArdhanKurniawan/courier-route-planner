@@ -2,6 +2,7 @@ import "server-only";
 import { asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase, type createDatabase } from "@/db/client";
+import { readRecordExists } from "@/db/repositories/read-record-exists";
 import { depots, scenarios } from "@/db/schema";
 import { DepotError, depotRow, parseDepotId } from "@/lib/validation/depot";
 
@@ -10,7 +11,10 @@ export type DepotWrite = Omit<DepotRow, "id">;
 export type DepotUpdate = Omit<DepotWrite, "createdAt">;
 export type DepotRepository = {
   list: (query: { after?: bigint; limit: number }) => Promise<DepotRow[]>;
-  findById: (id: bigint) => Promise<DepotRow | null>;
+  findById: (
+    id: bigint,
+    options?: { confirmAbsence: true },
+  ) => Promise<DepotRow | null>;
   insert: (input: DepotWrite) => Promise<bigint>;
   update: (id: bigint, input: DepotUpdate) => Promise<number>;
   remove: (id: bigint) => Promise<number>;
@@ -107,13 +111,21 @@ export function createDepotRepository(
           .limit(query.limit);
         return z.array(depotRow).parse(rows);
       }),
-    findById: (id) =>
+    findById: (id, options) =>
       read(async (db) => {
+        const scope = eq(depots.id, id);
+        if (
+          options?.confirmAbsence &&
+          !(await readRecordExists(db, depots, scope))
+        )
+          return null;
         const rows = await db
           .select(projection)
           .from(depots)
-          .where(eq(depots.id, id))
+          .where(scope)
           .limit(1);
+        if (options?.confirmAbsence && rows.length !== 1)
+          throw new DepotError("UNAVAILABLE");
         if (!rows.length) return null;
         const row = depotRow.parse(rows[0]);
         if (row.id !== id) throw new DepotError("UNAVAILABLE");

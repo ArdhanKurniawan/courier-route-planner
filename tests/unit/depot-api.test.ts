@@ -4,7 +4,11 @@ import { createDatabase, getDatabase } from "@/db/client";
 import { HttpError } from "@/lib/http/request-security";
 import { GET, POST } from "@/app/api/depots/route";
 import { GET as detail, PUT, DELETE } from "@/app/api/depots/[id]/route";
-import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
+import {
+  fakeDatabaseUrl,
+  recordExistsReply,
+  type DatabaseFetch,
+} from "../fixtures/tidb-http";
 const boundary = vi.hoisted(() => ({ status: 0 }));
 vi.mock("@/lib/security/admin", () => ({
   requireAdmin: async () => {
@@ -76,9 +80,12 @@ beforeEach(() => {
   vi.stubEnv("APP_ENV", "development");
   vi.stubEnv("DATABASE_URL", fakeDatabaseUrl);
   const transport: DatabaseFetch = async (_url, init) => {
-    queries.push(JSON.parse(init!.body).query);
+    const { query } = JSON.parse(init!.body);
+    queries.push(query);
     if (!replies.length) throw new Error("Unexpected synthetic SQL");
-    const next = replies.shift();
+    const reply = replies.shift();
+    const next = typeof reply === "function" ? reply(query) : reply;
+    if (next instanceof Error) throw next;
     return next instanceof Response
       ? next
       : Response.json(next, {
@@ -138,7 +145,7 @@ describe("protected Depot HTTP contracts", () => {
     },
   );
   it("lists and reads lossless string ids with private no-store envelopes", async () => {
-    replies = [rows(), rows()];
+    replies = [rows(), recordExistsReply("1"), rows()];
     const list = await GET(request());
     expect(list.status).toBe(200);
     expect(await list.json()).toMatchObject({
@@ -148,7 +155,12 @@ describe("protected Depot HTTP contracts", () => {
     expect(list.headers.get("cache-control")).toBe("private, no-store");
     const found = await detail(request(), context());
     expect(found.status).toBe(200);
-    expect(await found.json()).toMatchObject({ data: { id } });
+    expect(await found.json()).toMatchObject({ data: { id, ...input } });
+    expect(queries).toHaveLength(3);
+    for (const sql of queries.slice(1)) {
+      expect(sql).toMatch(/^select\b/i);
+      expect(sql).toContain(id);
+    }
   });
   it("creates, no-op updates and deletes with their exact status contracts", async () => {
     replies = [{ rowsAffected: 1, sLastInsertID: id }, rows()];
@@ -162,13 +174,59 @@ describe("protected Depot HTTP contracts", () => {
     expect(removed.status).toBe(204);
     expect(await removed.text()).toBe("");
   });
-  it("maps a missing Depot to 404 after confirming no Scenario reference", async () => {
-    replies = [{ types: [{ name: "id", type: "BIGINT" }], rows: [] }];
-    expect((await detail(request(), context())).status).toBe(404);
+  it("returns 404 for a deleted Depot when a direct SELECT would omit rows", async () => {
+    replies = [
+      (query: string) =>
+        /^select cast\(exists\(/i.test(query)
+          ? recordExistsReply("0")
+          : { types: rows().types },
+    ];
+    const response = await detail(request(), context());
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: { code: "NOT_FOUND" } });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(
+      /^select cast\(exists\(select 1 from `depots` where /i,
+    );
+    expect(queries[0]).toContain(id);
+  });
+  it.each([
+    ["invalid flag", { ...recordExistsReply("0"), rows: [["2"]] }],
+    [
+      "unexpected flag type",
+      { ...recordExistsReply("0"), types: [{ name: "record_exists", type: "INT" }] },
+    ],
+    ["missing flag rows", { types: recordExistsReply("0").types }],
+    ["transport failure", new Error("synthetic private URL")],
+  ])("returns unavailable for a Depot existence check with %s", async (_label, reply) => {
+    replies = [reply];
+    const response = await detail(request(), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: { code: "UNAVAILABLE", message: "Depot unavailable." },
+    });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/i);
+  });
+  it.each([
+    ["an empty row array", { ...rows(), rows: [] }],
+    ["omitted rows", { types: rows().types }],
+    ["omitted column metadata", { rows: rows().rows }],
+  ])("fails closed when a positive Depot flag is followed by %s", async (_label, reply) => {
+    replies = [recordExistsReply("1"), reply];
+    const response = await detail(request(), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: { code: "UNAVAILABLE" },
+    });
+    expect(queries).toHaveLength(2);
+    expect(queries.every((query) => /^select\b/i.test(query))).toBe(true);
+  });
+  it("maps a zero-row Depot DELETE to 404 after confirming no Scenario reference", async () => {
     replies = [referenceReply("0"), { rowsAffected: 0 }];
     expect((await DELETE(request("DELETE"), context())).status).toBe(404);
     expect(queries.filter((q) => /^delete\b/iu.test(q))).toHaveLength(1);
-    expect(queries[1]).toContain("scenarios");
+    expect(queries[0]).toContain("scenarios");
   });
   it("validates origin, id, query and fields before DB construction", async () => {
     expect(

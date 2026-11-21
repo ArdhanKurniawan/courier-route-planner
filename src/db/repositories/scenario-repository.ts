@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, eq, exists, gt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDatabase, type createDatabase } from "@/db/client";
+import { readRecordExists } from "@/db/repositories/read-record-exists";
 import { depots, orders, scenarios } from "@/db/schema";
 import {
   ScenarioError,
@@ -14,7 +15,10 @@ export type ScenarioWrite = Omit<ScenarioRow, "id">;
 export type ScenarioUpdate = Omit<ScenarioWrite, "createdAt" | "status">;
 export type ScenarioRepository = {
   list: (query: { after?: bigint; limit: number }) => Promise<ScenarioRow[]>;
-  findById: (id: bigint) => Promise<ScenarioRow | null>;
+  findById: (
+    id: bigint,
+    options?: { confirmAbsence: true },
+  ) => Promise<ScenarioRow | null>;
   insert: (input: ScenarioWrite) => Promise<bigint>;
   update: (id: bigint, input: ScenarioUpdate) => Promise<number>;
   remove: (id: bigint) => Promise<number>;
@@ -116,13 +120,21 @@ export function createScenarioRepository(
             .limit(query.limit),
         ),
       ),
-    findById: (id) =>
+    findById: (id, options) =>
       read(async (db) => {
+        const scope = eq(scenarios.id, id);
+        if (
+          options?.confirmAbsence &&
+          !(await readRecordExists(db, scenarios, scope))
+        )
+          return null;
         const rows = await db
           .select(projection)
           .from(scenarios)
-          .where(eq(scenarios.id, id))
+          .where(scope)
           .limit(1);
+        if (options?.confirmAbsence && rows.length !== 1)
+          throw new ScenarioError("UNAVAILABLE");
         if (!rows.length) return null;
         const row = scenarioRow.parse(rows[0]);
         if (row.id !== id) throw new ScenarioError("UNAVAILABLE");
