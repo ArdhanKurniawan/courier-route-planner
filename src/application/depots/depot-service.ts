@@ -38,7 +38,7 @@ export function createDepotService(
       }),
     getDepot: (id: bigint) =>
       read(async () => {
-        const row = await repo.findById(id);
+        const row = await repo.findById(id, { confirmAbsence: true });
         if (!row) throw new DepotError("NOT_FOUND");
         return serializeDepot(row);
       }),

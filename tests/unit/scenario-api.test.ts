@@ -4,7 +4,11 @@ import { createDatabase, getDatabase } from "@/db/client";
 import { HttpError } from "@/lib/http/request-security";
 import { GET, POST } from "@/app/api/scenarios/route";
 import { GET as detail, PUT, DELETE } from "@/app/api/scenarios/[id]/route";
-import { fakeDatabaseUrl, type DatabaseFetch } from "../fixtures/tidb-http";
+import {
+  fakeDatabaseUrl,
+  recordExistsReply,
+  type DatabaseFetch,
+} from "../fixtures/tidb-http";
 import { flag } from "../fixtures/order";
 import {
   scenarioInput as input,
@@ -45,9 +49,12 @@ beforeEach(() => {
   vi.stubEnv("APP_ENV", "development");
   vi.stubEnv("DATABASE_URL", fakeDatabaseUrl);
   const transport: DatabaseFetch = async (_url, init) => {
-    queries.push(JSON.parse(init!.body).query);
+    const { query } = JSON.parse(init!.body);
+    queries.push(query);
     if (!replies.length) throw new Error("Unexpected fixture SQL");
-    const value = replies.shift();
+    const reply = replies.shift();
+    const value = typeof reply === "function" ? reply(query) : reply;
+    if (value instanceof Error) throw value;
     return value instanceof Response
       ? value
       : Response.json(value, {
@@ -84,7 +91,7 @@ describe("Scenario protected HTTP contracts", () => {
     },
   );
   it("lists and reads protected no-store JSON with lossless ids and seeds", async () => {
-    replies = [scenarioWire(), scenarioWire()];
+    replies = [scenarioWire(), recordExistsReply("1"), scenarioWire()];
     const list = await GET(request());
     expect(list.status).toBe(200);
     expect(list.headers.get("cache-control")).toBe("private, no-store");
@@ -95,6 +102,11 @@ describe("Scenario protected HTTP contracts", () => {
     const response = await detail(request(), context());
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ data: scenarioDtoFixture });
+    expect(queries).toHaveLength(3);
+    for (const sql of queries.slice(1)) {
+      expect(sql).toMatch(/^select\b/i);
+      expect(sql).toContain(id);
+    }
   });
   it("creates/updates/deletes only its selected Scenario and returns expected envelopes", async () => {
     replies = [
@@ -207,13 +219,56 @@ describe("Scenario protected HTTP contracts", () => {
     expect(body).toContain("SCENARIO_IN_USE");
     expect(body).not.toContain("synthetic private SQL");
   });
-  it("preserves missing-id responses and unknown mutation outcomes without automatic retry", async () => {
+  it("returns 404 for a deleted Scenario when a direct SELECT would omit rows", async () => {
     replies = [
-      { types: [{ name: "id", type: "BIGINT" }], rows: [] },
-      flag("0"),
-      { rowsAffected: 0 },
+      (query: string) =>
+        /^select cast\(exists\(/i.test(query)
+          ? recordExistsReply("0")
+          : { types: scenarioWire().types },
     ];
-    expect((await detail(request(), context())).status).toBe(404);
+    const response = await detail(request(), context());
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: { code: "NOT_FOUND" } });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(
+      /^select cast\(exists\(select 1 from `scenarios` where /i,
+    );
+    expect(queries[0]).toContain(id);
+  });
+  it.each([
+    ["invalid flag", { ...recordExistsReply("0"), rows: [["2"]] }],
+    [
+      "unexpected flag column",
+      { types: [{ name: "other", type: "VARCHAR" }], rows: [["0"]] },
+    ],
+    ["missing flag metadata", { rows: [["0"]] }],
+    ["transport failure", new Error("synthetic private URL")],
+  ])("returns unavailable for a Scenario existence check with %s", async (_label, reply) => {
+    replies = [reply];
+    const response = await detail(request(), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({
+      error: { code: "UNAVAILABLE", message: "Scenario unavailable." },
+    });
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toMatch(/^select\b/i);
+  });
+  it.each([
+    ["an empty row array", { ...scenarioWire(), rows: [] }],
+    ["omitted rows", { types: scenarioWire().types }],
+    ["omitted column metadata", { rows: scenarioWire().rows }],
+  ])("fails closed when a positive Scenario flag is followed by %s", async (_label, reply) => {
+    replies = [recordExistsReply("1"), reply];
+    const response = await detail(request(), context());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: { code: "UNAVAILABLE" },
+    });
+    expect(queries).toHaveLength(2);
+    expect(queries.every((query) => /^select\b/i.test(query))).toBe(true);
+  });
+  it("preserves missing-id responses and unknown mutation outcomes without automatic retry", async () => {
+    replies = [flag("0"), { rowsAffected: 0 }];
     expect((await DELETE(request("DELETE"), context())).status).toBe(404);
     replies = [
       { rowsAffected: 1, sLastInsertID: id },
@@ -224,6 +279,6 @@ describe("Scenario protected HTTP contracts", () => {
     expect(await response.json()).toMatchObject({
       error: { code: "MUTATION_OUTCOME_UNKNOWN" },
     });
-    expect(queries).toHaveLength(5);
+    expect(queries).toHaveLength(4);
   });
 });

@@ -447,3 +447,13 @@ Tes offline mencakup penolakan berdasarkan mode, guard saat ledger aktif, mutasi
 Tombol Edit dan Hapus masih dapat muncul untuk Order dummy di mode `disabled` dan `recovery`. Server menolak mutasinya. Ini temuan UI Minor yang tidak memblokir Draft PR.
 
 Phase 2B di Production tetap **NOT RELEASED**, aktivasi writer belum dilakukan, dan identitas database fisik dari deployment kandidat **NOT VERIFIED**. Migrasi `0003` di Production dan aktivasi writer memerlukan persetujuan terpisah. Isolasi deployment lama yang masih dapat menulis sebelum aktivasi. [Checklist rilis](12_CI_CD_RELEASE.md#checkpoint-aktivasi-writer-phase-2b)
+
+## 25. Kontrak GET setelah cleanup Phase 2B Part E.5
+
+Pascamerge Testing pada `707a2ef` mencatat PASS untuk Save tiga Order dummy dan satu manual, edit dan hapus Order dummy, perpindahan marker Map, serta Regenerate dengan satu Order manual tetap tersedia. Pemeriksaan read-only TiDB Testing setelah cleanup mengonfirmasi Depot `330001`, Scenario `270001`, dan Order fixture berjumlah nol. Ledger fixture mencatat dua operasi `confirmed` dan nol operasi aktif. SC1 tetap tersedia dengan nol Order.
+
+GET detail Depot dan Scenario yang telah dihapus mengembalikan `503 UNAVAILABLE`. Probe read-only menunjukkan SELECT TiDB HTTP untuk ID yang sudah tidak ada mengembalikan metadata `types` tanpa `rows`. Validasi transport menolak payload tersebut sebelum repository dapat mengembalikan `null`. Jalur ini sudah ada sebelum Part E.
+
+Perbaikan lokal Part E.6 memakai `SELECT EXISTS` dengan tepat satu flag tervalidasi untuk GET detail. Flag negatif menghasilkan `404 NOT_FOUND`. Flag positif memerlukan tepat satu detail yang valid untuk ID yang sama. Jika detail hilang di antara kedua SELECT, API mengembalikan `503 UNAVAILABLE`. Tes offline memakai transport sintetis dan mencakup respons rusak, kegagalan transport, dan BIGINT di atas batas integer aman JavaScript.
+
+**PENDING LIVE VERIFICATION.** Setelah fix tersedia di Testing, verifikasi HTTP 404 dengan kode `NOT_FOUND` untuk Depot `330001` dan Scenario `270001`, serta HTTP 200 untuk record pembanding yang masih ada. Bukti cleanup dan acceptance fitur pada Part E.5 tetap berlaku. Phase 2B Production **NOT RELEASED**.
