@@ -372,6 +372,9 @@ describe("Testing migration runner", () => {
       expect(connection.queries).toEqual([]);
       expect(stream.closed).toBe(true);
       expect(info).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining("phase=tls category=verification-failed"),
+      );
     },
   );
 
@@ -383,6 +386,55 @@ describe("Testing migration runner", () => {
     expect(connection.stream.closed).toBe(true);
     expect(JSON.stringify([info.mock.calls, error.mock.calls])).not.toMatch(
       /fixture_password|mysql:\/\//,
+    );
+  });
+
+  it("reports empty inherited environment values before opening a connection", async () => {
+    expect(await runTestingMigration({ APP_ENV: "", DATABASE_URL: "" })).toBe(1);
+    expect(mysql.createConnection).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("phase=environment category=invalid-config"),
+    );
+  });
+
+  it.each([
+    ["ETIMEDOUT", "connection", "timeout"],
+    ["ER_ACCESS_DENIED_ERROR", "connection", "authentication"],
+    ["HANDSHAKE_SSL_ERROR", "tls", "verification-failed"],
+  ])(
+    "classifies handshake failure %s without logging the raw error",
+    async (code, phase, category) => {
+      connection.handshakeError = Object.assign(
+        new Error(testingEnvironment.DATABASE_URL),
+        { code, stack: "private stack trace" },
+      );
+      expect(await runTestingMigration(testingEnvironment)).toBe(1);
+      expect(mysql.createConnection).toHaveBeenCalledTimes(1);
+      expect(connection.queries).toEqual([]);
+      expect(error).toHaveBeenCalledWith(
+        expect.stringContaining(`phase=${phase} category=${category}`),
+      );
+      expect(JSON.stringify(error.mock.calls)).not.toMatch(
+        /fixture_password|private stack trace/,
+      );
+    },
+  );
+
+  it("classifies a direct mysql2 ledger read rejection as SQL", async () => {
+    vi.spyOn(connection, "execute").mockRejectedValueOnce(
+      Object.assign(new Error("private server message"), {
+        code: "ER_TABLEACCESS_DENIED_ERROR",
+        errno: 1142,
+        sqlState: "42000",
+      }),
+    );
+    expect(await runTestingMigration(testingEnvironment)).toBe(1);
+    expect(migrationWrites(connection)).toEqual([]);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("phase=sql category=permission-denied"),
+    );
+    expect(JSON.stringify(error.mock.calls)).not.toContain(
+      "private server message",
     );
   });
 
@@ -567,6 +619,7 @@ describe("installed Drizzle migration parity through the Development runner", ()
 
   it("stops after failed DDL without retry or custom ledger repair", async () => {
     connection.failAtForeignKey = true;
+    connection.failClosing = true;
     expect(await runDevelopmentMigration(environment)).toBe(1);
     expect(mysql.createConnection).toHaveBeenCalledTimes(1);
     expect(migrationWrites(connection)).toEqual(ordersWrites.slice(0, 2));
@@ -574,6 +627,10 @@ describe("installed Drizzle migration parity through the Development runner", ()
     expect(connection.queries).toContain("rollback"); // Drizzle control flow, not a DDL rollback guarantee.
     expect(connection.connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("phase=sql category=query-failed"),
+    );
+    expect(JSON.stringify(error.mock.calls)).not.toContain("ALTER TABLE");
     expect(JSON.stringify(error.mock.calls)).not.toContain("fixture_password");
   });
 
@@ -631,6 +688,9 @@ describe("installed Drizzle migration parity through the Development runner", ()
     ]);
     expect(connection.connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining("phase=cleanup category=close-failed"),
+    );
     expect(JSON.stringify(error.mock.calls)).not.toContain("mysql://");
   });
 
