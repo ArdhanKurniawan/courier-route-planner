@@ -141,6 +141,7 @@ const roadErrorMessages: Record<string, string> = {
   OSRM_TIMEOUT: "OSRM melewati batas waktu.",
   OSRM_BUSY: "OSRM sedang sibuk. Coba lagi nanti.",
   SCENARIO_CHANGED: "Data Scenario berubah. Muat ulang data peta.",
+  OSRM_SNAPSHOT_CHANGED: "Data Scenario berbeda dari snapshot OSRM yang disetujui. Gunakan Haversine atau hubungi pengelola.",
   OSRM_INVALID_POINTS: "Koordinat Depot atau Order tidak valid untuk OSRM.",
 };
 

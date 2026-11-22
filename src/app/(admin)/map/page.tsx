@@ -4,7 +4,10 @@ import { localMapDemoData } from "@/application/local-map-demo";
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import MapManager from "@/components/map/map-manager";
-import { isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled, isTestingOsrmEnabled } from "@/config/osrm-map-demo";
+import {
+  isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled, isTestingOsrmEnabled,
+  readTestingOsrmScenarioAllowlist,
+} from "@/config/osrm-map-demo";
 import { HttpError } from "@/lib/http/request-security";
 import { requireAdmin } from "@/lib/security/admin";
 import { depotId } from "@/lib/validation/depot";
@@ -51,7 +54,7 @@ export default async function MapPage({
           key={scenario.data ?? ""}
           initialScenarioId={scenario.data}
           osrmEnabled={testingOsrm || isLocalOsrmDemoEnabled()}
-          demoOnlyOsrm={testingOsrm}
+          testingOsrmScenarioIds={testingOsrm ? [...readTestingOsrmScenarioAllowlist().keys()] : undefined}
           demoScenario={demoEnabled ? localMapDemoData : undefined}
         />
       </ComponentCard>

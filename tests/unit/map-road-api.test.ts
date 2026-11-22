@@ -36,6 +36,12 @@ const second = {
   id: "9007199254740993", scenarioId: "10", orderCode: "QA-3", customerName: "B",
   longitude: 110.02, latitude: -7.02,
 };
+const approvedScenario = "90001";
+// SHA-256 of the canonical snapshot for the two synthetic Orders below.
+const approvedSnapshot = "4f422120be4b6934acd0265b31fbd76ee4fbf0530e877a8d853cdd5a14ae85a2";
+const approvedOrders = [second, first].map((order) => ({
+  ...order, scenarioId: approvedScenario, source: "dummy",
+}));
 const distances = [[0, 2, 3], [4, 0, 4], [20, 2, 0]];
 const points = [depot, first, second].map(({ longitude, latitude }) => ({
   location: [longitude, latitude],
@@ -118,6 +124,12 @@ function postTesting(id = "local-demo", requestOrigin = testingOrigin) {
   return post(id, requestOrigin, testingOrigin);
 }
 
+function useApprovedScenario(allowlist = `${approvedScenario}:${approvedSnapshot}`) {
+  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", allowlist);
+  reads.getScenario.mockResolvedValue({ id: approvedScenario, depotId: depot.id });
+  reads.listOrders.mockResolvedValue({ data: approvedOrders, nextCursor: null, totalCount: "2" });
+}
+
 async function post(
   id = "10",
   requestOrigin = origin,
@@ -143,6 +155,7 @@ beforeEach(() => {
   vi.stubEnv("AUTH_ORIGIN", origin);
   vi.stubEnv("OSRM_MAP_DEMO", "1");
   vi.stubEnv("OSRM_MAP_TESTING", undefined);
+  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", undefined);
   vi.stubEnv("MAP_LOCAL_SCENARIO_DEMO", undefined);
   vi.stubEnv("VERCEL", undefined);
   vi.stubEnv("VERCEL_ENV", undefined);
@@ -365,6 +378,84 @@ describe("OSRM for Testing Preview", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
+  it("optimizes the approved snapshot and shares the same quota with Scenario Demo Testing", async () => {
+    useTestingPreview();
+    useApprovedScenario();
+    quota.set.mockResolvedValueOnce("OK").mockResolvedValueOnce(null);
+    fetcher.mockResolvedValueOnce(tableReply()).mockResolvedValueOnce(geometryReply());
+
+    const response = await postTesting(approvedScenario);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      data: {
+        scenarioId: approvedScenario,
+        route: { totalDistanceM: 9 },
+        positions: waypointOrder.map(({ location: [longitude, latitude] }) => [latitude, longitude]),
+      },
+    });
+    expect(quota.set.mock.invocationCallOrder[0]).toBeLessThan(fetcher.mock.invocationCallOrder[0]);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    Reflect.deleteProperty(globalThis, Symbol.for("courier-route-planner.osrm-map-demo"));
+    vi.resetModules();
+    expect((await postTesting()).status).toBe(429);
+    expect(quota.set.mock.calls).toEqual([
+      ["crp:osrm:testing:fossgis", "reserved", { nx: true, ex: 60 }],
+      ["crp:osrm:testing:fossgis", "reserved", { nx: true, ex: 60 }],
+    ]);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an ID outside the configured allowlist before loading database data", async () => {
+    useTestingPreview();
+    useApprovedScenario();
+    expect((await postTesting("90002")).status).toBe(404);
+    expect(reads.getScenario).not.toHaveBeenCalled();
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "90001",
+    `90001:${approvedSnapshot},90001:${approvedSnapshot}`,
+    `90001:${approvedSnapshot},9223372036854775808:${approvedSnapshot}`,
+  ])("rejects malformed allowlist entries without contacting the database or provider (%s)", async (value) => {
+    useTestingPreview();
+    useApprovedScenario(value);
+    expect((await postTesting(approvedScenario)).status).toBe(404);
+    expect(reads.getScenario).not.toHaveBeenCalled();
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each(["depot", "order", "source"] as const)("rejects an approved Scenario when its %s differs", async (change) => {
+    useTestingPreview();
+    useApprovedScenario();
+    if (change === "depot") {
+      reads.getDepot.mockResolvedValue({ ...depot, longitude: 111 });
+    } else {
+      const modified = change === "order"
+        ? { ...approvedOrders[0], latitude: -8 }
+        : { ...approvedOrders[0], source: "manual" };
+      reads.listOrders.mockResolvedValue({
+        data: [modified, approvedOrders[1]], nextCursor: null, totalCount: "2",
+      });
+    }
+    const response = await postTesting(approvedScenario);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ error: { code: "OSRM_SNAPSHOT_CHANGED" } });
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("fails closed for an approved Scenario when Redis fails", async () => {
+    useTestingPreview();
+    useApprovedScenario();
+    quota.set.mockRejectedValueOnce(new Error("Redis unavailable"));
+    expect((await postTesting(approvedScenario)).status).toBe(503);
+    expect(quota.set).toHaveBeenCalledOnce();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it.each([
     ["OSRM_MAP_TESTING", undefined],
     ["OSRM_MAP_TESTING", "0"],
@@ -377,8 +468,11 @@ describe("OSRM for Testing Preview", () => {
     ["NODE_ENV", "development"],
   ])("fails closed for %s=%s", async (name, value) => {
     useTestingPreview();
+    useApprovedScenario();
     vi.stubEnv(name!, value);
     expect((await postTesting()).status).toBe(404);
+    expect((await postTesting(approvedScenario)).status).toBe(404);
+    expect(reads.getScenario).not.toHaveBeenCalled();
     expect(quota.set).not.toHaveBeenCalled();
     expect(fetcher).not.toHaveBeenCalled();
   });

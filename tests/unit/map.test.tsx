@@ -152,7 +152,7 @@ function enableLocalDemo() {
   vi.stubEnv("VERCEL_TARGET_ENV", undefined);
 }
 
-it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario", async () => {
+function enableTestingOsrm() {
   vi.stubEnv("NODE_ENV", "production");
   vi.stubEnv("APP_ENV", "testing");
   vi.stubEnv("VERCEL", "1");
@@ -161,6 +161,11 @@ it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario"
   vi.stubEnv("VERCEL_GIT_COMMIT_REF", "testing");
   vi.stubEnv("AUTH_ORIGIN", "https://testing.example");
   vi.stubEnv("OSRM_MAP_TESTING", "1");
+  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", undefined);
+}
+
+it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario by default", async () => {
+  enableTestingOsrm();
   const fetcher = mockReads();
   render(await MapPage());
   await selectScenario("Scenario Demo Testing", "local-demo");
@@ -172,6 +177,23 @@ it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario"
   fireEvent.click(screen.getByRole("button", { name: "Muat daftar Scenario database" }));
   await selectScenario("Scenario A", "10");
   await screen.findByRole("button", { name: "Order QA-A" });
+  expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
+  expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
+  expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);
+});
+
+it("offers OSRM for an allowlisted Testing Scenario and keeps Haversine for all Scenarios", async () => {
+  enableTestingOsrm();
+  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", `10:${"a".repeat(64)}`);
+  const fetcher = mockReads();
+  render(await MapPage({ searchParams: Promise.resolve({ scenarioId: "10" }) }));
+  await screen.findByRole("button", { name: "Order QA-A" });
+  expect(screen.getByRole("option", { name: "Jarak Jalan (OSRM)" })).toBeInTheDocument();
+  expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
+
+  chooseRoadMode();
+  await selectScenario("Scenario B", "20");
+  await screen.findByRole("button", { name: "Order QA-B" });
   expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
   expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
   expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);

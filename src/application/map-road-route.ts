@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { nearestNeighborTwoOpt } from "@/domain/nn-two-opt";
 import { createOsrmClient, OsrmError } from "@/infrastructure/osrm-client";
@@ -20,6 +21,25 @@ export class RoadRouteBusyError extends Error {
   constructor() {
     super("OSRM demo is busy.");
   }
+}
+
+type CoordinateStop = Pick<DepotDTO, "id" | "latitude" | "longitude">;
+
+export function hashTestingOsrmSnapshot(
+  scenarioId: string,
+  depot: CoordinateStop,
+  orders: readonly CoordinateStop[],
+): string {
+  const coordinates = ({ id, latitude, longitude }: CoordinateStop) =>
+    [id, latitude, longitude] as const;
+  const ordered = [...orders].sort((left, right) =>
+    left.id.length - right.id.length || (left.id < right.id ? -1 : left.id === right.id ? 0 : 1),
+  );
+  return createHash("sha256")
+    .update(JSON.stringify([
+      "osrm-testing-snapshot-v1", scenarioId, coordinates(depot), ordered.map(coordinates),
+    ]))
+    .digest("hex");
 }
 
 export async function buildMapRoadRoute(
