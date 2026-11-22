@@ -54,6 +54,11 @@ const dummyOperationsEntry: LedgerRow = {
   hash: "37bf2a6115126b82fba46214711f16b75814b752a22a5cea3535fd5e62ebb4ab",
   created_at: 1794716866549,
 };
+const benchmarkCasesEntry: LedgerRow = {
+  id: 5,
+  hash: "eeae3260e989dd0f5ac70b6ef5a2fac2257191b30cf557f08e368a0a92fced54",
+  created_at: 1795345815271,
+};
 const asRecorded = (row: LedgerRow): LedgerRow => ({
   ...row,
   created_at: String(row.created_at),
@@ -84,6 +89,22 @@ const dummyOperationsWrites = [
   expect.stringMatching(
     /^ALTER TABLE `dummy_order_operations` .*FOREIGN KEY \(`active_scenario_id`\) REFERENCES `scenarios`\(`id`\)/,
   ),
+  ledgerInsert,
+];
+const benchmarkCasesWrites = [
+  expect.stringMatching(
+    /^CREATE TABLE `benchmark_case_points`[\s\S]*UNIQUE\(`case_id`,`node_index`\)[\s\S]*UNIQUE\(`case_id`,`kind`,`source_id`\)/,
+  ),
+  expect.stringMatching(
+    /^CREATE TABLE `benchmark_cases`[\s\S]*UNIQUE\(`request_id`\)/,
+  ),
+  expect.stringMatching(
+    /^ALTER TABLE `benchmark_case_points` .*FOREIGN KEY \(`case_id`\) REFERENCES `benchmark_cases`\(`id`\) ON DELETE restrict ON UPDATE restrict;/,
+  ),
+  expect.stringMatching(
+    /^ALTER TABLE `benchmark_cases` .*FOREIGN KEY \(`scenario_id`\) REFERENCES `scenarios`\(`id`\) ON DELETE restrict ON UPDATE restrict;/,
+  ),
+  expect.stringMatching(/^CREATE INDEX `benchmark_cases_scenario_id_idx`/),
   ledgerInsert,
 ];
 
@@ -365,16 +386,18 @@ describe("Testing migration runner", () => {
     );
   });
 
-  it("applies pending 0002 and 0003 in order while preserving the historical CRLF ledger row", async () => {
+  it("applies pending 0002 through 0004 in order while preserving the historical CRLF ledger row", async () => {
     expect(await runTestingMigration(testingEnvironment)).toBe(0);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
+      ...benchmarkCasesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...testingLedger(),
       ordersEntry,
       dummyOperationsEntry,
+      benchmarkCasesEntry,
     ]);
   });
 
@@ -421,12 +444,14 @@ describe("Production migration runner", () => {
       ...scenariosWrites,
       ...ordersWrites,
       ...dummyOperationsWrites,
+      ...benchmarkCasesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...initial,
       { ...initialLedger()[1], created_at: 1793441266963 },
       ordersEntry,
       dummyOperationsEntry,
+      benchmarkCasesEntry,
     ]);
     expect(connection.stream.closed).toBe(true);
   });
@@ -481,35 +506,57 @@ describe("Production migration runner", () => {
 });
 
 describe("installed Drizzle migration parity through the Development runner", () => {
-  it("applies only pending 0002 and 0003 with their DDL, hashes, and journal timestamps in order", async () => {
+  it("applies only pending 0002 through 0004 with their DDL, hashes, and journal timestamps in order", async () => {
     expect(await runDevelopmentMigration(environment)).toBe(0);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
+      ...benchmarkCasesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
       ordersEntry,
       dummyOperationsEntry,
+      benchmarkCasesEntry,
     ]);
   });
 
-  it("applies only 0003 when the ledger already contains 0000 through 0002", async () => {
+  it("applies only 0003 and 0004 when the ledger already contains 0000 through 0002", async () => {
     connection.ledger.push(asRecorded(ordersEntry));
     expect(await runDevelopmentMigration(environment)).toBe(0);
-    expect(migrationWrites(connection)).toEqual(dummyOperationsWrites);
+    expect(migrationWrites(connection)).toEqual([
+      ...dummyOperationsWrites,
+      ...benchmarkCasesWrites,
+    ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
       asRecorded(ordersEntry),
       dummyOperationsEntry,
+      benchmarkCasesEntry,
     ]);
   });
 
-  it("does not run migration DDL or insert a ledger row when 0003 is already recorded", async () => {
+  it("applies only 0004 when the ledger already contains 0000 through 0003", async () => {
+    const recorded = [
+      asRecorded(ordersEntry),
+      asRecorded(dummyOperationsEntry),
+    ];
+    connection.ledger.push(...recorded);
+    expect(await runDevelopmentMigration(environment)).toBe(0);
+    expect(migrationWrites(connection)).toEqual(benchmarkCasesWrites);
+    expect(connection.ledger).toEqual([
+      ...initialLedger(),
+      ...recorded,
+      benchmarkCasesEntry,
+    ]);
+  });
+
+  it("does not run migration DDL or insert a ledger row when 0004 is already recorded", async () => {
     const recorded = [
       ...initialLedger(),
       asRecorded(ordersEntry),
       asRecorded(dummyOperationsEntry),
+      asRecorded(benchmarkCasesEntry),
     ];
     connection.ledger.push(...recorded.slice(2));
     expect(await runDevelopmentMigration(environment)).toBe(0);
@@ -543,6 +590,12 @@ describe("installed Drizzle migration parity through the Development runner", ()
       entry: dummyOperationsEntry,
       writes: dummyOperationsWrites,
     },
+    {
+      migration: "0004",
+      recorded: [asRecorded(ordersEntry), asRecorded(dummyOperationsEntry)],
+      entry: benchmarkCasesEntry,
+      writes: benchmarkCasesWrites,
+    },
   ])(
     "stops after a lost $migration ledger acknowledgement without mutation retry",
     async ({ recorded, entry, writes }) => {
@@ -569,10 +622,12 @@ describe("installed Drizzle migration parity through the Development runner", ()
       ...initialLedger(),
       ordersEntry,
       dummyOperationsEntry,
+      benchmarkCasesEntry,
     ]);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
+      ...benchmarkCasesWrites,
     ]);
     expect(connection.connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();
