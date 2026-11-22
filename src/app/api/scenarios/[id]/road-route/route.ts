@@ -1,13 +1,14 @@
 import { ZodError } from "zod";
 import { localMapDemo } from "@/application/local-map-demo";
 import { buildMapRoadRoute, RoadRouteBusyError } from "@/application/map-road-route";
-import { isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled } from "@/config/osrm-map-demo";
+import { isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled, isTestingOsrmEnabled } from "@/config/osrm-map-demo";
 import { OsrmError } from "@/infrastructure/osrm-client";
 import { depotService } from "@/lib/http/depot-api";
 import { orderService } from "@/lib/http/order-api";
 import { scenarioService } from "@/lib/http/scenario-api";
 import { assertSameOrigin, errorResponse, HttpError, privateJson } from "@/lib/http/request-security";
 import { requireAdmin } from "@/lib/security/admin";
+import { reserveTestingOsrm } from "@/lib/security/testing-osrm-quota";
 import { DepotError } from "@/lib/validation/depot";
 import { localMapDemoId, osrmOrderLimit } from "@/lib/validation/map-road-route";
 import { OrderError } from "@/lib/validation/order";
@@ -19,7 +20,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   try {
     const admin = await requireAdmin();
     assertSameOrigin(request, admin.origin);
-    if (!isLocalOsrmDemoEnabled() || admin.environment !== "development")
+    const localAccess = admin.environment === "development" && isLocalOsrmDemoEnabled();
+    const testingAccess = admin.environment === "testing" && isTestingOsrmEnabled();
+    if (!localAccess && !testingAccess)
       throw new HttpError(404, "OSRM_DISABLED", "OSRM demo unavailable.");
     const expectedOrigin = new URL(admin.origin);
     // Next dev can use its bind hostname in Request.url instead of the Host header.
@@ -30,12 +33,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       throw new HttpError(403, "FORBIDDEN", "Request origin denied.");
 
     const { id: requestedId } = await context.params;
+    if (testingAccess && requestedId !== localMapDemoId)
+      throw new HttpError(404, "OSRM_DISABLED", "OSRM demo unavailable.");
     if (requestedId === localMapDemoId) {
-      if (!isLocalMapScenarioEnabled())
+      if (!testingAccess && !isLocalMapScenarioEnabled())
         throw new HttpError(404, "OSRM_DISABLED", "OSRM demo unavailable.");
+      if (localMapDemo.orders.length > osrmOrderLimit)
+        throw new HttpError(422, "OSRM_TOO_MANY_ORDERS", "Too many Orders.");
+      const fetcher = testingAccess ? await reserveTestingOsrm(admin, request.signal) : undefined;
       return privateJson({
         data: await buildMapRoadRoute(
-          localMapDemoId, localMapDemo.depot, localMapDemo.orders, request.signal,
+          localMapDemoId, localMapDemo.depot, localMapDemo.orders, request.signal, fetcher,
         ),
       });
     }
