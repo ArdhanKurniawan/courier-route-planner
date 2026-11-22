@@ -161,10 +161,9 @@ function enableTestingOsrm() {
   vi.stubEnv("VERCEL_GIT_COMMIT_REF", "testing");
   vi.stubEnv("AUTH_ORIGIN", "https://testing.example");
   vi.stubEnv("OSRM_MAP_TESTING", "1");
-  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", undefined);
 }
 
-it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario by default", async () => {
+it("offers OSRM for demo and database Scenarios without posting on load or selection", async () => {
   enableTestingOsrm();
   const fetcher = mockReads();
   render(await MapPage());
@@ -177,26 +176,31 @@ it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario 
   fireEvent.click(screen.getByRole("button", { name: "Muat daftar Scenario database" }));
   await selectScenario("Scenario A", "10");
   await screen.findByRole("button", { name: "Order QA-A" });
-  expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
-  expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
-  expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);
-});
-
-it("offers OSRM for an allowlisted Testing Scenario and keeps Haversine for all Scenarios", async () => {
-  enableTestingOsrm();
-  vi.stubEnv("OSRM_TESTING_SCENARIO_ALLOWLIST", `10:${"a".repeat(64)}`);
-  const fetcher = mockReads();
-  render(await MapPage({ searchParams: Promise.resolve({ scenarioId: "10" }) }));
-  await screen.findByRole("button", { name: "Order QA-A" });
   expect(screen.getByRole("option", { name: "Jarak Jalan (OSRM)" })).toBeInTheDocument();
   expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
 
   chooseRoadMode();
   await selectScenario("Scenario B", "20");
   await screen.findByRole("button", { name: "Order QA-B" });
-  expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "Jarak Jalan (OSRM)" })).toBeInTheDocument();
   expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
   expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);
+});
+
+it("explains when a Testing Scenario contains non-dummy Orders without falling back to Haversine", async () => {
+  enableTestingOsrm();
+  const fetcher = mockReads({
+    [roadPath]: Response.json({ error: { code: "OSRM_DUMMY_ORDERS_ONLY" } }, { status: 422 }),
+  });
+  const { create } = mockRouteWorker();
+  render(await MapPage({ searchParams: Promise.resolve({ scenarioId: "10" }) }));
+  const optimize = await screen.findByRole("button", { name: optimizeLabel });
+  chooseRoadMode();
+  expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);
+  fireEvent.click(optimize);
+  expect(await screen.findByRole("alert")).toHaveTextContent(/semua Order.*dummy/i);
+  expect(screen.getByRole("combobox", { name: "Mode jarak" })).toHaveValue("osrm");
+  expect(create).not.toHaveBeenCalled();
 });
 
 describe("Scenario Demo Lokal", () => {
