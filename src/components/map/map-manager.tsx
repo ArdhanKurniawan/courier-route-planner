@@ -2,8 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { localMapDemoId, osrmOrderLimit, type MapRouteMode } from "@/lib/validation/map-road-route";
 import {
+  readMapRoadRoute,
   readScenarioMap,
   readScenarioOptions,
   type ScenarioMapData,
@@ -45,25 +47,61 @@ function LoadError({ message, retry }: { message: string; retry: () => void }) {
 function MapResults({
   data,
   reload,
-}: { data: ScenarioMapData; reload: () => void }) {
+  osrmEnabled,
+}: { data: ScenarioMapData; reload: () => void; osrmEnabled: boolean }) {
   const [route, setRoute] = useState<MapRouteState>({ status: "idle" });
-  const activeWorker = useRef<Worker | null>(null);
+  const [routeMode, setRouteMode] = useState<MapRouteMode>("haversine");
+  const isDemo = data.scenarioId === localMapDemoId;
+  const mode = osrmEnabled ? routeMode : "haversine";
+  const active = useRef<{ cancel?: () => void } | null>(null);
   const routePositions = route.status === "ready"
-    ? route.route.stops.map(({ position }) => position)
+    ? mode === "osrm"
+      ? route.roadPositions ?? undefined
+      : route.route.stops.map(({ position }) => position)
     : undefined;
 
-  useEffect(
-    () => () => {
-      const worker = activeWorker.current;
-      activeWorker.current = null;
-      worker?.terminate();
-    },
-    [],
-  );
+  const cancelOptimization = useCallback(() => {
+    const job = active.current;
+    active.current = null;
+    job?.cancel?.();
+  }, []);
+  useEffect(() => cancelOptimization, [cancelOptimization]);
+
+  function chooseMode(next: MapRouteMode) {
+    cancelOptimization();
+    setRouteMode(next);
+    setRoute({ status: "idle" });
+  }
 
   function optimize() {
-    if (activeWorker.current || data.orders.length === 0) return;
+    if (active.current || data.orders.length === 0) return;
+    if (mode === "osrm") {
+      if (data.orders.length > osrmOrderLimit) return;
+      if (!data.depot.position || data.orders.some((order) => !order.position)) {
+        setRoute({ status: "error", message: "Koordinat Depot atau Order tidak valid untuk OSRM." });
+        return;
+      }
+    }
+    const job: { cancel?: () => void } = {};
+    active.current = job;
     setRoute({ status: "loading" });
+
+    function finish(outcome: MapRouteState) {
+      if (active.current !== job) return;
+      cancelOptimization();
+      setRoute(outcome);
+    }
+
+    if (mode === "osrm") {
+      const controller = new AbortController();
+      job.cancel = () => controller.abort();
+      void readMapRoadRoute(data, controller.signal).then(
+        (result) => finish({ status: "ready", route: result.route, roadPositions: result.positions }),
+        (error: Error) => finish({ status: "error", message: error.message }),
+      );
+      return;
+    }
+
     const failure: MapRouteOutcome = {
       status: "error",
       message: mapRouteFailure,
@@ -73,22 +111,14 @@ function MapResults({
       const worker = new Worker(
         new URL("./map-route-worker.ts", import.meta.url),
       );
-      activeWorker.current = worker;
-      function finish(outcome: MapRouteOutcome) {
-        if (activeWorker.current !== worker) return;
-        activeWorker.current = null;
-        worker.terminate();
-        setRoute(outcome);
-      }
+      job.cancel = () => worker.terminate();
       worker.onmessage = (event: MessageEvent<MapRouteOutcome>) =>
         finish(event.data);
       worker.onerror = () => finish(failure);
       worker.onmessageerror = () => finish(failure);
       worker.postMessage(data);
     } catch {
-      activeWorker.current?.terminate();
-      activeWorker.current = null;
-      setRoute(failure);
+      finish(failure);
     }
   }
 
@@ -101,14 +131,16 @@ function MapResults({
         aria-label="Ringkasan Order"
         className="flex flex-wrap gap-x-5 gap-y-2 border-y border-gray-200 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300"
       >
-        <li className="font-semibold">{data.orders.length} Order aktual</li>
+        <li className="font-semibold">{data.orders.length} Order {isDemo ? "sintetis" : "aktual"}</li>
         <li>{validOrders} koordinat valid</li>
         <li>{data.orders.length - validOrders} koordinat tidak valid</li>
       </ul>
 
       <MapRoutePanel
         state={route}
-        hasOrders={data.orders.length > 0}
+        orderCount={data.orders.length}
+        mode={mode}
+        onModeChange={osrmEnabled ? chooseMode : undefined}
         optimize={optimize}
         reload={reload}
       />
@@ -140,7 +172,7 @@ function MapResults({
             {routePositions && (
               <span>
                 <span aria-hidden="true" className="mr-1 inline-block w-5 align-middle border-t-2 border-dashed border-violet-600 dark:border-violet-400" />{" "}
-                Rute demo
+                {mode === "osrm" ? "Rute jalan OSRM" : "Rute demo"}
               </span>
             )}
           </div>
@@ -162,13 +194,13 @@ function MapResults({
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 Depot
               </h3>
-              <Link
+              {!isDemo && <Link
                 className="inline-flex min-h-11 items-center text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
                 href="/depots"
                 prefetch={false}
               >
                 Kelola Depot
-              </Link>
+              </Link>}
             </div>
             <p className="break-words text-sm font-medium text-gray-800 dark:text-gray-200">
               {data.depot.name}
@@ -189,13 +221,13 @@ function MapResults({
               <h3 className="font-semibold text-gray-900 dark:text-white">
                 Order
               </h3>
-              <Link
+              {!isDemo && <Link
                 className="inline-flex min-h-11 items-center text-sm font-medium text-brand-600 hover:underline dark:text-brand-400"
                 href="/orders"
                 prefetch={false}
               >
                 Kelola Order
-              </Link>
+              </Link>}
             </div>
             {data.orders.length === 0 ? (
               <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -232,7 +264,10 @@ function MapResults({
   );
 }
 
-function SelectedScenarioMap({ scenarioId }: { scenarioId: string }) {
+function SelectedScenarioMap({
+  scenarioId,
+  osrmEnabled,
+}: { scenarioId: string; osrmEnabled: boolean }) {
   const [map, setMap] = useState<Load<ScenarioMapData>>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
 
@@ -269,19 +304,25 @@ function SelectedScenarioMap({ scenarioId }: { scenarioId: string }) {
         retry={reload}
       />
     );
-  return <MapResults data={map.data} reload={reload} />;
+  return <MapResults data={map.data} reload={reload} osrmEnabled={osrmEnabled} />;
 }
 
 export default function MapManager({
   initialScenarioId = "",
-}: { initialScenarioId?: string } = {}) {
-  const [scenarios, setScenarios] = useState<Load<ScenarioOption[]>>({
-    status: "loading",
+  osrmEnabled = false,
+  demoScenario,
+}: { initialScenarioId?: string; osrmEnabled?: boolean; demoScenario?: ScenarioMapData } = {}) {
+  const [scenarioAttempt, setScenarioAttempt] = useState<number | null>(() =>
+    demoScenario && (!initialScenarioId || initialScenarioId === localMapDemoId) ? null : 0,
+  );
+  const [scenarios, setScenarios] = useState<Load<ScenarioOption[]> | { status: "idle" }>({
+    status: scenarioAttempt === null ? "idle" : "loading",
   });
-  const [scenarioAttempt, setScenarioAttempt] = useState(0);
   const [selectedId, setSelectedId] = useState(initialScenarioId);
+  const [demoAttempt, setDemoAttempt] = useState(0);
 
   useEffect(() => {
+    if (scenarioAttempt === null) return;
     const controller = new AbortController();
     void readScenarioOptions(controller.signal).then(
       (data) => {
@@ -294,25 +335,25 @@ export default function MapManager({
     return () => controller.abort();
   }, [scenarioAttempt]);
 
-  if (scenarios.status === "loading")
-    return (
-      <p role="status" className="text-sm">
-        Memuat daftar Scenario...
-      </p>
-    );
-  if (scenarios.status === "error")
-    return (
-      <LoadError
-        message="Daftar Scenario gagal dimuat."
-        retry={() => {
-          setScenarios({ status: "loading" });
-          setScenarioAttempt((attempt) => attempt + 1);
-        }}
-      />
-    );
-  if (scenarios.data.length === 0)
-    return <p className="text-sm">Belum ada Scenario.</p>;
-  const activeId = scenarios.data.some(({ id }) => id === selectedId)
+  function loadDatabaseScenarios() {
+    setScenarios({ status: "loading" });
+    setScenarioAttempt((attempt) => (attempt ?? -1) + 1);
+  }
+
+  const databaseOptions = scenarios.status === "ready" ? scenarios.data : [];
+  const loadingScenarios = (
+    <p role="status" className="text-sm">Memuat daftar Scenario...</p>
+  );
+  const scenarioListError = (
+    <LoadError message="Daftar Scenario gagal dimuat." retry={loadDatabaseScenarios} />
+  );
+  if (!demoScenario) {
+    if (scenarios.status === "loading") return loadingScenarios;
+    if (scenarios.status === "error") return scenarioListError;
+    if (databaseOptions.length === 0) return <p className="text-sm">Belum ada Scenario.</p>;
+  }
+  const demoSelected = demoScenario && selectedId === localMapDemoId;
+  const activeId = demoSelected || databaseOptions.some(({ id }) => id === selectedId)
     ? selectedId
     : "";
 
@@ -339,7 +380,8 @@ export default function MapManager({
           }}
         >
           <option value="">Pilih Scenario</option>
-          {scenarios.data.map((scenario) => (
+          {demoScenario && <option value={localMapDemoId}>Scenario Demo Lokal</option>}
+          {databaseOptions.map((scenario) => (
             <option key={scenario.id} value={scenario.id}>
               {scenario.name}
             </option>
@@ -347,9 +389,24 @@ export default function MapManager({
         </select>
       </div>
 
-      {activeId ? (
-        <SelectedScenarioMap key={activeId} scenarioId={activeId} />
-      ) : selectedId ? (
+      {scenarios.status === "idle" && (
+        <button type="button" className="min-h-11 text-sm font-medium underline" onClick={loadDatabaseScenarios}>
+          Muat daftar Scenario database
+        </button>
+      )}
+      {scenarios.status === "loading" && loadingScenarios}
+      {scenarios.status === "error" && scenarioListError}
+
+      {demoSelected ? (
+        <MapResults
+          key={demoAttempt}
+          data={demoScenario}
+          reload={() => setDemoAttempt((attempt) => attempt + 1)}
+          osrmEnabled={osrmEnabled}
+        />
+      ) : activeId ? (
+        <SelectedScenarioMap key={activeId} scenarioId={activeId} osrmEnabled={osrmEnabled} />
+      ) : selectedId && scenarios.status === "ready" ? (
         <p role="alert">Scenario pada tautan tidak ditemukan.</p>
       ) : (
         <p className="text-sm text-gray-600 dark:text-gray-300">

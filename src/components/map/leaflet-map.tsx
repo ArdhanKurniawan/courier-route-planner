@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import type { MapPosition, ScenarioMapData } from "./map-data";
 import type { DummyPreview } from "@/lib/validation/dummy-preview";
+import { localMapDemoId } from "@/lib/validation/map-road-route";
 
 const tileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const attribution =
@@ -150,6 +151,7 @@ function routeInDepotWorld(
 function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
   const positions: MapPosition[] = [];
   const { depot, orders, scenarioId } = data;
+  const canEdit = scenarioId !== localMapDemoId;
   const editQuery = `?scenarioId=${scenarioId}&edit=`;
   if (depot.position) {
     positions.push(depot.position);
@@ -159,7 +161,7 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
       "depot",
       `Depot ${depot.name}`,
       [depot.address, depot.position.join(", ")],
-      `/depots${editQuery}${depot.id}`,
+      canEdit ? `/depots${editQuery}${depot.id}` : undefined,
     );
   }
   for (const order of orders) {
@@ -172,7 +174,7 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
       "order",
       `Order ${order.orderCode}`,
       [order.customerName, order.address, order.position.join(", ")],
-      `/orders${editQuery}${order.id}`,
+      canEdit ? `/orders${editQuery}${order.id}` : undefined,
     );
   }
   return positions;

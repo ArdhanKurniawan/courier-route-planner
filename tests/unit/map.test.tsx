@@ -8,8 +8,13 @@ import {
 } from "@testing-library/react";
 import { Browser, Map as LeafletMap, Polyline, type LatLng, type LatLngBounds } from "leaflet";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import MapPage from "@/app/(admin)/map/page";
 import MapManager from "@/components/map/map-manager";
 import type { ScenarioMapData } from "@/components/map/map-data";
+
+vi.mock("@/lib/security/admin", () => ({
+  requireAdmin: async () => ({ origin: "http://localhost:3000", environment: "development" }),
+}));
 
 const scenarioA = { id: "10", depotId: "100", name: "Scenario A" };
 const scenarioB = { id: "20", depotId: "200", name: "Scenario B" };
@@ -48,6 +53,26 @@ const ordersA = "/api/scenarios/10/orders?limit=100";
 const ordersB = "/api/scenarios/20/orders?limit=100";
 const leafletSvg = Browser.svg;
 const optimizeLabel = "Optimasi Rute (NN + 2-Opt)";
+const roadPath = "/api/scenarios/10/road-route";
+const roadStops = [
+  { id: "100", label: "Depot Gudang A", position: [-6.9, 110.4] },
+  { id: "1000", label: "QA-A — Pelanggan A", position: [-6.91, 110.41] },
+  { id: "100", label: "Depot Gudang A", position: [-6.9, 110.4] },
+];
+const roadPositions = [[-6.9, 110.4], [-6.905, 110.407], [-6.91, 110.41], [-6.9, 110.4]];
+function roadReply(positions: number[][] | null = roadPositions) {
+  return { data: {
+    scenarioId: "10",
+    route: { stops: roadStops, nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75 },
+    positions,
+  } };
+}
+
+function chooseRoadMode() {
+  fireEvent.change(screen.getByRole("combobox", { name: "Mode jarak" }), {
+    target: { value: "osrm" },
+  });
+}
 
 function page<T>(data: T[], nextCursor: string | null = null) {
   return { data, nextCursor };
@@ -109,7 +134,119 @@ function mockRouteWorker() {
 afterEach(() => {
   Object.defineProperty(Browser, "svg", { value: leafletSvg });
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
+});
+
+function enableLocalDemo() {
+  vi.stubEnv("NODE_ENV", "development");
+  vi.stubEnv("APP_ENV", "development");
+  vi.stubEnv("AUTH_ORIGIN", "http://localhost:3000");
+  vi.stubEnv("OSRM_MAP_DEMO", "1");
+  vi.stubEnv("MAP_LOCAL_SCENARIO_DEMO", "1");
+  vi.stubEnv("VERCEL", undefined);
+  vi.stubEnv("VERCEL_ENV", undefined);
+  vi.stubEnv("VERCEL_TARGET_ENV", undefined);
+}
+
+describe("Scenario Demo Lokal", () => {
+  it("makes the fixture selectable and navigable without calling the database APIs", async () => {
+    enableLocalDemo();
+    Object.defineProperty(Browser, "svg", { value: true });
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    const fetcher = vi.fn(async (path: string) => {
+      if (path === scenarioList) return new Response(null, { status: 503 });
+      throw Error("Unexpected request");
+    });
+    vi.stubGlobal("fetch", fetcher);
+    const { worker, complete } = mockRouteWorker();
+    render(await MapPage());
+    await selectScenario("Scenario Demo Lokal", "local-demo");
+    expect(await screen.findByText("8 Order sintetis")).toBeInTheDocument();
+    await screen.findByRole("region", { name: "Peta Depot dan Order" });
+    expect(screen.queryByRole("link", { name: /Kelola Depot|Kelola Order/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Order DEMO-01" }));
+    expect(screen.queryByRole("link", { name: "Edit Order" })).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?scenarioId=local-demo");
+    expect(fetcher).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
+    const [fixture] = worker.postMessage.mock.calls[0];
+    expect(fixture.orders).toHaveLength(8);
+    await complete();
+    expect(await screen.findByRole("list", { name: "Urutan kunjungan" })).toBeInTheDocument();
+    await waitFor(() => expect(overlay).toHaveBeenCalledTimes(1));
+    expect(fetcher).not.toHaveBeenCalled();
+
+    const depot = {
+      id: fixture.depot.id,
+      label: `Depot ${fixture.depot.name}`,
+      position: fixture.depot.position,
+    };
+    const stops = fixture.orders.map((order) => ({
+      id: order.id, label: `${order.orderCode} — ${order.customerName}`, position: order.position,
+    }));
+    const roadVisit = [depot, ...stops, depot];
+    const positions = roadVisit.map((stop) => stop.position);
+    fetcher.mockResolvedValueOnce(Response.json({ data: {
+      scenarioId: "local-demo",
+      route: { stops: roadVisit, nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75 },
+      positions,
+    } }));
+    chooseRoadMode();
+    expect(fetcher).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
+    expect(await screen.findByText("Rute jalan OSRM")).toBeInTheDocument();
+    expect(screen.getByText("325 m")).toBeInTheDocument();
+    expect(fetcher.mock.calls).toEqual([["/api/scenarios/local-demo/road-route", expect.objectContaining({ method: "POST" })]]);
+    await waitFor(() => expect(overlay).toHaveBeenCalledTimes(2));
+    const [line] = (overlay.mock.contexts.at(-1) as Polyline).getLatLngs() as LatLng[][];
+    expect(line.map(({ lat, lng }) => [lat, lng])).toEqual(positions);
+
+    fireEvent.click(screen.getByRole("button", { name: "Muat daftar Scenario database" }));
+    expect(await screen.findByText("Daftar Scenario gagal dimuat.")).toBeInTheDocument();
+    expect(screen.getByText("8 Order sintetis")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Scenario Demo Lokal" })).toBeInTheDocument();
+  });
+
+  it("opens a bookmarked demo directly without requesting the database list", async () => {
+    enableLocalDemo();
+    vi.stubEnv("OSRM_MAP_DEMO", undefined);
+    const fetcher = mockReads();
+    render(await MapPage({ searchParams: Promise.resolve({ scenarioId: "local-demo" }) }));
+    expect(await screen.findByText("8 Order sintetis")).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("still loads and selects a saved Scenario on request", async () => {
+    enableLocalDemo();
+    const fetcher = mockReads();
+    render(await MapPage());
+    fireEvent.click(screen.getByRole("button", { name: "Muat daftar Scenario database" }));
+    await selectScenario("Scenario A", "10");
+    expect(await screen.findByRole("button", { name: "Order QA-A" })).toBeInTheDocument();
+    expect(fetcher.mock.calls.map(([path]) => path)).toContain(ordersA);
+    await selectScenario("Scenario Demo Lokal", "local-demo");
+    expect(await screen.findByText("8 Order sintetis")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Order QA-A" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["MAP_LOCAL_SCENARIO_DEMO", undefined],
+    ["NODE_ENV", "production"],
+    ["APP_ENV", "testing"],
+    ["VERCEL_ENV", "preview"],
+    ["VERCEL_TARGET_ENV", "production"],
+  ])("hides the fixture for %s=%s", async (key, value) => {
+    enableLocalDemo();
+    vi.stubEnv(key!, value);
+    mockReads();
+    render(await MapPage({ searchParams: Promise.resolve({ scenarioId: "local-demo" }) }));
+    expect(await screen.findByRole("option", { name: "Scenario A" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "Scenario Demo Lokal" })).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Tautan Scenario tidak valid.");
+  });
 });
 
 describe("Admin Map", () => {
@@ -471,5 +608,84 @@ describe("Admin Map", () => {
     expect(await screen.findByRole("button", { name: "Order QA-B" })).toBeInTheDocument();
     expect(screen.queryByText("Hasil Scenario lama")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: optimizeLabel })).toBeEnabled();
+  });
+
+  it("offers road routing only when enabled and sends one scoped request on explicit action", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    const fetcher = mockReads({ [roadPath]: roadReply() });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    expect(screen.getByRole("combobox", { name: "Mode jarak" })).toHaveValue("haversine");
+    expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
+    chooseRoadMode();
+    expect(fetcher.mock.calls.some(([path]) => path === roadPath)).toBe(false);
+    fireEvent.click(optimize);
+    expect(await screen.findByRole("list", { name: "Urutan kunjungan" })).toHaveTextContent("QA-A");
+    expect(screen.getByText("325 m")).toBeInTheDocument();
+    expect(screen.getByText("75 m")).toBeInTheDocument();
+    expect(await screen.findByText("Rute jalan OSRM")).toBeInTheDocument();
+    const layer = overlay.mock.contexts[0] as Polyline;
+    const [line] = layer.getLatLngs() as LatLng[][];
+    expect(line.map(({ lat, lng }) => [lat, lng])).toEqual(roadPositions);
+    expect(fetcher.mock.calls.filter(([path]) => path === roadPath)).toEqual([
+      [roadPath, expect.objectContaining({ method: "POST", credentials: "same-origin" })],
+    ]);
+  });
+
+  it("keeps road metrics and visit order visible when geometry is unavailable", async () => {
+    const overlay = vi.spyOn(Polyline.prototype, "onAdd");
+    mockReads({ [roadPath]: roadReply(null) });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    await screen.findByRole("button", { name: "Order QA-A" });
+    chooseRoadMode();
+    fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
+    expect(await screen.findByText(/Geometri rute jalan belum tersedia/)).toBeInTheDocument();
+    expect(screen.getByText("325 m")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "Urutan kunjungan" })).toBeInTheDocument();
+    expect(overlay).not.toHaveBeenCalled();
+  });
+
+  it("shows an OSRM timeout without starting the Haversine worker", async () => {
+    mockReads({ [roadPath]: Response.json({ error: { code: "OSRM_TIMEOUT" } }, { status: 504 }) });
+    const { create } = mockRouteWorker();
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    chooseRoadMode();
+    fireEvent.click(optimize);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/OSRM.*waktu/i);
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it("aborts and ignores a late road result after selecting a different Scenario", async () => {
+    let finish!: (value: unknown) => void;
+    const pending = new Promise((resolve) => { finish = resolve; });
+    const fetcher = mockReads({ [roadPath]: pending });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    chooseRoadMode();
+    fireEvent.click(optimize);
+    const roadRequest = fetcher.mock.calls.find(([path]) => path === roadPath);
+    await selectScenario("Scenario B", "20");
+    await screen.findByRole("button", { name: "Order QA-B" });
+    expect(roadRequest?.[1].signal?.aborted).toBe(true);
+    await act(async () => { finish(roadReply()); });
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["coordinate", { position: [-6.92, 110.42] }],
+    ["label", { label: "QA-A — Nama baru" }],
+  ])("rejects road results when the %s differs from the loaded Map", async (_field, changed) => {
+    const reply = roadReply();
+    reply.data.route.stops = [roadStops[0], { ...roadStops[1], ...changed }, roadStops[2]];
+    mockReads({ [roadPath]: reply });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    chooseRoadMode();
+    fireEvent.click(optimize);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/Data Scenario berubah/i);
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
   });
 });
