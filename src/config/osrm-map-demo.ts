@@ -1,4 +1,5 @@
 import "server-only";
+import { depotId } from "@/lib/validation/depot";
 
 type Environment = Record<string, string | undefined>;
 
@@ -30,6 +31,22 @@ export function isTestingOsrmEnabled(env: Environment = process.env): boolean {
 
   const origin = URL.parse(env.AUTH_ORIGIN ?? "");
   return origin?.protocol === "https:" && origin.origin === env.AUTH_ORIGIN;
+}
+
+export function readTestingOsrmScenarioAllowlist(
+  env: Environment = process.env,
+): ReadonlyMap<string, string> {
+  const allowlist = new Map<string, string>();
+  const configured = env.OSRM_TESTING_SCENARIO_ALLOWLIST?.trim();
+  if (!configured || !isTestingOsrmEnabled(env)) return allowlist;
+
+  for (const item of configured.split(",")) {
+    const entry = /^([1-9]\d{0,18}):([a-f0-9]{64})$/u.exec(item.trim());
+    if (!entry || !depotId.safeParse(entry[1]).success || allowlist.has(entry[1]))
+      return new Map();
+    allowlist.set(entry[1], entry[2]);
+  }
+  return allowlist;
 }
 
 export function isLocalMapScenarioEnabled(env: Environment = process.env): boolean {
