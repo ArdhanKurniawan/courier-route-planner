@@ -6,7 +6,6 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import MapManager from "@/components/map/map-manager";
 import {
   isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled, isTestingOsrmEnabled,
-  readTestingOsrmScenarioAllowlist,
 } from "@/config/osrm-map-demo";
 import { HttpError } from "@/lib/http/request-security";
 import { requireAdmin } from "@/lib/security/admin";
@@ -54,7 +53,7 @@ export default async function MapPage({
           key={scenario.data ?? ""}
           initialScenarioId={scenario.data}
           osrmEnabled={testingOsrm || isLocalOsrmDemoEnabled()}
-          testingOsrmScenarioIds={testingOsrm ? [...readTestingOsrmScenarioAllowlist().keys()] : undefined}
+          testingOsrm={testingOsrm}
           demoScenario={demoEnabled ? localMapDemoData : undefined}
         />
       </ComponentCard>

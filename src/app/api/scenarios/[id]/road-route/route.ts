@@ -1,9 +1,8 @@
 import { ZodError } from "zod";
 import { localMapDemo } from "@/application/local-map-demo";
-import { buildMapRoadRoute, hashTestingOsrmSnapshot, RoadRouteBusyError } from "@/application/map-road-route";
+import { buildMapRoadRoute, RoadRouteBusyError } from "@/application/map-road-route";
 import {
   isLocalMapScenarioEnabled, isLocalOsrmDemoEnabled, isTestingOsrmEnabled,
-  readTestingOsrmScenarioAllowlist,
 } from "@/config/osrm-map-demo";
 import { OsrmError } from "@/infrastructure/osrm-client";
 import { depotService } from "@/lib/http/depot-api";
@@ -36,11 +35,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       throw new HttpError(403, "FORBIDDEN", "Request origin denied.");
 
     const { id: requestedId } = await context.params;
-    const approvedHash = testingAccess
-      ? readTestingOsrmScenarioAllowlist().get(requestedId)
-      : undefined;
-    if (testingAccess && requestedId !== localMapDemoId && !approvedHash)
-      throw new HttpError(404, "OSRM_DISABLED", "OSRM demo unavailable.");
     if (requestedId === localMapDemoId) {
       if (!testingAccess && !isLocalMapScenarioEnabled())
         throw new HttpError(404, "OSRM_DISABLED", "OSRM demo unavailable.");
@@ -69,15 +63,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       total !== BigInt(page.data.length) ||
       page.data.some((order) => order.scenarioId !== scenarioId)
     ) throw new HttpError(409, "SCENARIO_CHANGED", "Scenario data changed.");
+    if (testingAccess && page.data.some((order) => order.source !== "dummy"))
+      throw new HttpError(422, "OSRM_DUMMY_ORDERS_ONLY", "OSRM Testing requires every Order to be dummy.");
 
     const depot = await depotService().getDepot(BigInt(scenario.depotId));
     if (depot.id !== scenario.depotId)
       throw new HttpError(409, "SCENARIO_CHANGED", "Scenario Depot changed.");
-    if (testingAccess && (
-      page.data.some((order) => order.source !== "dummy") ||
-      hashTestingOsrmSnapshot(scenarioId, depot, page.data) !== approvedHash
-    ))
-      throw new HttpError(409, "OSRM_SNAPSHOT_CHANGED", "Scenario differs from the approved OSRM snapshot.");
 
     const fetcher = testingAccess ? await reserveTestingOsrm(admin, request.signal) : undefined;
     return privateJson({

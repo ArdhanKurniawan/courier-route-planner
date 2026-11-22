@@ -3,6 +3,7 @@ import { depotId } from "@/lib/validation/depot";
 import {
   mapPosition,
   mapRoadResponse,
+  osrmOrderLimit,
   type MapRoadResult,
   type MapRoute,
 } from "@/lib/validation/map-road-route";
@@ -141,7 +142,9 @@ const roadErrorMessages: Record<string, string> = {
   OSRM_TIMEOUT: "OSRM melewati batas waktu.",
   OSRM_BUSY: "OSRM sedang sibuk. Coba lagi nanti.",
   SCENARIO_CHANGED: "Data Scenario berubah. Muat ulang data peta.",
-  OSRM_SNAPSHOT_CHANGED: "Data Scenario berbeda dari snapshot OSRM yang disetujui. Gunakan Haversine atau hubungi pengelola.",
+  OSRM_DUMMY_ORDERS_ONLY: "OSRM Testing hanya tersedia jika semua Order pada Scenario bersumber dummy.",
+  OSRM_NO_ORDERS: "Tambahkan Order untuk menghitung rute OSRM.",
+  OSRM_TOO_MANY_ORDERS: `OSRM mendukung maksimal ${osrmOrderLimit} Order per Scenario.`,
   OSRM_INVALID_POINTS: "Koordinat Depot atau Order tidak valid untuk OSRM.",
 };
 

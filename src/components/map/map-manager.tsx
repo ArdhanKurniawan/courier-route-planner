@@ -313,12 +313,12 @@ function SelectedScenarioMap({
 export default function MapManager({
   initialScenarioId = "",
   osrmEnabled = false,
-  testingOsrmScenarioIds,
+  testingOsrm = false,
   demoScenario,
 }: {
   initialScenarioId?: string;
   osrmEnabled?: boolean;
-  testingOsrmScenarioIds?: readonly string[];
+  testingOsrm?: boolean;
   demoScenario?: ScenarioMapData;
 } = {}) {
   const [scenarioAttempt, setScenarioAttempt] = useState<number | null>(() =>
@@ -391,7 +391,7 @@ export default function MapManager({
           <option value="">Pilih Scenario</option>
           {demoScenario && (
             <option value={localMapDemoId}>
-              {testingOsrmScenarioIds ? "Scenario Demo Testing" : "Scenario Demo Lokal"}
+              {testingOsrm ? "Scenario Demo Testing" : "Scenario Demo Lokal"}
             </option>
           )}
           {databaseOptions.map((scenario) => (
@@ -421,7 +421,7 @@ export default function MapManager({
         <SelectedScenarioMap
           key={activeId}
           scenarioId={activeId}
-          osrmEnabled={osrmEnabled && (testingOsrmScenarioIds?.includes(activeId) ?? true)}
+          osrmEnabled={osrmEnabled}
         />
       ) : selectedId && scenarios.status === "ready" ? (
         <p role="alert">Scenario pada tautan tidak ditemukan.</p>
