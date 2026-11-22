@@ -491,6 +491,7 @@ describe("Admin Map", () => {
     expect(screen.queryByRole("button", { name: optimizeLabel })).not.toBeInTheDocument();
     await selectScenario("Scenario A", "10");
     const marker = await screen.findByRole("button", { name: "Order QA-A" });
+    expect(marker).toHaveTextContent(/^O$/);
     const requestsBeforeOptimization = fetchMock.mock.calls.length;
     const optimize = screen.getByRole("button", { name: optimizeLabel });
     fireEvent.click(optimize);
@@ -515,6 +516,7 @@ describe("Admin Map", () => {
       expect.objectContaining({ lat: depotA.latitude, lng: depotA.longitude }),
     ]]);
     expect(screen.getByRole("button", { name: "Order QA-A" })).toBe(marker);
+    expect(marker).toHaveTextContent(/^1$/);
     expect(fetchMock.mock.calls).toHaveLength(requestsBeforeOptimization);
     expect(fetchMock.mock.calls.every(([, init]) => !init.method || init.method === "GET")).toBe(true);
     expect(calculation.worker.terminate).toHaveBeenCalledOnce();
@@ -523,7 +525,46 @@ describe("Admin Map", () => {
     expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
     expect(removeOverlay).toHaveBeenCalledOnce();
     expect(await screen.findByRole("button", { name: optimizeLabel })).toBeEnabled();
+    expect(await screen.findByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^O$/);
     expect(fetchMock.mock.calls.length).toBeGreaterThan(requestsBeforeOptimization);
+  });
+
+  it("numbers existing markers by visit order, preserves an open popup and resets on Scenario switch", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const removeMap = vi.spyOn(LeafletMap.prototype, "remove");
+    const fetcher = mockReads({
+      [ordersA]: page([
+        { ...orderA, id: depotA.id, latitude: -6.95, longitude: 110.45 },
+        { ...orderA, id: "1001", orderCode: "QA-NEAR", latitude: -6.901, longitude: 110.401 },
+      ]),
+    });
+    const calculation = mockRouteWorker();
+    render(<MapManager initialScenarioId="10" />);
+    const far = await screen.findByRole("button", { name: "Order QA-A" });
+    const near = screen.getByRole("button", { name: "Order QA-NEAR" });
+    const depot = screen.getByRole("button", { name: "Depot Gudang A" });
+    fireEvent.click(far);
+    const edit = await screen.findByRole("link", { name: "Edit Order" });
+    expect(edit).toHaveAttribute("href", "/orders?scenarioId=10&edit=100");
+    expect(screen.getByText("-6.95, 110.45")).toBeInTheDocument();
+    const requests = fetcher.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
+    await calculation.complete();
+
+    expect(near).toHaveTextContent(/^1$/);
+    expect(far).toHaveTextContent(/^2$/);
+    expect(far).toHaveAccessibleDescription("Kunjungan ke-2");
+    expect(depot).toHaveTextContent(/^D$/);
+    expect(screen.getByRole("link", { name: "Edit Order" })).toBe(edit);
+    expect(screen.getByText("-6.95, 110.45")).toBeInTheDocument();
+    expect(removeMap).not.toHaveBeenCalled();
+    expect(fetcher.mock.calls).toHaveLength(requests);
+
+    await selectScenario("Scenario B", "20");
+    expect(await screen.findByRole("button", { name: "Order QA-B" })).toHaveTextContent(/^O$/);
+    expect(screen.getByRole("button", { name: "Depot Gudang B" })).toHaveTextContent(/^D$/);
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
   });
 
   it("refuses a partial route when one Order coordinate is missing", async () => {
@@ -537,7 +578,8 @@ describe("Admin Map", () => {
     await calculation.complete();
     expect(screen.getByRole("alert")).toHaveTextContent(/koordinat Order QA-MISSING/i);
     expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: "Order QA-A" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^O$/);
+    expect(screen.queryByRole("button", { name: "Order QA-MISSING" })).not.toBeInTheDocument();
   });
 
   it("draws the short local crossing when locations straddle the antimeridian", async () => {
@@ -616,6 +658,7 @@ describe("Admin Map", () => {
     const fetcher = mockReads({ [roadPath]: roadReply() });
     render(<MapManager initialScenarioId="10" osrmEnabled />);
     const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    const marker = await screen.findByRole("button", { name: "Order QA-A" });
     expect(screen.getByRole("combobox", { name: "Mode jarak" })).toHaveValue("haversine");
     expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
     chooseRoadMode();
@@ -628,6 +671,13 @@ describe("Admin Map", () => {
     const layer = overlay.mock.contexts[0] as Polyline;
     const [line] = layer.getLatLngs() as LatLng[][];
     expect(line.map(({ lat, lng }) => [lat, lng])).toEqual(roadPositions);
+    expect(marker).toHaveTextContent(/^1$/);
+    fireEvent.change(screen.getByRole("combobox", { name: "Mode jarak" }), {
+      target: { value: "haversine" },
+    });
+    expect(marker).toHaveTextContent(/^O$/);
+    expect(marker).not.toHaveAttribute("aria-description");
+    expect(screen.queryByText("Rute jalan OSRM")).not.toBeInTheDocument();
     expect(fetcher.mock.calls.filter(([path]) => path === roadPath)).toEqual([
       [roadPath, expect.objectContaining({ method: "POST", credentials: "same-origin" })],
     ]);
@@ -643,7 +693,30 @@ describe("Admin Map", () => {
     expect(await screen.findByText(/Geometri rute jalan belum tersedia/)).toBeInTheDocument();
     expect(screen.getByText("325 m")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "Urutan kunjungan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^1$/);
     expect(overlay).not.toHaveBeenCalled();
+  });
+
+  it("clears old visit numbers during a new optimization and when it fails", async () => {
+    Object.defineProperty(Browser, "svg", { value: true });
+    const fetcher = mockReads({ [roadPath]: roadReply() });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const marker = await screen.findByRole("button", { name: "Order QA-A" });
+    const optimize = screen.getByRole("button", { name: optimizeLabel });
+    chooseRoadMode();
+    fireEvent.click(optimize);
+    await waitFor(() => expect(marker).toHaveTextContent(/^1$/));
+
+    let fail!: (response: Response) => void;
+    fetcher.mockImplementationOnce(() => new Promise((resolve) => { fail = resolve; }));
+    fireEvent.click(optimize);
+    expect(marker).toHaveTextContent(/^O$/);
+    expect(screen.queryByRole("list", { name: "Urutan kunjungan" })).not.toBeInTheDocument();
+    await act(async () => {
+      fail(Response.json({ error: { code: "OSRM_TIMEOUT" } }, { status: 504 }));
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent(/OSRM.*waktu/i);
+    expect(marker).toHaveTextContent(/^O$/);
   });
 
   it("shows an OSRM timeout without starting the Haversine worker", async () => {

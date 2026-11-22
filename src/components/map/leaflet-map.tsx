@@ -21,7 +21,7 @@ const icons = {
   order: L.divIcon({
     className:
       "rounded-full border-2 border-white bg-teal-700 font-bold text-white shadow-md",
-    html: '<span class="grid h-full place-items-center" aria-hidden="true">O</span>',
+    html: '<span data-order-marker-label class="grid h-full place-items-center tabular-nums" aria-hidden="true">O</span>',
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   }),
@@ -84,12 +84,17 @@ function addMarker(
       icon.focus();
     });
   });
-  marker.bindPopup(popup).addTo(map);
+  return marker.bindPopup(popup).addTo(map);
 }
 
 type MapProps =
-  | { data: ScenarioMapData; preview?: never; routePositions?: MapPosition[] }
-  | { preview: DummyPreview; data?: never; routePositions?: never };
+  | {
+      data: ScenarioMapData;
+      preview?: never;
+      routePositions?: MapPosition[];
+      visitOrder?: readonly string[];
+    }
+  | { preview: DummyPreview; data?: never; routePositions?: never; visitOrder?: never };
 
 function drawPreview(map: L.Map, preview: DummyPreview): MapPosition[] {
   const depot: MapPosition = [preview.depot.latitude, preview.depot.longitude];
@@ -148,7 +153,11 @@ function routeInDepotWorld(
   return lines;
 }
 
-function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
+function drawScenario(
+  map: L.Map,
+  data: ScenarioMapData,
+  orderMarkers: Map<string, L.Marker>,
+): MapPosition[] {
   const positions: MapPosition[] = [];
   const { depot, orders, scenarioId } = data;
   const canEdit = scenarioId !== localMapDemoId;
@@ -168,7 +177,7 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
     if (!order.position) continue;
     const position = inDepotWorld(order.position, depot.position?.[1]);
     positions.push(position);
-    addMarker(
+    const marker = addMarker(
       map,
       position,
       "order",
@@ -176,13 +185,15 @@ function drawScenario(map: L.Map, data: ScenarioMapData): MapPosition[] {
       [order.customerName, order.address, order.position.join(", ")],
       canEdit ? `/orders${editQuery}${order.id}` : undefined,
     );
+    orderMarkers.set(order.id, marker);
   }
   return positions;
 }
 
-export default function LeafletMap({ data, preview, routePositions }: MapProps) {
+export default function LeafletMap({ data, preview, routePositions, visitOrder }: MapProps) {
   const container = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<L.Map | null>(null);
+  const orderMarkers = useRef<Map<string, L.Marker> | null>(null);
   const [tileFailed, setTileFailed] = useState(false);
 
   useEffect(() => {
@@ -193,9 +204,11 @@ export default function LeafletMap({ data, preview, routePositions }: MapProps) 
       scrollWheelZoom: false,
     });
     mapInstance.current = map;
+    const markers = new Map<string, L.Marker>();
+    orderMarkers.current = markers;
     const positions = preview
       ? drawPreview(map, preview)
-      : drawScenario(map, data);
+      : drawScenario(map, data, markers);
 
     if (positions.length === 1) map.setView(positions[0], 14);
     else if (positions.length > 1)
@@ -217,11 +230,29 @@ export default function LeafletMap({ data, preview, routePositions }: MapProps) 
 
     return () => {
       mapInstance.current = null;
+      orderMarkers.current = null;
       resizeObserver?.disconnect();
       tiles.off("tileerror", onTileError);
       map.remove();
     };
   }, [data, preview]);
+
+  useEffect(() => {
+    if (!data || !orderMarkers.current) return;
+    const numbers = new Map<string, number>(
+      visitOrder?.map((id, index) => [id, index + 1]),
+    );
+    for (const [id, marker] of orderMarkers.current) {
+      const icon = marker.getElement();
+      const label = icon?.querySelector("[data-order-marker-label]");
+      if (!icon || !label) continue;
+      const number = numbers.get(id);
+      // Update the existing icon so keyboard handlers and open popups stay attached.
+      label.textContent = number?.toString() ?? "O";
+      if (number === undefined) icon.removeAttribute("aria-description");
+      else icon.setAttribute("aria-description", `Kunjungan ke-${number}`);
+    }
+  }, [data, visitOrder]);
 
   useEffect(() => {
     const map = mapInstance.current;

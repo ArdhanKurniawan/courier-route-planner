@@ -54,6 +54,9 @@ function MapResults({
   const isDemo = data.scenarioId === localMapDemoId;
   const mode = osrmEnabled ? routeMode : "haversine";
   const active = useRef<{ cancel?: () => void } | null>(null);
+  const visitOrder = route.status === "ready"
+    ? route.route.stops.slice(1, -1).map(({ id }) => id)
+    : undefined;
   const routePositions = route.status === "ready"
     ? mode === "osrm"
       ? route.roadPositions ?? undefined
@@ -165,9 +168,9 @@ function MapResults({
                 aria-hidden="true"
                 className="mr-1 inline-block rounded-full bg-teal-700 px-2 text-white"
               >
-                O
+                {visitOrder ? "1" : "O"}
               </span>{" "}
-              Order
+              {visitOrder ? "Urutan kunjungan Order" : "Order"}
             </span>
             {routePositions && (
               <span>
@@ -177,7 +180,7 @@ function MapResults({
             )}
           </div>
           {data.depot.position || validOrders > 0 ? (
-            <LeafletMap data={data} routePositions={routePositions} />
+            <LeafletMap data={data} routePositions={routePositions} visitOrder={visitOrder} />
           ) : (
             <p className="rounded-xl border border-dashed border-gray-300 p-6 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-300">
               Tidak ada koordinat valid untuk ditampilkan pada peta.
