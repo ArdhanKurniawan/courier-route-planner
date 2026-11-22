@@ -1,12 +1,6 @@
 import { nearestNeighborTwoOpt } from "@/domain/nn-two-opt";
+import type { MapRoute } from "@/lib/validation/map-road-route";
 import type { MapPosition, ScenarioMapData } from "./map-data";
-
-export type MapRoute = {
-  stops: { id: string; label: string; position: MapPosition }[];
-  nnInitialDistanceM: number;
-  totalDistanceM: number;
-  savingsM: number;
-};
 
 export type MapRouteOutcome =
   | { status: "ready"; route: MapRoute }

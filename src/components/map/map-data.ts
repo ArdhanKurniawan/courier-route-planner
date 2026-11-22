@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { depotId } from "@/lib/validation/depot";
+import {
+  mapPosition,
+  mapRoadResponse,
+  type MapRoadResult,
+  type MapRoute,
+} from "@/lib/validation/map-road-route";
 
 const pageSize = 100;
 const scenarioOption = z.object({ id: depotId, name: z.string().min(1) });
@@ -21,13 +27,8 @@ const orderDetail = z.object({
   customerName: z.string().min(1),
   ...locationFields,
 });
-const coordinates = z.tuple([
-  z.number().min(-90).max(90),
-  z.number().min(-180).max(180),
-]);
-
 export type ScenarioOption = z.infer<typeof scenarioOption>;
-export type MapPosition = z.infer<typeof coordinates>;
+export type MapPosition = z.infer<typeof mapPosition>;
 type MapLocation = { address: string | null; position: MapPosition | null };
 export type ScenarioMapData = {
   scenarioId: string;
@@ -48,7 +49,7 @@ function mapLocation({
   latitude?: unknown;
   longitude?: unknown;
 }): MapLocation {
-  const parsed = coordinates.safeParse([latitude, longitude]);
+  const parsed = mapPosition.safeParse([latitude, longitude]);
   return {
     address: address ?? null,
     position: parsed.success ? parsed.data : null,
@@ -134,4 +135,66 @@ export async function readScenarioMap(
       ...mapLocation(order),
     })),
   };
+}
+
+const roadErrorMessages: Record<string, string> = {
+  OSRM_TIMEOUT: "OSRM melewati batas waktu.",
+  OSRM_BUSY: "OSRM sedang sibuk. Coba lagi nanti.",
+  SCENARIO_CHANGED: "Data Scenario berubah. Muat ulang data peta.",
+  OSRM_INVALID_POINTS: "Koordinat Depot atau Order tidak valid untuk OSRM.",
+};
+
+function isSameStop(
+  stop: MapRoute["stops"][number],
+  location: { id: string; position: MapPosition | null },
+  label: string,
+) {
+  return stop.id === location.id &&
+    stop.label === label &&
+    stop.position[0] === location.position?.[0] &&
+    stop.position[1] === location.position?.[1];
+}
+
+function matchesScenario(result: MapRoadResult, map: ScenarioMapData) {
+  const stops = result.route.stops;
+  const depotLabel = `Depot ${map.depot.name}`;
+  if (
+    result.scenarioId !== map.scenarioId || stops.length !== map.orders.length + 2 ||
+    !isSameStop(stops[0], map.depot, depotLabel) ||
+    !isSameStop(stops[stops.length - 1], map.depot, depotLabel)
+  ) return false;
+
+  const orders = new Map(map.orders.map((order) => [order.id, order]));
+  for (const stop of stops.slice(1, -1)) {
+    const order = orders.get(stop.id);
+    if (!order || !isSameStop(stop, order, `${order.orderCode} — ${order.customerName}`))
+      return false;
+    orders.delete(stop.id);
+  }
+  return orders.size === 0;
+}
+
+export async function readMapRoadRoute(
+  map: ScenarioMapData,
+  signal: AbortSignal,
+): Promise<MapRoadResult> {
+  const response = await fetch(`/api/scenarios/${map.scenarioId}/road-route`, {
+    method: "POST",
+    credentials: "same-origin",
+    cache: "no-store",
+    signal,
+  }).catch(() => { throw new Error("Jarak jalan OSRM belum tersedia."); });
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const failure = z.object({ error: z.object({ code: z.string() }) }).safeParse(body);
+    const code = failure.data?.error.code ?? "";
+    throw new Error(Object.hasOwn(roadErrorMessages, code)
+      ? roadErrorMessages[code]
+      : "Jarak jalan OSRM belum tersedia.");
+  }
+  const parsed = mapRoadResponse.safeParse(body);
+  if (!parsed.success) throw new Error("Respons optimasi OSRM tidak valid.");
+  if (!matchesScenario(parsed.data.data, map))
+    throw new Error(roadErrorMessages.SCENARIO_CHANGED);
+  return parsed.data.data;
 }

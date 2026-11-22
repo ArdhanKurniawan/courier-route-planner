@@ -1,6 +1,13 @@
+import {
+  osrmOrderLimit,
+  type MapRoadResult,
+  type MapRouteMode,
+} from "@/lib/validation/map-road-route";
 import type { MapRouteOutcome } from "./map-route";
 
-export type MapRouteState = MapRouteOutcome | { status: "idle" | "loading" };
+export type MapRouteState =
+  | (MapRouteOutcome & { roadPositions?: MapRoadResult["positions"] })
+  | { status: "idle" | "loading" };
 
 const meters = new Intl.NumberFormat("id-ID", {
   style: "unit",
@@ -10,24 +17,45 @@ const meters = new Intl.NumberFormat("id-ID", {
 
 export function MapRoutePanel({
   state,
-  hasOrders,
+  orderCount,
+  mode,
+  onModeChange,
   optimize,
   reload,
 }: {
   state: MapRouteState;
-  hasOrders: boolean;
+  orderCount: number;
+  mode: MapRouteMode;
+  onModeChange?: (mode: MapRouteMode) => void;
   optimize: () => void;
   reload: () => void;
 }) {
   const loading = state.status === "loading";
   const route = state.status === "ready" ? state.route : null;
+  const tooManyOrders = mode === "osrm" && orderCount > osrmOrderLimit;
 
   return (
     <div className="space-y-3 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
       <div className="flex flex-wrap items-center gap-2">
+        {onModeChange && (
+          <>
+            <label htmlFor="map-route-mode" className="text-sm font-medium">
+              Mode jarak
+            </label>
+            <select
+              id="map-route-mode"
+              value={mode}
+              onChange={(event) => onModeChange(event.currentTarget.value === "osrm" ? "osrm" : "haversine")}
+              className="min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:outline-2 focus:outline-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            >
+              <option value="haversine">Garis Lurus (Haversine)</option>
+              <option value="osrm">Jarak Jalan (OSRM)</option>
+            </select>
+          </>
+        )}
         <button
           type="button"
-          disabled={!hasOrders || loading}
+          disabled={orderCount === 0 || tooManyOrders || loading}
           onClick={optimize}
           className="min-h-11 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 disabled:opacity-50"
         >
@@ -42,14 +70,32 @@ export function MapRoutePanel({
         </button>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-300">
-        Estimasi garis lurus (Haversine) untuk demo. Benchmark formal
-        menggunakan matriks jaringan jalan.
+        {mode === "osrm"
+          ? "Demo jarak jalan. Saat optimasi dijalankan, koordinat Depot dan Order dikirim ke server publik FOSSGIS."
+          : "Estimasi garis lurus (Haversine) untuk demo. Benchmark formal menggunakan matriks jaringan jalan."}
       </p>
-      {!hasOrders && <p className="text-sm">Tambahkan Order untuk menghitung rute.</p>}
+      {mode === "osrm" && (
+        <p className="text-xs text-gray-600 dark:text-gray-300">
+          <a href="https://routing.openstreetmap.de/about.html" className="underline">OSRM/FOSSGIS</a>
+          {" · "}
+          <a href="https://www.openstreetmap.org/copyright" className="underline">© OpenStreetMap contributors</a>
+          {" · "}
+          <a href="https://www.openstreetmap.org/fixthemap" className="underline">Perbaiki peta</a>
+        </p>
+      )}
+      {orderCount === 0 && <p className="text-sm">Tambahkan Order untuk menghitung rute.</p>}
+      {tooManyOrders && (
+        <p className="text-sm">Demo OSRM mendukung maksimal {osrmOrderLimit} Order per Scenario.</p>
+      )}
       {loading && <p role="status" className="text-sm">Menghitung rute...</p>}
       {state.status === "error" && (
         <p role="alert" className="text-sm text-red-800 dark:text-red-200">
           {state.message}
+        </p>
+      )}
+      {mode === "osrm" && state.status === "ready" && state.roadPositions === null && (
+        <p role="status" className="text-sm text-amber-800 dark:text-amber-300">
+          Geometri rute jalan belum tersedia. Jarak dan urutan kunjungan tetap tersedia.
         </p>
       )}
       {route && (
