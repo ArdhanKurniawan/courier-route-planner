@@ -6,6 +6,7 @@ import {
   double,
   index,
   int,
+  json,
   mysqlTable,
   text,
   uniqueIndex,
@@ -123,6 +124,70 @@ export const dummyOrderOperations = mysqlTable(
     uniqueIndex("dummy_order_ops_scenario_version_unique").on(
       table.scenarioId,
       table.operationVersion,
+    ),
+  ],
+);
+
+export const benchmarkCases = mysqlTable(
+  "benchmark_cases",
+  {
+    id: bigint("id", { mode: "bigint" }).autoincrement().primaryKey(),
+    requestId: varchar("request_id", { length: 36 }).notNull(),
+    scenarioId: bigint("scenario_id", { mode: "bigint" })
+      .notNull()
+      .references(() => scenarios.id, {
+        onDelete: "restrict",
+        onUpdate: "restrict",
+      }),
+    scenarioSnapshot: json("scenario_snapshot").notNull(),
+    configuredCustomerCount: int("configured_customer_count").notNull(),
+    actualOrderCount: int("actual_order_count").notNull(),
+    pointCount: int("point_count").notNull(),
+    inputVersion: varchar("input_version", { length: 64 }).notNull(),
+    inputHash: varchar("input_hash", { length: 64 }).notNull(),
+    frozenAt: datetime("frozen_at", { mode: "string", fsp: 3 }).notNull(),
+    gitCommitSha: varchar("git_commit_sha", { length: 40 }),
+  },
+  (table) => [
+    uniqueIndex("benchmark_cases_request_id_unique").on(table.requestId),
+    index("benchmark_cases_scenario_id_idx").on(table.scenarioId),
+  ],
+);
+
+export const benchmarkCasePoints = mysqlTable(
+  "benchmark_case_points",
+  {
+    id: bigint("id", { mode: "bigint" }).autoincrement().primaryKey(),
+    caseId: bigint("case_id", { mode: "bigint" })
+      .notNull()
+      .references(() => benchmarkCases.id, {
+        onDelete: "restrict",
+        onUpdate: "restrict",
+      }),
+    nodeIndex: int("node_index").notNull(),
+    kind: varchar("kind", { length: 8, enum: ["depot", "order"] }).notNull(),
+    // Provenance is copied without an FK to the live Depot or Order.
+    sourceId: bigint("source_id", { mode: "bigint" }).notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    address: text("address"),
+    latitude: double("latitude").notNull(),
+    longitude: double("longitude").notNull(),
+    orderCode: varchar("order_code", { length: 64 }),
+    orderSource: varchar("order_source", {
+      length: 16,
+      enum: ["manual", "dummy"],
+    }),
+    depotActive: boolean("depot_active"),
+  },
+  (table) => [
+    uniqueIndex("benchmark_case_points_node_unique").on(
+      table.caseId,
+      table.nodeIndex,
+    ),
+    uniqueIndex("benchmark_case_points_source_unique").on(
+      table.caseId,
+      table.kind,
+      table.sourceId,
     ),
   ],
 );
