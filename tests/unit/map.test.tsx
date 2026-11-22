@@ -754,7 +754,9 @@ describe("Admin Map", () => {
     const visits = screen.getByRole("list", { name: "Urutan kunjungan" });
     expect(within(visits).getByText("125 m")).toBeInTheDocument();
     expect(within(visits).getByText("200 m")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^1$/);
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^1$/);
+    });
     expect(overlay).not.toHaveBeenCalled();
   });
 
