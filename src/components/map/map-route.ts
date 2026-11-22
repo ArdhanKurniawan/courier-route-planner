@@ -1,3 +1,4 @@
+import { buildMapRouteResult } from "@/application/map-route-result";
 import { nearestNeighborTwoOpt } from "@/domain/nn-two-opt";
 import type { MapRoute } from "@/lib/validation/map-road-route";
 import type { MapPosition, ScenarioMapData } from "./map-data";
@@ -71,14 +72,8 @@ export function calculateMapRoute({
     }
   }
   const result = nearestNeighborTwoOpt(matrix);
-  const { nnInitialDistanceM } = result.diagnostics;
   return {
     status: "ready",
-    route: {
-      stops: result.route.map((index) => nodes[index]),
-      nnInitialDistanceM,
-      totalDistanceM: result.totalDistanceM,
-      savingsM: nnInitialDistanceM - result.totalDistanceM,
-    },
+    route: buildMapRouteResult(result, matrix, (index) => nodes[index]),
   };
 }

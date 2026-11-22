@@ -14,6 +14,17 @@ const meters = new Intl.NumberFormat("id-ID", {
   unit: "meter",
   maximumFractionDigits: 1,
 });
+const kilometers = new Intl.NumberFormat("id-ID", {
+  style: "unit",
+  unit: "kilometer",
+  maximumFractionDigits: 3,
+});
+
+function formatDistance(distanceM: number) {
+  return distanceM < 1000
+    ? meters.format(distanceM)
+    : kilometers.format(distanceM / 1000);
+}
 
 export function MapRoutePanel({
   state,
@@ -71,7 +82,7 @@ export function MapRoutePanel({
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-300">
         {mode === "osrm"
-          ? "Demo jarak jalan. Saat optimasi dijalankan, koordinat Depot dan Order dikirim ke server publik FOSSGIS."
+          ? "Jarak jaringan jalan (OSRM). Saat optimasi dijalankan, koordinat Depot dan Order dikirim ke server publik FOSSGIS."
           : "Estimasi garis lurus (Haversine) untuk demo. Benchmark formal menggunakan matriks jaringan jalan."}
       </p>
       {mode === "osrm" && (
@@ -109,7 +120,7 @@ export function MapRoutePanel({
               <div key={label}>
                 <dt className="text-gray-600 dark:text-gray-300">{label}</dt>
                 <dd className="mt-1 font-semibold tabular-nums text-gray-900 dark:text-white">
-                  {meters.format(distance)}
+                  {formatDistance(distance)}
                 </dd>
               </div>
             ))}
@@ -125,6 +136,13 @@ export function MapRoutePanel({
                 <li key={`${index}-${stop.id}`} className="break-words">
                   {index === route.stops.length - 1 ? "Kembali ke " : ""}
                   {stop.label}
+                  {index > 0 && (
+                    <span className="ml-2 whitespace-nowrap tabular-nums text-gray-600 dark:text-gray-400">
+                      <span aria-hidden="true">· </span>
+                      <span className="sr-only">Jarak dari pemberhentian sebelumnya </span>
+                      {formatDistance(route.legDistancesM[index - 1])}
+                    </span>
+                  )}
                 </li>
               ))}
             </ol>
