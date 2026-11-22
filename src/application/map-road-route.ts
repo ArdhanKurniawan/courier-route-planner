@@ -27,6 +27,7 @@ export async function buildMapRoadRoute(
   depot: Pick<DepotDTO, "id" | "name" | "latitude" | "longitude">,
   orders: readonly Pick<OrderDTO, "id" | "orderCode" | "customerName" | "latitude" | "longitude">[],
   signal: AbortSignal,
+  fetcher?: typeof fetch,
 ): Promise<MapRoadResult> {
   signal.throwIfAborted();
   if (quota.active || performance.now() < quota.nextRequestAt)
@@ -39,6 +40,7 @@ export async function buildMapRoadRoute(
       profile: "driving",
       timeoutMs: 10_000,
       userAgent: "CourierRoutePlanner/2.4.0 (+https://github.com/ArdhanKurniawan/courier-route-planner)",
+      fetcher,
     });
     const table = await client.getDistanceTable({ depot, orders }, signal);
     const result = nearestNeighborTwoOpt(table.matrix);

@@ -13,7 +13,7 @@ import MapManager from "@/components/map/map-manager";
 import type { ScenarioMapData } from "@/components/map/map-data";
 
 vi.mock("@/lib/security/admin", () => ({
-  requireAdmin: async () => ({ origin: "http://localhost:3000", environment: "development" }),
+  requireAdmin: async () => ({ origin: process.env.AUTH_ORIGIN, environment: process.env.APP_ENV }),
 }));
 
 const scenarioA = { id: "10", depotId: "100", name: "Scenario A" };
@@ -151,6 +151,31 @@ function enableLocalDemo() {
   vi.stubEnv("VERCEL_ENV", undefined);
   vi.stubEnv("VERCEL_TARGET_ENV", undefined);
 }
+
+it("offers OSRM in Testing Preview only for the server-owned synthetic Scenario", async () => {
+  vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("APP_ENV", "testing");
+  vi.stubEnv("VERCEL", "1");
+  vi.stubEnv("VERCEL_ENV", "preview");
+  vi.stubEnv("VERCEL_TARGET_ENV", "preview");
+  vi.stubEnv("VERCEL_GIT_COMMIT_REF", "testing");
+  vi.stubEnv("AUTH_ORIGIN", "https://testing.example");
+  vi.stubEnv("OSRM_MAP_TESTING", "1");
+  const fetcher = mockReads();
+  render(await MapPage());
+  await selectScenario("Scenario Demo Testing", "local-demo");
+  expect(await screen.findByText("8 Order sintetis")).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "Jarak Jalan (OSRM)" })).toBeInTheDocument();
+  chooseRoadMode();
+  expect(fetcher).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole("button", { name: "Muat daftar Scenario database" }));
+  await selectScenario("Scenario A", "10");
+  await screen.findByRole("button", { name: "Order QA-A" });
+  expect(screen.queryByRole("option", { name: "Jarak Jalan (OSRM)" })).not.toBeInTheDocument();
+  expect(screen.getByText(/Estimasi garis lurus/)).toBeInTheDocument();
+  expect(fetcher.mock.calls.every(([, request]) => request.method !== "POST")).toBe(true);
+});
 
 describe("Scenario Demo Lokal", () => {
   it("makes the fixture selectable and navigable without calling the database APIs", async () => {

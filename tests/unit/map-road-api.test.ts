@@ -7,6 +7,13 @@ const reads = vi.hoisted(() => ({
   getDepot: vi.fn(),
   listOrders: vi.fn(),
 }));
+const quota = vi.hoisted(() => ({ connect: vi.fn(), set: vi.fn() }));
+vi.mock("@upstash/redis", () => ({
+  Redis: class {
+    set = quota.set;
+    constructor(config: unknown) { quota.connect(config); }
+  },
+}));
 vi.mock("@/lib/security/admin", () => ({ requireAdmin: reads.requireAdmin }));
 vi.mock("@/lib/http/scenario-api", () => ({
   scenarioService: () => ({ getScenario: reads.getScenario }),
@@ -19,6 +26,7 @@ vi.mock("@/lib/http/order-api", () => ({
 }));
 
 const origin = "http://localhost:3000";
+const testingOrigin = "https://testing.example";
 const depot = { id: "1", name: "Gudang", longitude: 110, latitude: -7 };
 const first = {
   id: "2", scenarioId: "10", orderCode: "QA-2", customerName: "A",
@@ -51,6 +59,65 @@ function geometryReply() {
   });
 }
 
+function mockSyntheticProvider() {
+  fetcher.mockImplementation(async (input) => {
+    const path = new URL(String(input)).pathname;
+    const coordinates = path.split("/").at(-1)!.split(";").map((pair) =>
+      pair.split(",").map(Number),
+    );
+    const waypoints = coordinates.map((location) => ({ location }));
+    if (path.includes("/table/")) {
+      expect(coordinates).toHaveLength(9);
+      for (const [longitude, latitude] of coordinates) {
+        expect(longitude).toBeGreaterThan(110.35);
+        expect(longitude).toBeLessThan(110.5);
+        expect(latitude).toBeGreaterThan(-7.06);
+        expect(latitude).toBeLessThan(-6.92);
+      }
+      return Response.json({
+        code: "Ok",
+        distances: coordinates.map((_, from) => coordinates.map((_, to) =>
+          from === to ? 0 : 1 + ((to - from + 9) % 9),
+        )),
+        sources: waypoints,
+        destinations: waypoints,
+      });
+    }
+    expect(path).toContain("/route/");
+    expect(coordinates).toHaveLength(10);
+    expect(coordinates.at(-1)).toEqual(coordinates[0]);
+    return Response.json({
+      code: "Ok",
+      waypoints,
+      routes: [{ legs: Array.from({ length: 9 }, () => ({})), geometry: {
+        type: "LineString", coordinates,
+      } }],
+    });
+  });
+}
+
+function useTestingPreview() {
+  vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("APP_ENV", "testing");
+  vi.stubEnv("VERCEL", "1");
+  vi.stubEnv("VERCEL_ENV", "preview");
+  vi.stubEnv("VERCEL_TARGET_ENV", "preview");
+  vi.stubEnv("VERCEL_GIT_COMMIT_REF", "testing");
+  vi.stubEnv("AUTH_ORIGIN", testingOrigin);
+  vi.stubEnv("OSRM_MAP_DEMO", undefined);
+  vi.stubEnv("OSRM_MAP_TESTING", "1");
+  reads.requireAdmin.mockResolvedValue({
+    origin: testingOrigin,
+    environment: "testing",
+    redisUrl: "https://redis.invalid",
+    redisToken: "mock-only",
+  });
+}
+
+function postTesting(id = "local-demo", requestOrigin = testingOrigin) {
+  return post(id, requestOrigin, testingOrigin);
+}
+
 async function post(
   id = "10",
   requestOrigin = origin,
@@ -75,10 +142,12 @@ beforeEach(() => {
   vi.stubEnv("APP_ENV", "development");
   vi.stubEnv("AUTH_ORIGIN", origin);
   vi.stubEnv("OSRM_MAP_DEMO", "1");
+  vi.stubEnv("OSRM_MAP_TESTING", undefined);
   vi.stubEnv("MAP_LOCAL_SCENARIO_DEMO", undefined);
   vi.stubEnv("VERCEL", undefined);
   vi.stubEnv("VERCEL_ENV", undefined);
   vi.stubEnv("VERCEL_TARGET_ENV", undefined);
+  vi.stubEnv("VERCEL_GIT_COMMIT_REF", undefined);
   vi.stubGlobal("fetch", fetcher);
   reads.requireAdmin.mockResolvedValue({ origin, environment: "development" });
   reads.getScenario.mockResolvedValue({ id: "10", depotId: "1" });
@@ -95,40 +164,7 @@ afterEach(() => {
 describe("local OSRM Map endpoint", () => {
   it("optimizes the eight demo stops with one Table and one Route without database reads", async () => {
     vi.stubEnv("MAP_LOCAL_SCENARIO_DEMO", "1");
-    fetcher.mockImplementation(async (input) => {
-      const path = new URL(String(input)).pathname;
-      const coordinates = path.split("/").at(-1)!.split(";").map((pair) =>
-        pair.split(",").map(Number),
-      );
-      const waypoints = coordinates.map((location) => ({ location }));
-      if (path.includes("/table/")) {
-        expect(coordinates).toHaveLength(9);
-        for (const [longitude, latitude] of coordinates) {
-          expect(longitude).toBeGreaterThan(110.35);
-          expect(longitude).toBeLessThan(110.5);
-          expect(latitude).toBeGreaterThan(-7.06);
-          expect(latitude).toBeLessThan(-6.92);
-        }
-        return Response.json({
-          code: "Ok",
-          distances: coordinates.map((_, from) => coordinates.map((_, to) =>
-            from === to ? 0 : 1 + ((to - from + 9) % 9),
-          )),
-          sources: waypoints,
-          destinations: waypoints,
-        });
-      }
-      expect(path).toContain("/route/");
-      expect(coordinates).toHaveLength(10);
-      expect(coordinates.at(-1)).toEqual(coordinates[0]);
-      return Response.json({
-        code: "Ok",
-        waypoints,
-        routes: [{ legs: Array.from({ length: 9 }, () => ({})), geometry: {
-          type: "LineString", coordinates,
-        } }],
-      });
-    });
+    mockSyntheticProvider();
 
     const response = await post("local-demo");
     expect(response.status).toBe(200);
@@ -290,5 +326,122 @@ describe("local OSRM Map endpoint", () => {
       expect((await post()).status).toBe(status);
     }
     expect(fetcher).not.toHaveBeenCalled();
+  });
+});
+
+describe("OSRM for Testing Preview", () => {
+  it("routes only the fixture after a shared permit and rejects another instance during cooldown", async () => {
+    useTestingPreview();
+    quota.set.mockResolvedValueOnce("OK").mockResolvedValueOnce(null);
+    mockSyntheticProvider();
+    const response = await postTesting();
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(await response.json()).toMatchObject({ data: { scenarioId: "local-demo" } });
+    expect(quota.set.mock.invocationCallOrder[0]).toBeLessThan(fetcher.mock.invocationCallOrder[0]);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(reads.getScenario).not.toHaveBeenCalled();
+    expect(reads.getDepot).not.toHaveBeenCalled();
+    expect(reads.listOrders).not.toHaveBeenCalled();
+
+    Reflect.deleteProperty(globalThis, Symbol.for("courier-route-planner.osrm-map-demo"));
+    vi.resetModules();
+    expect((await postTesting()).status).toBe(429);
+    expect(quota.set.mock.calls).toEqual([
+      ["crp:osrm:testing:fossgis", "reserved", { nx: true, ex: 60 }],
+      ["crp:osrm:testing:fossgis", "reserved", { nx: true, ex: 60 }],
+    ]);
+    expect(quota.connect).toHaveBeenCalledWith(expect.objectContaining({ retry: { retries: 0 } }));
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects database Scenarios before fetching any coordinates or consuming quota", async () => {
+    useTestingPreview();
+    expect((await postTesting("10")).status).toBe(404);
+    expect(reads.getScenario).not.toHaveBeenCalled();
+    expect(reads.getDepot).not.toHaveBeenCalled();
+    expect(reads.listOrders).not.toHaveBeenCalled();
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["OSRM_MAP_TESTING", undefined],
+    ["OSRM_MAP_TESTING", "0"],
+    ["VERCEL_GIT_COMMIT_REF", "feature/other"],
+    ["VERCEL_GIT_COMMIT_REF", undefined],
+    ["VERCEL", undefined],
+    ["VERCEL_ENV", "production"],
+    ["VERCEL_TARGET_ENV", "production"],
+    ["APP_ENV", "production"],
+    ["NODE_ENV", "development"],
+  ])("fails closed for %s=%s", async (name, value) => {
+    useTestingPreview();
+    vi.stubEnv(name!, value);
+    expect((await postTesting()).status).toBe(404);
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("requires a Testing admin session and same origin before reserving quota", async () => {
+    useTestingPreview();
+    const { HttpError } = await import("@/lib/http/request-security");
+    reads.requireAdmin.mockRejectedValueOnce(new HttpError(401, "UNAUTHORIZED", "Authentication required."));
+    expect((await postTesting()).status).toBe(401);
+    expect((await postTesting("local-demo", "https://other.example")).status).toBe(403);
+    reads.requireAdmin.mockResolvedValueOnce({ origin: testingOrigin, environment: "production" });
+    expect((await postTesting()).status).toBe(404);
+    expect(quota.set).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("does not contact OSRM on Redis error or an unrecognized permit response", async () => {
+    useTestingPreview();
+    quota.set.mockRejectedValueOnce(new Error("Redis unavailable")).mockResolvedValueOnce(true);
+    expect((await postTesting()).status).toBe(503);
+    expect((await postTesting()).status).toBe(503);
+    expect(quota.set).toHaveBeenCalledTimes(2);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("rejects a late Redis acknowledgement before the timeout signal fires", async () => {
+    useTestingPreview();
+    const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+    try {
+      mockSyntheticProvider();
+      quota.set.mockImplementationOnce(async () => {
+        clock.mockReturnValue(1_001);
+        return "OK";
+      });
+      expect((await postTesting()).status).toBe(503);
+      expect(quota.set).toHaveBeenCalledOnce();
+      expect(fetcher).not.toHaveBeenCalled();
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
+  it("keeps the Table result without sending Route after the dispatch deadline", async () => {
+    useTestingPreview();
+    quota.set.mockResolvedValueOnce("OK");
+    mockSyntheticProvider();
+    const reply = fetcher.getMockImplementation()!;
+    const clock = vi.spyOn(performance, "now").mockReturnValue(0);
+    try {
+      fetcher.mockImplementationOnce(async (...args) => {
+        const response = await reply(...args);
+        clock.mockReturnValue(25_001);
+        return response;
+      });
+
+      const response = await postTesting();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({
+        data: { scenarioId: "local-demo", route: { totalDistanceM: 18 }, positions: null },
+      });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally {
+      clock.mockRestore();
+    }
   });
 });
