@@ -63,7 +63,10 @@ const roadPositions = [[-6.9, 110.4], [-6.905, 110.407], [-6.91, 110.41], [-6.9,
 function roadReply(positions: number[][] | null = roadPositions) {
   return { data: {
     scenarioId: "10",
-    route: { stops: roadStops, nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75 },
+    route: {
+      stops: roadStops, legDistancesM: [125, 200],
+      nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75,
+    },
     positions,
   } };
 }
@@ -190,7 +193,10 @@ describe("Scenario Demo Lokal", () => {
     const positions = roadVisit.map((stop) => stop.position);
     fetcher.mockResolvedValueOnce(Response.json({ data: {
       scenarioId: "local-demo",
-      route: { stops: roadVisit, nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75 },
+      route: {
+        stops: roadVisit, legDistancesM: [25, ...Array<number>(8).fill(37.5)],
+        nnInitialDistanceM: 400, totalDistanceM: 325, savingsM: 75,
+      },
       positions,
     } }));
     chooseRoadMode();
@@ -506,9 +512,10 @@ describe("Admin Map", () => {
     expect(screen.getByText("Jarak Hybrid")).toBeInTheDocument();
     expect(screen.getByText("Selisih jarak")).toBeInTheDocument();
     const stops = within(screen.getByRole("list", { name: "Urutan kunjungan" }));
-    expect(stops.getAllByRole("listitem").map((stop) => stop.textContent)).toEqual([
-      "Depot Gudang A", "QA-A — Pelanggan A", "Kembali ke Depot Gudang A",
-    ]);
+    const [depotStart, customer, depotReturn] = stops.getAllByRole("listitem");
+    expect(depotStart).toHaveTextContent(/^Depot Gudang A$/);
+    expect(customer).toHaveTextContent(/^QA-A — Pelanggan A.*km$/);
+    expect(depotReturn).toHaveTextContent(/^Kembali ke Depot Gudang A.*km$/);
     const layer = overlay.mock.contexts[0] as Polyline;
     expect(layer.getLatLngs()).toEqual([[
       expect.objectContaining({ lat: depotA.latitude, lng: depotA.longitude }),
@@ -692,9 +699,31 @@ describe("Admin Map", () => {
     fireEvent.click(screen.getByRole("button", { name: optimizeLabel }));
     expect(await screen.findByText(/Geometri rute jalan belum tersedia/)).toBeInTheDocument();
     expect(screen.getByText("325 m")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Urutan kunjungan" })).toBeInTheDocument();
+    expect(screen.getByText(/Jarak jaringan jalan \(OSRM\)/)).toBeInTheDocument();
+    const visits = screen.getByRole("list", { name: "Urutan kunjungan" });
+    expect(within(visits).getByText("125 m")).toBeInTheDocument();
+    expect(within(visits).getByText("200 m")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Order QA-A" })).toHaveTextContent(/^1$/);
     expect(overlay).not.toHaveBeenCalled();
+  });
+
+  it("formats segment distances below one kilometer in meters and the boundary in kilometers", async () => {
+    const reply = roadReply(null);
+    reply.data.route.legDistancesM = [999.5, 1000];
+    reply.data.route.nnInitialDistanceM = 2000;
+    reply.data.route.totalDistanceM = 1999.5;
+    reply.data.route.savingsM = 0.5;
+    const fetcher = mockReads({ [roadPath]: reply });
+    render(<MapManager initialScenarioId="10" osrmEnabled />);
+    const optimize = await screen.findByRole("button", { name: optimizeLabel });
+    chooseRoadMode();
+    fireEvent.click(optimize);
+    const visits = await screen.findByRole("list", { name: "Urutan kunjungan" });
+    const [depotStart, customer, depotReturn] = within(visits).getAllByRole("listitem");
+    expect(depotStart).toHaveTextContent(/^Depot Gudang A$/);
+    expect(customer).toHaveTextContent(/QA-A — Pelanggan A.*999,5 m$/);
+    expect(depotReturn).toHaveTextContent(/Kembali ke Depot Gudang A.*1 km$/);
+    expect(fetcher.mock.calls.filter(([path]) => path === roadPath)).toHaveLength(1);
   });
 
   it("clears old visit numbers during a new optimization and when it fails", async () => {

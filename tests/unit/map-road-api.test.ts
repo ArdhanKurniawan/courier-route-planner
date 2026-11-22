@@ -28,7 +28,7 @@ const second = {
   id: "9007199254740993", scenarioId: "10", orderCode: "QA-3", customerName: "B",
   longitude: 110.02, latitude: -7.02,
 };
-const distances = [[0, 9, 2], [3, 0, 1], [8, 4, 0]];
+const distances = [[0, 2, 3], [4, 0, 4], [20, 2, 0]];
 const points = [depot, first, second].map(({ longitude, latitude }) => ({
   location: [longitude, latitude],
 }));
@@ -138,6 +138,9 @@ describe("local OSRM Map endpoint", () => {
     expect(data.route.stops.at(-1)).toEqual(data.route.stops[0]);
     expect(new Set(data.route.stops.slice(0, -1).map(({ id }: { id: string }) => id)).size).toBe(9);
     expect(data.route.totalDistanceM).toBeLessThanOrEqual(data.route.nnInitialDistanceM);
+    expect(data.route.legDistancesM).toHaveLength(9);
+    expect(data.route.legDistancesM.reduce((sum: number, leg: number) => sum + leg, 0))
+      .toBeCloseTo(data.route.totalDistanceM, 8);
     expect(data.positions[0]).toEqual(data.route.stops[0].position);
     expect(fetcher).toHaveBeenCalledTimes(2);
     expect(reads.getScenario).not.toHaveBeenCalled();
@@ -183,7 +186,10 @@ describe("local OSRM Map endpoint", () => {
     expect(reads.listOrders).toHaveBeenCalledWith(BigInt(10), { limit: 10 });
     const { data } = await response.json();
     expect(data.scenarioId).toBe("10");
-    expect(data.route).toMatchObject({ totalDistanceM: 9, nnInitialDistanceM: 9, savingsM: 0 });
+    expect(data.route).toMatchObject({
+      totalDistanceM: 9, nnInitialDistanceM: 26, savingsM: 17,
+      legDistancesM: [3, 2, 4],
+    });
     expect(data.route.stops.map(({ id }: { id: string }) => id)).toEqual([
       "1", "9007199254740993", "2", "1",
     ]);
@@ -206,7 +212,7 @@ describe("local OSRM Map endpoint", () => {
     const response = await post();
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      data: { positions: null, route: { totalDistanceM: 9 } },
+      data: { positions: null, route: { totalDistanceM: 9, legDistancesM: [3, 2, 4] } },
     });
   });
 

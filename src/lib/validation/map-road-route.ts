@@ -17,9 +17,22 @@ const route = z.object({
     label: z.string().min(1),
     position: mapPosition,
   })).min(3).max(osrmOrderLimit + 2),
+  legDistancesM: z.array(meters).min(2).max(osrmOrderLimit + 1),
   nnInitialDistanceM: meters,
   totalDistanceM: meters,
   savingsM: meters,
+}).refine(({ stops, legDistancesM, totalDistanceM }) => {
+  if (legDistancesM.length !== stops.length - 1) return false;
+  const sum = legDistancesM.reduce((total, distance) => total + distance, 0);
+  if (!Number.isFinite(sum)) return false;
+  const toleranceM = Math.max(
+    1e-6,
+    Number.EPSILON * Math.max(sum, totalDistanceM) * legDistancesM.length,
+  );
+  return Math.abs(sum - totalDistanceM) <= toleranceM;
+}, {
+  path: ["legDistancesM"],
+  message: "Leg distances must match the route stops and Hybrid total.",
 });
 export type MapRoute = z.infer<typeof route>;
 

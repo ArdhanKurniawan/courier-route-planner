@@ -6,6 +6,7 @@ import { createOsrmClient, OsrmError } from "@/infrastructure/osrm-client";
 import type { DepotDTO } from "@/lib/validation/depot";
 import type { OrderDTO } from "@/lib/validation/order";
 import type { MapRoadResult } from "@/lib/validation/map-road-route";
+import { buildMapRouteResult } from "./map-route-result";
 
 const minimumGapMs = 1_100;
 // Development hot reload must not reset the quota for this Node.js process.
@@ -44,17 +45,12 @@ export async function buildMapRoadRoute(
     const labels = new Map(orders.map((order) => [
       order.id, `${order.orderCode} — ${order.customerName}`,
     ]));
-    const route: MapRoadResult["route"] = {
-      stops: result.route.map((index) => {
-        const node = table.nodes[index];
-        const label = node.kind === "depot" ? `Depot ${depot.name}` : labels.get(node.id);
-        if (label === undefined) throw new Error("OSRM result references an unknown Order.");
-        return { id: node.id, label, position: [node.latitude, node.longitude] };
-      }),
-      nnInitialDistanceM: result.diagnostics.nnInitialDistanceM,
-      totalDistanceM: result.totalDistanceM,
-      savingsM: result.diagnostics.nnInitialDistanceM - result.totalDistanceM,
-    };
+    const route = buildMapRouteResult(result, table.matrix, (index) => {
+      const node = table.nodes[index];
+      const label = node.kind === "depot" ? `Depot ${depot.name}` : labels.get(node.id);
+      if (label === undefined) throw new Error("OSRM result references an unknown Order.");
+      return { id: node.id, label, position: [node.latitude, node.longitude] };
+    });
 
     await delay(minimumGapMs, undefined, { signal });
     let positions: MapRoadResult["positions"] = null;
