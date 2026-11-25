@@ -133,7 +133,9 @@ const okHeader = () => ({ rowsAffected: 1, sLastInsertID: caseId });
 const okPoints = () => ({ rowsAffected: 3 });
 const sessionMode = () =>
   wire({ sql_mode: "VARCHAR" }, [["STRICT_TRANS_TABLES"]]);
+const absentCase = () => storedReply(null, []);
 const complete = () => [
+  absentCase(),
   sessionReply(),
   sessionMode(),
   sourceReply(),
@@ -229,24 +231,25 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     expect(snapshot.nodes).toEqual(baseline.nodes);
     expect(snapshot.scenario.generatorVersion).toBeNull();
     expect(snapshot.provenance).toEqual({ frozenAt, benchmarkCaseId: caseId });
-    expect(fixture.calls[0]).toMatchObject({
+    expect(fixture.calls[0].query).toMatch(/case_header/u);
+    expect(fixture.calls[1]).toMatchObject({
       query: "BEGIN",
       isolation: "REPEATABLE READ",
     });
-    expect(fixture.calls.slice(1, 6).map((call) => call.session)).toEqual(
+    expect(fixture.calls.slice(2, 7).map((call) => call.session)).toEqual(
       Array(5).fill("synthetic-tx"),
     );
-    expect(fixture.calls[2].query).toMatch(/COUNT\(.*\) OVER \(\)/i);
-    expect(fixture.calls[2].query).toContain("'generatorVersion', NULL");
-    expect(fixture.calls[3].query).toMatch(/insert into `benchmark_cases`/i);
-    expect(fixture.calls[4].query).toMatch(
+    expect(fixture.calls[3].query).toMatch(/COUNT\(.*\) OVER \(\)/i);
+    expect(fixture.calls[3].query).toContain("'generatorVersion', NULL");
+    expect(fixture.calls[4].query).toMatch(/insert into `benchmark_cases`/i);
+    expect(fixture.calls[5].query).toMatch(
       /insert into `benchmark_case_points`/i,
     );
-    expect(fixture.calls[4].query).toContain("9007199254740992");
-    expect(fixture.calls[4].query).toContain("9007199254740993");
-    expect(fixture.calls[4].query).toContain(String(depot.latitude));
-    expect(fixture.calls[6].session).not.toBe("synthetic-tx");
-    expect(fixture.calls[7]).toMatchObject({
+    expect(fixture.calls[5].query).toContain("9007199254740992");
+    expect(fixture.calls[5].query).toContain("9007199254740993");
+    expect(fixture.calls[5].query).toContain(String(depot.latitude));
+    expect(fixture.calls[7].session).not.toBe("synthetic-tx");
+    expect(fixture.calls[8]).toMatchObject({
       query: "COMMIT",
       session: "synthetic-tx",
     });
@@ -257,18 +260,20 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     "rolls back a failed %s insert",
     async (stage) => {
       const fixture = connect([
+        absentCase(),
         sessionReply(),
         sessionMode(),
         sourceReply(),
         ...(stage === "points" ? [okHeader()] : []),
         new Error("Synthetic insert interruption"),
         sessionReply(),
-        storedReply(null, []),
+        ...(stage === "header" ? [absentCase()] : []),
+        absentCase(),
       ]);
       await expect(fixture.service.freeze(request)).rejects.toMatchObject({
         code: "UNAVAILABLE",
       });
-      expect(fixture.calls.at(-1)).toMatchObject({
+      expect(fixture.calls.at(stage === "header" ? -2 : -1)).toMatchObject({
         query: "ROLLBACK",
         session: "synthetic-tx",
       });
@@ -282,6 +287,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
 
   it("rolls back a short points insert", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       sourceReply(),
@@ -298,6 +304,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
 
   it("handles transaction token loss after an INSERT without a sessionless rollback", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       sourceReply(),
@@ -318,6 +325,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
 
   it("reports an unacknowledged rollback without attempting COMMIT", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       sourceReply(),
@@ -364,23 +372,55 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     expect(fixture.remaining()).toBe(0);
   });
 
-  it("rolls back a duplicate request ID instead of inserting another set of points", async () => {
+  it("rejects a committed UUID with the latest source hash without opening a writer", async () => {
+    const updated = [{ ...orders[0], latitude: -7.4 }, orders[1]];
+    const latest = buildBenchmarkInput({ scenario, depot, orders: updated });
+    expect(latest.inputHash).not.toBe(request.expectedInputHash);
+    const fixture = connect([storedReply(), sourceReply({ orders: updated })]);
+
+    await expect(
+      fixture.service.freeze({ ...request, expectedInputHash: latest.inputHash }),
+    ).rejects.toMatchObject({ code: "FREEZE_REQUEST_CONFLICT", requestId });
+    expect(fixture.calls.map(({ query }) => query)).toEqual([
+      expect.stringMatching(/^\s*SELECT/iu),
+      expect.stringMatching(/^\s*SELECT/iu),
+    ]);
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it("checks the latest input hash even when the UUID is already committed", async () => {
+    const updated = [{ ...orders[0], latitude: -7.4 }, orders[1]];
+    const fixture = connect([storedReply(), sourceReply({ orders: updated })]);
+    await expect(fixture.service.freeze(request)).rejects.toMatchObject({
+      code: "SOURCE_CHANGED",
+    });
+    expect(fixture.calls.every(({ query }) => /^\s*SELECT/iu.test(query))).toBe(true);
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it("reconciles a concurrent UUID winner after rolling back the failed header insert", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       sourceReply(),
       Response.json(
-        { code: 1062, message: "Synthetic duplicate" },
-        { status: 409 },
+        { code: 61100002, message: "Opaque rejected statement" },
+        { status: 400 },
       ),
       sessionReply(),
+      storedReply(),
       storedReply(),
     ]);
     await expect(fixture.service.freeze(request)).rejects.toMatchObject({
       code: "FREEZE_REQUEST_CONFLICT",
       requestId,
     });
-    expect(fixture.calls.at(-1)?.query).toBe("ROLLBACK");
+    expect(fixture.calls.at(-2)?.query).toBe("ROLLBACK");
+    expect(fixture.calls.at(-1)).toMatchObject({
+      query: expect.stringContaining(requestId),
+      session: "",
+    });
     expect(
       fixture.calls.every(
         ({ query }) => !/insert into `benchmark_case_points`/iu.test(query),
@@ -389,6 +429,44 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     await expect(fixture.service.recover(request)).resolves.toMatchObject({
       inputHash: baseline.inputHash,
     });
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it.each([
+    ["no committed request", absentCase()],
+    ["a failed independent read", new Error("Synthetic observer interrupted")],
+    ["corrupt persisted input", storedReply({ ...header, inputHash: "f".repeat(64) })],
+  ])("keeps a failed header insert unavailable with %s", async (_description, readback) => {
+    const fixture = connect([
+      absentCase(),
+      sessionReply(),
+      sessionMode(),
+      sourceReply(),
+      Response.json({ code: 1062, message: "Opaque duplicate" }, { status: 409 }),
+      sessionReply(),
+      readback,
+    ]);
+    await expect(fixture.service.freeze(request)).rejects.toMatchObject({
+      code: "UNAVAILABLE",
+    });
+    expect(fixture.calls.at(-2)?.query).toBe("ROLLBACK");
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it("preserves unknown rollback after a header insert fails", async () => {
+    const fixture = connect([
+      absentCase(),
+      sessionReply(),
+      sessionMode(),
+      sourceReply(),
+      new Error("Synthetic header failure"),
+      new Error("Synthetic rollback acknowledgement loss"),
+    ]);
+    await expect(fixture.service.freeze(request)).rejects.toMatchObject({
+      code: "ROLLBACK_UNKNOWN",
+      requestId,
+    });
+    expect(fixture.calls.at(-1)?.query).toBe("ROLLBACK");
     expect(fixture.remaining()).toBe(0);
   });
 
@@ -401,7 +479,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
         updated[0].customerName = "Changed after transaction read";
       if (field === "membership") updated.pop();
       const fixture = connect([
-        ...complete().slice(0, 6),
+        ...complete().slice(0, 7),
         sourceReply({ orders: updated }),
         sessionReply(),
       ]);
@@ -416,6 +494,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
 
   it("rejects stale preview hashes before inserting", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       sourceReply(),
@@ -448,6 +527,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     ],
   ])("fails closed for %s before any inserts", async (_name, source, code) => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       sessionMode(),
       source,
@@ -457,7 +537,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
       code,
     });
     expect(fixture.calls.at(-1)?.query).toBe("ROLLBACK");
-    expect(fixture.calls).toHaveLength(4);
+    expect(fixture.calls).toHaveLength(5);
     expect(fixture.remaining()).toBe(0);
   });
 
@@ -541,7 +621,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
 
   it("rolls back if persistence changed a display field outside the input hash", async () => {
     const fixture = connect([
-      ...complete().slice(0, 5),
+      ...complete().slice(0, 6),
       storedReply(header, [
         { ...points[0], name: "Changed after insert" },
         ...points.slice(1),
@@ -570,16 +650,20 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
   });
 
   it("stops when the server does not issue a transaction session", async () => {
-    const fixture = connect([Response.json({})]);
+    const fixture = connect([absentCase(), Response.json({})]);
     await expect(fixture.service.freeze(request)).rejects.toMatchObject({
       code: "UNAVAILABLE",
     });
-    expect(fixture.calls.map(({ query }) => query)).toEqual(["BEGIN"]);
+    expect(fixture.calls.map(({ query }) => query)).toEqual([
+      expect.stringMatching(/^\s*SELECT/iu),
+      "BEGIN",
+    ]);
     expect(fixture.remaining()).toBe(0);
   });
 
   it("checks the session fixed-string escape mode before writing", async () => {
     const fixture = connect([
+      absentCase(),
       sessionReply(),
       wire({ sql_mode: "VARCHAR" }, [
         ["NO_BACKSLASH_ESCAPES,STRICT_TRANS_TABLES"],
@@ -590,6 +674,7 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
       code: "UNAVAILABLE",
     });
     expect(fixture.calls.map(({ query }) => query)).toEqual([
+      expect.stringMatching(/^\s*SELECT/iu),
       "BEGIN",
       "SELECT @@SESSION.sql_mode AS sql_mode",
       "ROLLBACK",

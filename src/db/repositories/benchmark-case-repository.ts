@@ -138,6 +138,12 @@ async function readStored(session: Session, requestId: string) {
   return decodeStoredBenchmarkCase(result, requestId);
 }
 
+class HeaderInsertError extends Error {
+  constructor(cause: unknown) {
+    super("Benchmark Case header insert failed", { cause });
+  }
+}
+
 async function insertCase(
   db: Database,
   tx: Session,
@@ -162,9 +168,12 @@ async function insertCase(
     })
     .toSQL();
 
-  const { rowsAffected, lastInsertId } = headerInsertSchema.parse(
-    await tx.execute(header.sql, header.params, { fullResult: true }),
-  );
+  const inserted = await tx
+    .execute(header.sql, header.params, { fullResult: true })
+    .catch((error: unknown) => {
+      throw new HeaderInsertError(error);
+    });
+  const { rowsAffected, lastInsertId } = headerInsertSchema.parse(inserted);
   if (rowsAffected !== 1)
     throw new BenchmarkCaseError("CORRUPT_BENCHMARK_CASE");
 
@@ -211,20 +220,22 @@ function defaultDatabase() {
   return getDatabase();
 }
 
-function publicError(error: unknown, requestId?: string) {
+function publicError(error: unknown) {
   if (error instanceof BenchmarkCaseError) return error;
-  if (
-    requestId &&
-    error instanceof DatabaseError &&
-    [1062, "1062", "ER_DUP_ENTRY"].some((code) => code === error.details?.code)
-  )
-    return new BenchmarkCaseError("FREEZE_REQUEST_CONFLICT", requestId);
   return new BenchmarkCaseError("UNAVAILABLE");
 }
 
 export function createBenchmarkCaseRepository(
   acquire: () => Database = defaultDatabase,
 ): BenchmarkCaseRepository {
+  async function findByRequestId(requestId: string) {
+    try {
+      return await readStored(acquire().$client, requestId);
+    } catch (error) {
+      throw publicError(error);
+    }
+  }
+
   return {
     async readSource(scenarioId) {
       try {
@@ -233,13 +244,7 @@ export function createBenchmarkCaseRepository(
         throw publicError(error);
       }
     },
-    async findByRequestId(requestId) {
-      try {
-        return await readStored(acquire().$client, requestId);
-      } catch (error) {
-        throw publicError(error);
-      }
-    },
+    findByRequestId,
     async transact(rawRequestId, work) {
       const requestId = requestKey.parse(rawRequestId);
       let db: Database;
@@ -278,14 +283,15 @@ export function createBenchmarkCaseRepository(
           },
         });
       } catch (error) {
+        const cause = error instanceof HeaderInsertError ? error.cause : error;
         // The pinned HTTP driver clears its session on a successful response
         // without TiDB-Session. A sessionless ROLLBACK could acknowledge an
         // unrelated transaction, so the original rollback remains unverified.
         if (
-          error instanceof DatabaseError &&
-          error.status === 500 &&
-          error.details === null &&
-          error.message === "empty session, please try again"
+          cause instanceof DatabaseError &&
+          cause.status === 500 &&
+          cause.details === null &&
+          cause.message === "empty session, please try again"
         ) {
           throw new BenchmarkCaseError("ROLLBACK_UNKNOWN", requestId);
         }
@@ -294,7 +300,14 @@ export function createBenchmarkCaseRepository(
         } catch {
           throw new BenchmarkCaseError("ROLLBACK_UNKNOWN", requestId);
         }
-        throw publicError(error, requestId);
+        // A concurrent insert can win after the service's precheck. Only a
+        // committed, validated row from an independent read proves conflict.
+        if (error instanceof HeaderInsertError) {
+          const committed = await findByRequestId(requestId).catch(() => null);
+          if (committed)
+            throw new BenchmarkCaseError("FREEZE_REQUEST_CONFLICT", requestId);
+        }
+        throw publicError(cause);
       }
 
       // Drizzle's HTTP transaction wrapper calls rollback even when COMMIT
