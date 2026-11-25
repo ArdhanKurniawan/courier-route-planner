@@ -1,6 +1,6 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Benchmark Case Persistence acceptance. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Scenario Freeze API and UI. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
@@ -18,7 +18,7 @@ Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Benchmark C
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
 | `docs/07_TIDB_GUIDE.md` | 15467 | `42871120db1234f93f4db857d0e19000b9f3c4837611e880250aebd465657d91` |
 | `docs/08_DATABASE_DESIGN.md` | 15815 | `c3816695aa5f2445ee8307028d8586ba508d7b6092aaa3a97480ce4fc4673019` |
-| `docs/09_REPO_STRUCTURE.md` | 11136 | `fcbd5d7335e095cc98d7ed4e4fe02b16b226bae43cd617120f742606e4e58886` |
+| `docs/09_REPO_STRUCTURE.md` | 12952 | `fb9a25f4a74aadc05c696d208a55d9c965bf47efe395a27aa7650fd12298f4ba` |
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 11353 | `32adad89774bf0926d04c05ca32a675e209e581a4362bc3dc0e661b38acbdb46` |
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 11422 | `c4d394cf980567bcc38df2be52e7cf9f162f72835eb8d28ce78af98f7da19779` |

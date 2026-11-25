@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { DepotDTO } from "@/lib/validation/depot";
@@ -284,7 +285,16 @@ export default function ScenarioManager() {
                   <td className="p-3">{row.distributionPattern}</td>
                   <td className="p-3">{row.customerCount}</td>
                   <td className="p-3">{row.status}</td>
-                  <td className="flex gap-2 p-3">
+                  <td className="flex flex-wrap gap-2 p-3">
+                    {row.status === "draft" && (
+                      <Link
+                        href={"/scenarios/" + row.id + "/freeze"}
+                        aria-label={"Preview Freeze " + row.name}
+                        className={action}
+                      >
+                        Preview Freeze
+                      </Link>
+                    )}
                     <button
                       type="button"
                       aria-label={"Edit " + row.name}

@@ -11,6 +11,7 @@ const domainRoutes = [
   "/experiments",
   "/results",
   "/benchmark-batches",
+  "/benchmark-cases",
   "/export-results",
 ];
 
@@ -45,6 +46,7 @@ describe("route planner navigation", () => {
     expect(hrefs).not.toContain("/orders");
     expect(hrefs).not.toContain("/map");
     expect(hrefs).not.toContain("/dummy-generator");
+    expect(hrefs).not.toContain("/benchmark-cases");
     expect([...hrefs].sort()).toEqual(
       domainRoutes
         .filter(
@@ -55,6 +57,7 @@ describe("route planner navigation", () => {
               "/orders",
               "/map",
               "/dummy-generator",
+              "/benchmark-cases",
             ].includes(href),
         )
         .sort(),

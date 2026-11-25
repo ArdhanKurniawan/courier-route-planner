@@ -1,11 +1,15 @@
 import "server-only";
 import { isDeepStrictEqual } from "node:util";
-import { z } from "zod";
 import {
   buildBenchmarkInput,
   type BenchmarkInputSnapshot,
 } from "@/domain/benchmark-input";
 import { depotId } from "@/lib/validation/depot";
+import {
+  freezeRequest,
+  type BenchmarkHistoryPage,
+  type BenchmarkHistoryQuery,
+} from "@/lib/validation/benchmark-case";
 
 export type BenchmarkCaseSource = Readonly<{
   scenario: Readonly<Record<string, unknown>>;
@@ -24,6 +28,8 @@ type BenchmarkCaseWriter = {
 export type BenchmarkCaseRepository = {
   readSource(scenarioId: string): Promise<BenchmarkCaseSource>;
   findByRequestId(requestId: string): Promise<BenchmarkInputSnapshot | null>;
+  findById(id: string): Promise<BenchmarkInputSnapshot | null>;
+  list(query: BenchmarkHistoryQuery): Promise<BenchmarkHistoryPage>;
   transact<T>(
     requestId: string,
     work: (writer: BenchmarkCaseWriter) => Promise<T>,
@@ -51,12 +57,6 @@ export class BenchmarkCaseError extends Error {
     this.name = "BenchmarkCaseError";
   }
 }
-
-const freezeRequest = z.strictObject({
-  scenarioId: depotId,
-  requestId: z.uuid().transform((value) => value.toLowerCase()),
-  expectedInputHash: z.string().regex(/^[a-f0-9]{64}$/u),
-});
 
 function snapshotSource(
   source: BenchmarkCaseSource,
@@ -86,6 +86,16 @@ export function createBenchmarkCaseService(
   clock = () => new Date(),
 ) {
   return {
+    async detail(rawId: unknown) {
+      const snapshot = await repo.findById(depotId.parse(rawId));
+      if (!snapshot) throw new BenchmarkCaseError("NOT_FOUND");
+      return snapshot;
+    },
+
+    list(query: BenchmarkHistoryQuery) {
+      return repo.list(query);
+    },
+
     async preview(rawScenarioId: unknown) {
       const scenarioId = depotId.parse(rawScenarioId);
       return snapshotSource(await repo.readSource(scenarioId), scenarioId);
@@ -96,7 +106,10 @@ export function createBenchmarkCaseService(
         freezeRequest.parse(rawRequest);
       if (await repo.findByRequestId(requestId)) {
         const source = await repo.readSource(scenarioId);
-        assertExpectedInput(snapshotSource(source, scenarioId), expectedInputHash);
+        assertExpectedInput(
+          snapshotSource(source, scenarioId),
+          expectedInputHash,
+        );
         throw new BenchmarkCaseError("FREEZE_REQUEST_CONFLICT", requestId);
       }
       return repo.transact(requestId, async (writer) => {

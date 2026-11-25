@@ -30,6 +30,7 @@ export const navigationGroups: NavigationGroup[] = [
   {
     title: "Research",
     items: [
+      { title: "Benchmark Cases", href: "/benchmark-cases" },
       { title: "Benchmark Batches", href: "/benchmark-batches" },
       { title: "Export Results", href: "/export-results" },
     ],
@@ -52,5 +53,6 @@ export const plannedModules = navigationGroups
         "/orders",
         "/map",
         "/dummy-generator",
+        "/benchmark-cases",
       ].includes(item.href),
   );

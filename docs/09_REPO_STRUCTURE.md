@@ -160,3 +160,17 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 Protected page: src/app/(admin)/orders/page.tsx. UI: src/components/orders/order-manager.tsx and order-form.tsx. Nested API lives under the existing Scenario [id] directory: src/app/api/scenarios/[id]/orders/route.ts and orders/[orderId]/route.ts; [id] represents scenarioId, without introducing a conflicting Next slug. API helper src/lib/http/order-api.ts uses the existing auth/Origin/body/environment guards, then application/orders/order-service.ts and db/repositories/order-repository.ts. Zod/DTOs are in lib/validation/order.ts. All identifiers remain strings at HTTP boundaries. Scenario repository adds only an Order reference precondition; existing authentication/database client/dependencies are unchanged.
 
 Migration `0002_orders`, snapshot and journal append are versioned with Order source. The migration passed in Development and Testing. `tests/integration/order-crud.integration.test.ts` uses the fixture registry and lookup under `tests/fixtures/` for durable receipts and scoped cleanup. Testing live integration remains **NOT EXECUTED**. [Evidence and pending checkpoints](14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
+## Phase 3A — Scenario Freeze API dan UI
+
+Pada daftar Scenario, buka **Preview Freeze** untuk Scenario berstatus draft. Halaman `/scenarios/[id]/freeze` memvalidasi kelayakan data sumber melalui preview dan menampilkan urutan node, perbedaan jumlah pelanggan, serta hash input. Konfirmasi eksplisit menyimpan snapshot. Menu **Research → Benchmark Cases** membuka riwayat pada `/benchmark-cases` dan detail read-only pada `/benchmark-cases/[id]`. Detail memakai snapshot tersimpan. Data operasional tetap dapat diedit, dan FK `RESTRICT` melindungi Scenario sumber yang masih direferensikan.
+
+| Metode dan endpoint | Kontrak |
+|---|---|
+| `GET /api/scenarios/[id]/freeze-preview` | Preview canonical dari data sumber, tanpa mutasi. |
+| `POST /api/benchmark-cases` | Konfirmasi dengan `scenarioId`, UUID `requestId`, dan `expectedInputHash`. Sukses mengembalikan HTTP 201. `SOURCE_CHANGED` dan `FREEZE_REQUEST_CONFLICT` mengembalikan HTTP 409. |
+| `GET /api/benchmark-cases` | Riwayat snapshot dengan `limit` dan cursor `after` opsional. |
+| `GET /api/benchmark-cases/[id]` | Detail snapshot dan points tersimpan, dengan pemeriksaan urutan dan hash. |
+| `GET /api/benchmark-cases/recovery/[requestId]` | Recovery read-only. Query memerlukan `scenarioId` dan `expectedInputHash`. Hasil `data: null` berarti belum terkonfirmasi. |
+
+Semua endpoint memerlukan sesi admin dan memakai `Cache-Control: private, no-store`. POST juga memeriksa Origin dan Host. ID BIGINT tetap berupa string. UI menyimpan identitas request dalam sesi tab sebelum POST agar refresh tetap dapat memeriksa hasil ambigu dengan GET. UI mempertahankan request ketika hasil recovery kosong dan tidak mengulang POST otomatis. [Bukti Live Acceptance persistence](14_TESTING_QA.md#26-live-acceptance-benchmark-case-persistence-di-testing-2026-11-25)
