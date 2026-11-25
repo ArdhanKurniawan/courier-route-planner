@@ -25,6 +25,21 @@ export function assertIntegrationTarget(
 }
 // Deliberately fail before test collection; this command is never part of ordinary CI.
 assertIntegrationTarget(process.env);
+const benchmarkCaseAcceptance =
+  process.env.RUN_BENCHMARK_CASE_ACCEPTANCE === "1";
+if (
+  process.env.BENCHMARK_CASE_TARGETED_ACCEPTANCE_RUN !== undefined &&
+  !benchmarkCaseAcceptance
+)
+  throw new Error("Targeted Benchmark Case acceptance requires explicit opt-in.");
+if (
+  benchmarkCaseAcceptance &&
+  process.env.ORDER_INTEGRATION_RECONCILE_RUN !== undefined
+)
+  throw new Error(
+    "Benchmark acceptance and Order reconciliation require separate runs.",
+  );
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -36,8 +51,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include:
-      process.env.ORDER_INTEGRATION_RECONCILE_RUN === undefined
+    include: benchmarkCaseAcceptance
+      ? ["tests/integration/benchmark-case-persistence.integration.test.ts"]
+      : process.env.ORDER_INTEGRATION_RECONCILE_RUN === undefined
         ? ["tests/integration/**/*.integration.test.ts"]
         : ["tests/integration/order-crud.integration.test.ts"],
     fileParallelism: false,

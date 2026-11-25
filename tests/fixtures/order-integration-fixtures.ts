@@ -280,11 +280,10 @@ export async function reconcileFixtureReceipt(
   return observations;
 }
 
-export async function reconcileOrderRun(
+export function readStoppedOrderRun(
   directory: string | undefined,
   runId: string,
   target: string,
-  lookup: FixtureLookup,
 ) {
   if (!z.uuidv4().safeParse(runId).success)
     throw new FixtureStopped("Invalid private receipt run ID.");
@@ -314,6 +313,17 @@ export async function reconcileOrderRun(
       }
     }
   }
+  return { file, receipt };
+}
+
+export async function reconcileOrderRun(
+  directory: string | undefined,
+  runId: string,
+  target: string,
+  lookup: FixtureLookup,
+) {
+  const { file } = readStoppedOrderRun(directory, runId, target);
+  const folder = dirname(file);
   const observations = await reconcileFixtureReceipt(file, lookup);
   try {
     writeSnapshot(

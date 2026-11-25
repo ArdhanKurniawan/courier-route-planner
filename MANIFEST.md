@@ -1,6 +1,6 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, regenerated 2026-11-21 for Phase 2B Testing Acceptance closure. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Benchmark Case Persistence acceptance. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
@@ -23,7 +23,7 @@ Actual filesystem bytes and SHA-256, regenerated 2026-11-21 for Phase 2B Testing
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
 | `docs/12_CI_CD_RELEASE.md` | 11422 | `c4d394cf980567bcc38df2be52e7cf9f162f72835eb8d28ce78af98f7da19779` |
 | `docs/13_SECURITY.md` | 5349 | `2d515cbd746045942a113f1d8251fb2c6756ce90c99019865a9e196586990aea` |
-| `docs/14_TESTING_QA.md` | 63601 | `8e753996397e9c7f341ca767e0af43b994802c06c6718118ce3d5ae91e3d41e0` |
+| `docs/14_TESTING_QA.md` | 65610 | `b0bd515a42bd822f4852f63aff6ea3fef999f9afbf06a4fc760a829dd719a309` |
 | `docs/15_RESEARCH_BENCHMARK_PROTOCOL.md` | 13354 | `df05a2566c364e1742fc0dca1471576a15c8a669a00dd411672c86dd00ea5933` |
 | `docs/16_OBSERVABILITY_RUNBOOK.md` | 4592 | `093866e6c665d45889946deb329304a179502586d1ba627291968b679dd0768a` |
 | `docs/17_SETUP_FROM_ZERO.md` | 25966 | `b77e1c42a26a2c02c02523bec7559558f07931991ecfe9a3f94fff31d9764b8b` |

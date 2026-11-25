@@ -472,3 +472,17 @@ GitHub mencatat [PR #51](https://github.com/ArdhanKurniawan/courier-route-planne
 Bukti browser owner mencatat respons HTTP pada stable Testing alias. Pemetaan alias ke deployment ID dan SHA memerlukan metadata Vercel tersendiri dan belum diverifikasi pada checkpoint ini.
 
 Fault injection live `COMMIT_UNKNOWN` tetap **NOT TESTED**. Identitas SQL fisik Production **NOT VERIFIED**. Migrasi `0003` Production **NOT APPLIED**, writer Production **NOT ACTIVATED**, dan Phase 2B Production **NOT RELEASED**.
+
+## 26. Live Acceptance Benchmark Case Persistence di Testing (2026-11-25)
+
+**PASS.** Acceptance Phase 3A PR #2 memakai fixture sintetis terisolasi di TiDB Testing setelah migrasi `0004_benchmark_cases` terverifikasi. Pengujian awal mengonfirmasi preview deterministik, hash canonical yang cocok, commit satu Benchmark Case dengan tiga points, pembacaan ulang dari sesi independen, dan penolakan sumber yang berubah dengan `SOURCE_CHANGED`. Jalur duplicate UUID sebelumnya mengembalikan `UNAVAILABLE`.
+
+| Pemeriksaan lanjutan | Hasil |
+|---|---|
+| Duplicate UUID dengan hash preview terbaru | `FREEZE_REQUEST_CONFLICT` tanpa membuka transaksi tulis. Pembacaan independen mengonfirmasi satu Benchmark Case dan tiga points yang sama. |
+| Controlled rollback sebelum COMMIT | Pembacaan independen tidak menemukan header maupun points sementara. Benchmark Case awal tetap utuh. |
+| Cleanup operator | Kepemilikan fixture dan hasil transaksi dikonfirmasi dari receipt privat sebelum penghapusan. Pembacaan independen menemukan nol baris fixture tersisa. Fingerprint dua Scenario pembanding tetap sama. |
+
+Lookup UUID yang sudah committed memvalidasi hash sumber terkini. Unique constraint tetap menangani benturan saat request bersamaan. Jika INSERT header gagal, repository hanya melaporkan conflict setelah rollback terkonfirmasi dan pembacaan independen menemukan UUID committed yang valid. [Tes regresi offline](../tests/unit/benchmark-case-persistence.test.ts) · [Harness Testing opt-in](../tests/integration/benchmark-case-persistence.integration.test.ts)
+
+Validasi lokal mencatat 95/95 focused tests, 1.191/1.191 unit tests, ESLint, typecheck, dan `git diff --check` lulus. Build lokal berhenti pada kompilasi Turbopack dan belum terverifikasi pada sesi acceptance. Race antar-request tercakup offline. Fault injection kehilangan ACK untuk `COMMIT_UNKNOWN` dan `ROLLBACK_UNKNOWN` belum dilakukan live. Bukti ini mencakup persistence dan menjadi dasar untuk pekerjaan Scenario Freeze API dan UI berikutnya.

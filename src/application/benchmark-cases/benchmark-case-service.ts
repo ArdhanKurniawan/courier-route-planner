@@ -73,6 +73,14 @@ function snapshotSource(
   }
 }
 
+function assertExpectedInput(
+  snapshot: BenchmarkInputSnapshot,
+  expectedInputHash: string,
+) {
+  if (snapshot.inputHash !== expectedInputHash)
+    throw new BenchmarkCaseError("SOURCE_CHANGED");
+}
+
 export function createBenchmarkCaseService(
   repo: BenchmarkCaseRepository,
   clock = () => new Date(),
@@ -86,6 +94,11 @@ export function createBenchmarkCaseService(
     async freeze(rawRequest: unknown) {
       const { scenarioId, requestId, expectedInputHash } =
         freezeRequest.parse(rawRequest);
+      if (await repo.findByRequestId(requestId)) {
+        const source = await repo.readSource(scenarioId);
+        assertExpectedInput(snapshotSource(source, scenarioId), expectedInputHash);
+        throw new BenchmarkCaseError("FREEZE_REQUEST_CONFLICT", requestId);
+      }
       return repo.transact(requestId, async (writer) => {
         const source = await writer.readSource(scenarioId);
         const snapshot = snapshotSource(
@@ -93,9 +106,7 @@ export function createBenchmarkCaseService(
           scenarioId,
           clock().toISOString(),
         );
-        if (snapshot.inputHash !== expectedInputHash) {
-          throw new BenchmarkCaseError("SOURCE_CHANGED");
-        }
+        assertExpectedInput(snapshot, expectedInputHash);
         const saved = await writer.insert(requestId, snapshot);
         // A second read on the transaction would hide intervening commits.
         // The independent SELECT is the final source observation. Later edits
