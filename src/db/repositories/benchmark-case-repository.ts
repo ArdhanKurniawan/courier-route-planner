@@ -20,9 +20,12 @@ import {
 } from "@/db/schema";
 import type { BenchmarkInputSnapshot } from "@/domain/benchmark-input";
 import { depotId } from "@/lib/validation/depot";
+import type { BenchmarkHistoryQuery } from "@/lib/validation/benchmark-case";
 import {
+  decodeBenchmarkHistory,
   decodeBenchmarkSource,
   decodeStoredBenchmarkCase,
+  type BenchmarkCaseKey,
 } from "./benchmark-case-rows";
 
 type Database = ReturnType<typeof getDatabase>;
@@ -88,7 +91,12 @@ function selectSource(scenarioId: string) {
   `;
 }
 
-function selectStored(requestId: string) {
+function selectStored(key: BenchmarkCaseKey) {
+  const byRequest = "requestId" in key;
+  const requested = byRequest
+    ? sql`${requestKey.parse(key.requestId)}`
+    : sql`CAST(${BigInt(depotId.parse(key.id))} AS SIGNED)`;
+  const column = byRequest ? cases.requestId : cases.id;
   return sql`
     SELECT
       CASE WHEN ${cases.id} IS NULL THEN NULL ELSE JSON_OBJECT(
@@ -117,10 +125,35 @@ function selectStored(requestId: string) {
         'orderSource', ${points.orderSource},
         'depotActive', ${points.depotActive}
       ) END AS case_point
-    FROM (SELECT ${requestKey.parse(requestId)} AS id) requested
-    LEFT JOIN ${cases} ON ${cases.requestId} = requested.id
+    FROM (SELECT ${requested} AS id) requested
+    LEFT JOIN ${cases} ON ${column} = requested.id
     LEFT JOIN ${points} ON ${points.caseId} = ${cases.id}
     ORDER BY ${points.nodeIndex}
+  `;
+}
+
+function selectHistory({ after, limit }: BenchmarkHistoryQuery) {
+  const cursor =
+    after === undefined ? sql`` : sql`WHERE ${cases.id} < ${BigInt(after)}`;
+  return sql`
+    SELECT CASE WHEN page.id IS NULL THEN NULL ELSE JSON_OBJECT(
+      'id', CAST(page.id AS CHAR),
+      'scenarioId', CAST(page.scenario_id AS CHAR),
+      'scenarioName', JSON_UNQUOTE(JSON_EXTRACT(page.scenario_snapshot, '$.name')),
+      'actualOrderCount', page.actual_order_count,
+      'pointCount', page.point_count,
+      'inputHash', page.input_hash,
+      'frozenAt', CAST(page.frozen_at AS CHAR)
+    ) END AS summary
+    FROM (SELECT 1) anchor
+    LEFT JOIN (
+      SELECT id, scenario_id, scenario_snapshot, actual_order_count, point_count, input_hash, frozen_at
+      FROM ${cases}
+      ${cursor}
+      ORDER BY id DESC
+      LIMIT ${limit + 1}
+    ) page ON 1 = 1
+    ORDER BY page.id DESC
   `;
 }
 
@@ -133,9 +166,9 @@ async function readSource(session: Session, scenarioId: string) {
   const result = await selectRows(session, selectSource(scenarioId));
   return decodeBenchmarkSource(result, scenarioId);
 }
-async function readStored(session: Session, requestId: string) {
-  const result = await selectRows(session, selectStored(requestId));
-  return decodeStoredBenchmarkCase(result, requestId);
+async function readStored(session: Session, key: BenchmarkCaseKey) {
+  const result = await selectRows(session, selectStored(key));
+  return decodeStoredBenchmarkCase(result, key);
 }
 
 class HeaderInsertError extends Error {
@@ -203,7 +236,7 @@ async function insertCase(
     }
   }
 
-  const saved = await readStored(tx, requestId);
+  const saved = await readStored(tx, { requestId });
   if (
     !saved ||
     !isDeepStrictEqual(saved, {
@@ -228,13 +261,14 @@ function publicError(error: unknown) {
 export function createBenchmarkCaseRepository(
   acquire: () => Database = defaultDatabase,
 ): BenchmarkCaseRepository {
-  async function findByRequestId(requestId: string) {
+  async function findStored(key: BenchmarkCaseKey) {
     try {
-      return await readStored(acquire().$client, requestId);
+      return await readStored(acquire().$client, key);
     } catch (error) {
       throw publicError(error);
     }
   }
+  const findByRequestId = (requestId: string) => findStored({ requestId });
 
   return {
     async readSource(scenarioId) {
@@ -245,6 +279,17 @@ export function createBenchmarkCaseRepository(
       }
     },
     findByRequestId,
+    findById: (id) => findStored({ id }),
+    async list(query) {
+      try {
+        return decodeBenchmarkHistory(
+          await selectRows(acquire().$client, selectHistory(query)),
+          query,
+        );
+      } catch (error) {
+        throw publicError(error);
+      }
+    },
     async transact(rawRequestId, work) {
       const requestId = requestKey.parse(rawRequestId);
       let db: Database;

@@ -10,6 +10,7 @@ import {
   type BenchmarkInputSnapshot,
 } from "@/domain/benchmark-input";
 import { depotId } from "@/lib/validation/depot";
+import type { BenchmarkHistoryQuery } from "@/lib/validation/benchmark-case";
 
 const jsonObject = z.preprocess(
   (value) => (typeof value === "string" ? JSON.parse(value) : value),
@@ -125,7 +126,9 @@ const storedRowSchema = z.object({
   case_point: jsonObject.nullable(),
 });
 
-function decodeStored(raw: unknown, requestId: string) {
+export type BenchmarkCaseKey = { requestId: string } | { id: string };
+
+function decodeStored(raw: unknown, key: BenchmarkCaseKey) {
   const rows = z.array(storedRowSchema).min(1).parse(raw);
   if (
     rows.length === 1 &&
@@ -137,7 +140,9 @@ function decodeStored(raw: unknown, requestId: string) {
 
   const header = headerSchema.parse(rows[0].case_header);
   if (
-    header.requestId !== requestId ||
+    ("requestId" in key
+      ? header.requestId !== key.requestId
+      : header.id !== key.id) ||
     header.scenario.id !== header.scenarioId ||
     header.pointCount !== header.actualOrderCount + 1 ||
     rows.length !== header.pointCount ||
@@ -201,10 +206,59 @@ function decodeStored(raw: unknown, requestId: string) {
 
 export function decodeStoredBenchmarkCase(
   raw: unknown,
-  requestId: string,
+  key: BenchmarkCaseKey,
 ): BenchmarkInputSnapshot | null {
   try {
-    return decodeStored(raw, requestId);
+    return decodeStored(raw, key);
+  } catch {
+    throw new BenchmarkCaseError("CORRUPT_BENCHMARK_CASE");
+  }
+}
+
+const historyRow = z.object({
+  summary: jsonObject
+    .pipe(
+      headerSchema
+        .pick({
+          id: true,
+          scenarioId: true,
+          actualOrderCount: true,
+          pointCount: true,
+          inputHash: true,
+          frozenAt: true,
+        })
+        .extend({ scenarioName: z.string() }),
+    )
+    .nullable(),
+});
+
+export function decodeBenchmarkHistory(
+  raw: unknown,
+  query: BenchmarkHistoryQuery,
+) {
+  try {
+    const rows = z
+      .array(historyRow)
+      .min(1)
+      .max(query.limit + 1)
+      .parse(raw);
+    if (rows.length === 1 && rows[0].summary === null)
+      return { data: [], nextCursor: null };
+    let previous = query.after === undefined ? undefined : BigInt(query.after);
+    const summaries = rows.map(({ summary }) => {
+      if (!summary || summary.pointCount !== summary.actualOrderCount + 1)
+        throw new BenchmarkCaseError("CORRUPT_BENCHMARK_CASE");
+      const id = BigInt(summary.id);
+      if (previous !== undefined && id >= previous)
+        throw new BenchmarkCaseError("CORRUPT_BENCHMARK_CASE");
+      previous = id;
+      return summary;
+    });
+    const data = summaries.slice(0, query.limit);
+    return {
+      data,
+      nextCursor: summaries.length > query.limit ? data.at(-1)!.id : null,
+    };
   } catch {
     throw new BenchmarkCaseError("CORRUPT_BENCHMARK_CASE");
   }

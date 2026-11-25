@@ -53,6 +53,8 @@ describe("Scenario admin UI", () => {
     expect(
       screen.getByRole("table", { name: "Daftar scenario" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Preview Freeze Synthetic Scenario" }))
+      .toHaveAttribute("href", "/scenarios/" + dto.id + "/freeze");
     expect(
       await screen.findByRole("option", { name: "Synthetic Depot" }),
     ).toBeInTheDocument();

@@ -164,6 +164,8 @@ it("passes the complete canonical snapshot through the service's transaction por
   const repository: BenchmarkCaseRepository = {
     readSource: vi.fn(async () => source),
     findByRequestId: async () => null,
+    findById: async () => null,
+    list: async () => ({ data: [], nextCursor: null }),
     async transact(key, work) {
       expect(key).toBe(requestId);
       return work(writer);
@@ -379,7 +381,10 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     const fixture = connect([storedReply(), sourceReply({ orders: updated })]);
 
     await expect(
-      fixture.service.freeze({ ...request, expectedInputHash: latest.inputHash }),
+      fixture.service.freeze({
+        ...request,
+        expectedInputHash: latest.inputHash,
+      }),
     ).rejects.toMatchObject({ code: "FREEZE_REQUEST_CONFLICT", requestId });
     expect(fixture.calls.map(({ query }) => query)).toEqual([
       expect.stringMatching(/^\s*SELECT/iu),
@@ -394,7 +399,9 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     await expect(fixture.service.freeze(request)).rejects.toMatchObject({
       code: "SOURCE_CHANGED",
     });
-    expect(fixture.calls.every(({ query }) => /^\s*SELECT/iu.test(query))).toBe(true);
+    expect(fixture.calls.every(({ query }) => /^\s*SELECT/iu.test(query))).toBe(
+      true,
+    );
     expect(fixture.remaining()).toBe(0);
   });
 
@@ -435,23 +442,32 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
   it.each([
     ["no committed request", absentCase()],
     ["a failed independent read", new Error("Synthetic observer interrupted")],
-    ["corrupt persisted input", storedReply({ ...header, inputHash: "f".repeat(64) })],
-  ])("keeps a failed header insert unavailable with %s", async (_description, readback) => {
-    const fixture = connect([
-      absentCase(),
-      sessionReply(),
-      sessionMode(),
-      sourceReply(),
-      Response.json({ code: 1062, message: "Opaque duplicate" }, { status: 409 }),
-      sessionReply(),
-      readback,
-    ]);
-    await expect(fixture.service.freeze(request)).rejects.toMatchObject({
-      code: "UNAVAILABLE",
-    });
-    expect(fixture.calls.at(-2)?.query).toBe("ROLLBACK");
-    expect(fixture.remaining()).toBe(0);
-  });
+    [
+      "corrupt persisted input",
+      storedReply({ ...header, inputHash: "f".repeat(64) }),
+    ],
+  ])(
+    "keeps a failed header insert unavailable with %s",
+    async (_description, readback) => {
+      const fixture = connect([
+        absentCase(),
+        sessionReply(),
+        sessionMode(),
+        sourceReply(),
+        Response.json(
+          { code: 1062, message: "Opaque duplicate" },
+          { status: 409 },
+        ),
+        sessionReply(),
+        readback,
+      ]);
+      await expect(fixture.service.freeze(request)).rejects.toMatchObject({
+        code: "UNAVAILABLE",
+      });
+      expect(fixture.calls.at(-2)?.query).toBe("ROLLBACK");
+      expect(fixture.remaining()).toBe(0);
+    },
+  );
 
   it("preserves unknown rollback after a header insert fails", async () => {
     const fixture = connect([
@@ -562,6 +578,80 @@ describe("Benchmark Case persistence over the installed TiDB HTTP adapter", () =
     expect(saved).toEqual(frozen);
     expect(saved?.nodes[1].latitude).toBe(orders[0].latitude);
     expect(saved?.configuredCustomerCount).toBe(8);
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it("reads immutable detail by exact BIGINT case ID with one stored-points SELECT", async () => {
+    const fixture = connect([
+      storedReply(),
+      storedReply(null, []),
+      storedReply(),
+    ]);
+    await expect(fixture.service.detail(caseId)).resolves.toMatchObject({
+      scenario: baseline.scenario,
+      nodes: baseline.nodes,
+      provenance: { benchmarkCaseId: caseId },
+    });
+    await expect(fixture.service.detail("1")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+    await expect(fixture.service.detail("2")).rejects.toMatchObject({
+      code: "CORRUPT_BENCHMARK_CASE",
+    });
+    expect(fixture.calls).toHaveLength(3);
+    for (const { query } of fixture.calls) {
+      expect(query).toMatch(/^\s*SELECT/iu);
+      expect(query).toMatch(/benchmark_cases`\.`id` = requested\.id/u);
+      expect(query).toContain("benchmark_case_points");
+      expect(query).not.toContain("JOIN `scenarios`");
+    }
+    expect(fixture.calls[0].query).toContain(caseId);
+    expect(fixture.remaining()).toBe(0);
+  });
+
+  it("paginates frozen history without reading live sources and returns an empty page", async () => {
+    const newerId = "9007199254740998";
+    const summary = {
+      id: caseId,
+      scenarioId,
+      scenarioName: baseline.scenario.name,
+      actualOrderCount: 2,
+      pointCount: 3,
+      inputHash: baseline.inputHash,
+      frozenAt: "2026-01-02 13:14:15.123",
+    };
+    const fixture = connect([
+      wire({ summary: "JSON" }, [[{ ...summary, id: newerId }], [summary]]),
+      wire({ summary: "JSON" }, [[summary]]),
+      wire({ summary: "JSON" }, [[null]]),
+      wire({ summary: "JSON" }, [[{ ...summary, pointCount: 9 }]]),
+    ]);
+    await expect(fixture.service.list({ limit: 1 })).resolves.toEqual({
+      data: [{ ...summary, id: newerId, frozenAt }],
+      nextCursor: newerId,
+    });
+    await expect(
+      fixture.service.list({ limit: 1, after: newerId }),
+    ).resolves.toEqual({
+      data: [{ ...summary, frozenAt }],
+      nextCursor: null,
+    });
+    await expect(
+      fixture.service.list({ limit: 1, after: caseId }),
+    ).resolves.toEqual({
+      data: [],
+      nextCursor: null,
+    });
+    await expect(fixture.service.list({ limit: 1 })).rejects.toMatchObject({
+      code: "CORRUPT_BENCHMARK_CASE",
+    });
+    expect(fixture.calls[1].query).toContain(newerId);
+    expect(
+      fixture.calls.every(
+        ({ query }) =>
+          /^\s*SELECT/iu.test(query) && !/JOIN `scenarios`/iu.test(query),
+      ),
+    ).toBe(true);
     expect(fixture.remaining()).toBe(0);
   });
 
