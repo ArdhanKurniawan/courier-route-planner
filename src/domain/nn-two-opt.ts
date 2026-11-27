@@ -1,7 +1,14 @@
-export type DistanceMatrix = ReadonlyArray<ReadonlyArray<number>>;
-export type Route = ReadonlyArray<number>;
+import {
+  directedTourDistance,
+  validateClosedTour,
+  validateDistanceMatrix,
+  type DistanceMatrix,
+  type Route,
+  type Tour,
+} from "./route-validator";
 
-type Tour = Readonly<{ route: Route; totalDistanceM: number }>;
+export type { DistanceMatrix, Route } from "./route-validator";
+
 type TwoOptDiagnostics = Readonly<{
   twoOptPasses: number;
   acceptedImprovements: number;
@@ -12,61 +19,6 @@ export type NNTwoOptResult = Tour &
     algorithm: "NN_2OPT";
     diagnostics: TwoOptDiagnostics & Readonly<{ nnInitialDistanceM: number }>;
   }>;
-
-function validateDistanceMatrix(matrix: DistanceMatrix): void {
-  if (!Array.isArray(matrix) || matrix.length === 0) {
-    throw new Error("DISTANCE_MATRIX_INVALID");
-  }
-
-  for (let from = 0; from < matrix.length; from++) {
-    const row = matrix[from];
-    if (!Array.isArray(row) || row.length !== matrix.length) {
-      throw new Error("DISTANCE_MATRIX_INVALID");
-    }
-    for (let to = 0; to < row.length; to++) {
-      const cost = row[to];
-      if (!Number.isFinite(cost) || cost < 0 || (from === to && cost !== 0)) {
-        throw new Error("DISTANCE_MATRIX_INVALID");
-      }
-    }
-  }
-}
-
-function validateClosedTour(route: Route, nodeCount: number): void {
-  if (
-    !Array.isArray(route) ||
-    route.length !== nodeCount + 1 ||
-    route[0] !== 0 ||
-    route[nodeCount] !== 0
-  ) {
-    throw new Error("ALGORITHM_INVALID_ROUTE");
-  }
-
-  const visited = new Set<number>();
-  for (let position = 1; position < nodeCount; position++) {
-    const customer = route[position];
-    if (
-      !Number.isInteger(customer) ||
-      customer < 1 ||
-      customer >= nodeCount ||
-      visited.has(customer)
-    ) {
-      throw new Error("ALGORITHM_INVALID_ROUTE");
-    }
-    visited.add(customer);
-  }
-}
-
-function directedTourDistance(matrix: DistanceMatrix, route: Route): number {
-  let totalDistanceM = 0;
-  for (let position = 1; position < route.length; position++) {
-    totalDistanceM += matrix[route[position - 1]][route[position]];
-  }
-  if (!Number.isFinite(totalDistanceM)) {
-    throw new Error("ALGORITHM_NUMERICAL_ERROR");
-  }
-  return totalDistanceM;
-}
 
 function buildNearestNeighbor(matrix: DistanceMatrix): Tour {
   const route = [0];
