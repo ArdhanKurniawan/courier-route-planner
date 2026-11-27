@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import DistanceMatrixPanel from "@/components/distance-matrices/distance-matrix-panel";
 import Button from "@/components/ui/button/Button";
 import type { BenchmarkInputSnapshot } from "@/domain/benchmark-input";
 import {
@@ -44,6 +45,14 @@ export default function BenchmarkCaseDetail({ caseId }: { caseId: string }) {
             tidak dapat dihapus karena FK RESTRICT.
           </p>
           <BenchmarkSnapshot snapshot={result.data.data} />
+          {result.data.data.provenance.benchmarkCaseId === caseId && (
+            <DistanceMatrixPanel
+              key={caseId + ":" + result.data.data.inputHash}
+              caseId={result.data.data.provenance.benchmarkCaseId}
+              inputHash={result.data.data.inputHash}
+              pointCount={result.data.data.pointCount}
+            />
+          )}
         </>
       )}
     </>

@@ -1,6 +1,6 @@
 # 34 — OSRM DISTANCE CONTRACT
 
-**Status:** Approved target input infrastructure, 2026-10-02. Belum ada OSRM client aktual.
+**Status:** Kontrak disetujui 2026-10-02. Kandidat Phase 3B menerapkan adapter dan penyimpanan snapshot. Verifikasi provider dan migrasi live masih menunggu persetujuan.
 Keputusan: [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), [research decisions](32_RESEARCH_DECISIONS.md).
 
 ## 1. Purpose
@@ -70,7 +70,7 @@ Null/missing/unreachable pair, incomplete response, non-finite/negative value, w
 - Tetapkan satu serializer berversi dengan key order dan representasi angka deterministik; larang NaN/Infinity, normalisasi -0 menjadi 0, pertahankan array order. generated_at adalah provenance, tidak mengubah content identity.
 - Hash dihitung dari actual content; jangan mengarang hash atau memakai ID DB sebagai pengganti. Perubahan value/order/unit/config harus mengubah hash yang bersangkutan.
 
-Exact serializer implementation dan test vectors dibuat dalam task infrastructure, bukan source code pada task documentation ini.
+Serializer `distance-matrix/v1` mengikat versi, provider, profile, URL endpoint, opsi, unit, directed semantics, input hash, node order, nilai matriks, dan bukti snapping dalam urutan key tetap. Timestamp generate dan metadata provenance observasional berada di luar preimage. [Golden vector dan integrity tests](../tests/unit/distance-matrix-domain.test.ts)
 
 ## 12. Freeze / immutability
 
@@ -96,6 +96,24 @@ Network/profile/provider dapat berubah; coordinates yang sama belum tentu mengha
 
 Keputusan endpoint final masih OPEN. Evaluasi dukungan distance annotation, limits N+1 nodes, reproducibility/version pinning, availability, kebijakan penggunaan dan budget. Public service jangan diasumsikan unlimited atau stabil. Local/self-hosted memberi kontrol extract/profile tetapi membutuhkan setup/storage/compute. Pilihan dan keterbatasan wajib dicatat sebelum formal generation; tidak ada deployment OSRM pada task ini.
 
+Untuk Phase 3B, ukuran utama 10, 25, dan 50 Order memerlukan masing-masing 11, 26, dan 51 titik termasuk Depot. Satu Table request menghasilkan 121, 676, dan 2.601 sel berarah. Ketiga ukuran lulus dengan respons sintetis. Batas `--max-table-size` OSRM dapat dikonfigurasi operator. Sebelum generasi formal, provider terpilih harus membuktikan dukungan `annotations=distance`, ukuran target, dan kebijakan pemakaian. FOSSGIS membatasi satu request per detik, melarang penggunaan berat, dan menyimpan permintaan di log. [Konfigurasi OSRM](https://project-osrm.org/docs/v26.4.0/tools) · [Kebijakan FOSSGIS](https://routing.openstreetmap.de/about.html#usage-policy)
+
+Generasi aplikasi default nonaktif. Untuk mengaktifkannya di lingkungan yang telah disetujui, operator mengatur `DISTANCE_MATRIX_GENERATION=1`, `DISTANCE_MATRIX_OSRM_URL` ke endpoint HTTPS khusus tanpa kredensial, `DISTANCE_MATRIX_OSRM_PROFILE`, `DISTANCE_MATRIX_OSRM_MAX_POINTS` hingga 51, dan `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` sesuai metode penelitian. Endpoint demo FOSSGIS dan Project OSRM ditolak. Server meminta distance saja dengan radius per titik, tanpa fallback atau retry otomatis. Bukti snap sumber dan tujuan harus tersedia, menunjuk koordinat yang sama untuk indeks tersebut, dan berada dalam radius. Pemeriksaan batas bawah geometris membantu menolak waypoint yang terkait ke indeks salah. Toleransi satu meter menampung kuantisasi koordinat, dan pemeriksaan ini tidak menentukan nilai matriks. Versi software atau network extract yang tidak diberikan provider ditampilkan sebagai tidak tersedia.
+
+Operator dapat mencatat versi dan hash extract yang sudah diverifikasi melalui `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION` dan `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256`. Versi data yang dikembalikan OSRM disimpan terpisah. Generasi tidak tersedia pada Production.
+
 ## 17. Failure handling
 
 Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Retry terbatas hanya untuk transient infrastructure errors sebelum freeze dan dicatat. Jangan fallback ke metric lain atau overwrite snapshot sukses. Failed generation disimpan sebagai failure record, bukan successful benchmark case. Geometry error ditangani terpisah dari matrix/algorithm errors.
+
+Di Phase 3B, kode kegagalan generasi dicatat di log aplikasi tanpa koordinat atau payload provider. Kegagalan validasi tidak membuat snapshot. Jika hasil penyimpanan belum pasti, cari UUID request melalui recovery read-only. Hasil kosong tetap belum terkonfirmasi. Matriks dengan nol di luar diagonal dapat ditinjau dan memuat daftar pasangan berarah yang bermasalah. Matriks tersebut tidak memenuhi syarat common comparison ACO.
+
+Panel Distance Matrix berada di detail Benchmark Case. Route admin `/api/benchmark-cases/[id]/distance-matrices` memakai POST untuk generasi dan GET untuk riwayat. Query `requestId` melakukan recovery read-only. GET `/api/benchmark-cases/[id]/distance-matrices/[matrixId]` membaca snapshot tersimpan.
+
+## 18. Bukti acceptance dan urutan rilis Testing
+
+- **Phase 3A UAT di Testing lulus menurut konfirmasi owner.** Baseline `8fecbb0` mencakup [PR #72](https://github.com/ArdhanKurniawan/courier-route-planner/pull/72). Benchmark Case Testing #90001 menyimpan satu Depot dan 10 Order untuk total 11 titik. [Bukti acceptance persistence](14_TESTING_QA.md#26-live-acceptance-benchmark-case-persistence-di-testing-2026-11-25)
+- **Phase 3B offline lulus.** Kandidat mencatat 284/284 tes terfokus dan 1.297/1.297 tes penuh. ESLint, typecheck, `db:check`, dan `git diff --check` lulus. Mock OSRM mencakup 11, 26, dan 51 titik. Build Turbopack lokal dihentikan saat kompilasi. Percobaan webpack gagal pada loader `icon.svg` yang tetap sama. Build standar diperiksa lewat Quality Gate.
+- **Kompatibilitas sebelum `0005` berdasarkan review kode.** Detail Benchmark Case memakai pembacaan Phase 3A. Panel riwayat matriks memuat secara terpisah dan menampilkan status tidak tersedia saat tabel belum ada. Tombol generasi tetap nonaktif. Endpoint baru dapat mengembalikan `503 UNAVAILABLE` pada lookup storage sebelum sempat memanggil OSRM.
+
+Tunggu Quality Gate PR lulus. Dengan persetujuan terpisah, terapkan `0005_distance_matrices` pada TiDB Testing dari commit kandidat yang sudah diperiksa. Verifikasi entri ledger, tabel, FK, dan indeks sebelum merge ke `testing`. Pertahankan flag generasi nonaktif ketika deployment pertama diuji. Aktivasi dilakukan setelah endpoint khusus membuktikan dukungan distance annotation dan ukuran tabel yang dipakai.

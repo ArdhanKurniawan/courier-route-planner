@@ -173,6 +173,8 @@ Metadata pendamping perlu merekam unit=meter, directed semantics, serialization/
 
 Rules: NxN termasuk depot, diagonal zero, finite nonnegative values, no null/unreachable; no symmetry requirement. Common ACO eligibility mengikuti docs/33. Snapshot/hash bersifat immutable. Matrix regeneration menciptakan row/snapshot baru, tidak mengubah history. Jangan menghitung ulang matrix lama lewat OSRM pada saat replay benchmark.
 
+Kandidat migrasi `0005_distance_matrices` menambahkan penyimpanan append-only dengan FK `RESTRICT` ke Benchmark Case. UUID request unik per case mencegah dua snapshot pada replay request yang sama. Generasi ulang dengan UUID baru membuat row baru, meski hash kontennya identik. Indeks case dan ID mendukung paginasi riwayat. Pemeriksaan detail dan recovery menghitung ulang hash serta memeriksa node terhadap Benchmark Case tersimpan. Migrasi ini belum diterapkan. [Kontrak dan aktivasi provider](34_OSRM_DISTANCE_CONTRACT.md)
+
 ## 8. `experiments`
 
 Satu konfigurasi algoritma terhadap satu benchmark case.

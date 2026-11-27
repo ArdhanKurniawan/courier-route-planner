@@ -20,6 +20,7 @@ it("imports the schema without DB configuration or network", async () => {
       "benchmarkCasePoints",
       "benchmarkCases",
       "depots",
+      "distanceMatrices",
       "dummyOrderOperations",
       "orders",
       "scenarios",
@@ -69,6 +70,33 @@ it("preserves benchmark history with restrictive foreign keys and unique source 
   expect(benchmarkCasePoints.sourceId.getSQLType()).toBe("bigint");
   expect(benchmarkCasePoints.latitude.getSQLType()).toBe("double");
   expect(benchmarkCasePoints.longitude.getSQLType()).toBe("double");
+});
+
+it("scopes frozen distance matrices to a Benchmark Case with a restrictive foreign key", async () => {
+  const { benchmarkCases, distanceMatrices } = await import("@/db/schema");
+  const { foreignKeys, indexes } = getTableConfig(distanceMatrices);
+  expect(foreignKeys).toHaveLength(1);
+  const [fk] = foreignKeys;
+  expect(fk.reference()).toMatchObject({
+    columns: [distanceMatrices.benchmarkCaseId],
+    foreignColumns: [benchmarkCases.id],
+  });
+  expect(fk.reference().foreignTable).toBe(benchmarkCases);
+  expect(fk).toMatchObject({ onDelete: "restrict", onUpdate: "restrict" });
+  expect(
+    indexes.map(({ config }) => ({
+      unique: config.unique,
+      columns: config.columns.map((column) =>
+        "name" in column ? column.name : null,
+      ),
+    })),
+  ).toEqual([
+    { unique: true, columns: ["benchmark_case_id", "request_id"] },
+    { unique: false, columns: ["benchmark_case_id", "id"] },
+  ]);
+  expect(distanceMatrices.id.getSQLType()).toBe("bigint");
+  expect(distanceMatrices.generatedAt.getSQLType()).toBe("datetime(3)");
+  expect(distanceMatrices.matrix.getSQLType()).toBe("json");
 });
 
 it("uses a real RESTRICT relationship so deleting a Depot cannot cascade through Scenarios", async () => {

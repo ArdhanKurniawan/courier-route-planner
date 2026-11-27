@@ -191,3 +191,40 @@ export const benchmarkCasePoints = mysqlTable(
     ),
   ],
 );
+
+export const distanceMatrices = mysqlTable(
+  "distance_matrices",
+  {
+    id: bigint("id", { mode: "bigint" }).autoincrement().primaryKey(),
+    benchmarkCaseId: bigint("benchmark_case_id", { mode: "bigint" })
+      .notNull()
+      .references(() => benchmarkCases.id, {
+        onDelete: "restrict",
+        onUpdate: "restrict",
+      }),
+    requestId: varchar("request_id", { length: 36 }).notNull(),
+    version: varchar("version", { length: 64 }).notNull(),
+    provider: varchar("provider", { length: 16, enum: ["osrm"] }).notNull(),
+    profile: varchar("profile", { length: 64 }).notNull(),
+    endpoint: text("endpoint").notNull(),
+    unit: varchar("unit", { length: 16, enum: ["meter"] }).notNull(),
+    directed: boolean("directed").notNull(),
+    inputHash: varchar("input_hash", { length: 64 }).notNull(),
+    matrixHash: varchar("matrix_hash", { length: 64 }).notNull(),
+    pointCount: int("point_count").notNull(),
+    zeroPairCount: int("zero_pair_count").notNull(),
+    generatedAt: datetime("generated_at", { mode: "string", fsp: 3 }).notNull(),
+    options: json("options_json").notNull(),
+    nodeOrder: json("node_order_json").notNull(),
+    matrix: json("distance_matrix_json").notNull(),
+    snapping: json("snapping_json").notNull(),
+    provenance: json("provenance_json").notNull(),
+  },
+  (table) => [
+    uniqueIndex("distance_matrices_case_request_unique").on(
+      table.benchmarkCaseId,
+      table.requestId,
+    ),
+    index("distance_matrices_case_id_idx").on(table.benchmarkCaseId, table.id),
+  ],
+);
