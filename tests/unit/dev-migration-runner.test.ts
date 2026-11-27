@@ -59,6 +59,11 @@ const benchmarkCasesEntry: LedgerRow = {
   hash: "eeae3260e989dd0f5ac70b6ef5a2fac2257191b30cf557f08e368a0a92fced54",
   created_at: 1795345815271,
 };
+const distanceMatricesEntry: LedgerRow = {
+  id: 6,
+  hash: "31acbdb470fc6bc6d6ff92c61427934933f86ce5f0193d1ad7bdc973d694d5ad",
+  created_at: 1795617618473,
+};
 const asRecorded = (row: LedgerRow): LedgerRow => ({
   ...row,
   created_at: String(row.created_at),
@@ -105,6 +110,18 @@ const benchmarkCasesWrites = [
     /^ALTER TABLE `benchmark_cases` .*FOREIGN KEY \(`scenario_id`\) REFERENCES `scenarios`\(`id`\) ON DELETE restrict ON UPDATE restrict;/,
   ),
   expect.stringMatching(/^CREATE INDEX `benchmark_cases_scenario_id_idx`/),
+  ledgerInsert,
+];
+const distanceMatricesWrites = [
+  expect.stringMatching(
+    /^CREATE TABLE `distance_matrices`[\s\S]*`generated_at` datetime\(3\) NOT NULL[\s\S]*`distance_matrix_json` json NOT NULL[\s\S]*UNIQUE\(`benchmark_case_id`,`request_id`\)/,
+  ),
+  expect.stringMatching(
+    /^ALTER TABLE `distance_matrices` .*FOREIGN KEY \(`benchmark_case_id`\) REFERENCES `benchmark_cases`\(`id`\) ON DELETE restrict ON UPDATE restrict;/,
+  ),
+  expect.stringMatching(
+    /^CREATE INDEX `distance_matrices_case_id_idx` ON `distance_matrices` \(`benchmark_case_id`,`id`\)/,
+  ),
   ledgerInsert,
 ];
 
@@ -438,18 +455,20 @@ describe("Testing migration runner", () => {
     );
   });
 
-  it("applies pending 0002 through 0004 in order while preserving the historical CRLF ledger row", async () => {
+  it("applies pending 0002 through 0005 in order while preserving the historical CRLF ledger row", async () => {
     expect(await runTestingMigration(testingEnvironment)).toBe(0);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
       ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...testingLedger(),
       ordersEntry,
       dummyOperationsEntry,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
   });
 
@@ -497,6 +516,7 @@ describe("Production migration runner", () => {
       ...ordersWrites,
       ...dummyOperationsWrites,
       ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...initial,
@@ -504,6 +524,7 @@ describe("Production migration runner", () => {
       ordersEntry,
       dummyOperationsEntry,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
     expect(connection.stream.closed).toBe(true);
   });
@@ -558,57 +579,82 @@ describe("Production migration runner", () => {
 });
 
 describe("installed Drizzle migration parity through the Development runner", () => {
-  it("applies only pending 0002 through 0004 with their DDL, hashes, and journal timestamps in order", async () => {
+  it("applies only pending 0002 through 0005 with their DDL, hashes, and journal timestamps in order", async () => {
     expect(await runDevelopmentMigration(environment)).toBe(0);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
       ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
       ordersEntry,
       dummyOperationsEntry,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
   });
 
-  it("applies only 0003 and 0004 when the ledger already contains 0000 through 0002", async () => {
+  it("applies only 0003 through 0005 when the ledger already contains 0000 through 0002", async () => {
     connection.ledger.push(asRecorded(ordersEntry));
     expect(await runDevelopmentMigration(environment)).toBe(0);
     expect(migrationWrites(connection)).toEqual([
       ...dummyOperationsWrites,
       ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
     ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
       asRecorded(ordersEntry),
       dummyOperationsEntry,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
   });
 
-  it("applies only 0004 when the ledger already contains 0000 through 0003", async () => {
+  it("applies only 0004 and 0005 when the ledger already contains 0000 through 0003", async () => {
     const recorded = [
       asRecorded(ordersEntry),
       asRecorded(dummyOperationsEntry),
     ];
     connection.ledger.push(...recorded);
     expect(await runDevelopmentMigration(environment)).toBe(0);
-    expect(migrationWrites(connection)).toEqual(benchmarkCasesWrites);
+    expect(migrationWrites(connection)).toEqual([
+      ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
+    ]);
     expect(connection.ledger).toEqual([
       ...initialLedger(),
       ...recorded,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
   });
 
-  it("does not run migration DDL or insert a ledger row when 0004 is already recorded", async () => {
+  it("applies only 0005 when the ledger already contains 0000 through 0004", async () => {
+    const recorded = [
+      asRecorded(ordersEntry),
+      asRecorded(dummyOperationsEntry),
+      asRecorded(benchmarkCasesEntry),
+    ];
+    connection.ledger.push(...recorded);
+    expect(await runDevelopmentMigration(environment)).toBe(0);
+    expect(migrationWrites(connection)).toEqual(distanceMatricesWrites);
+    expect(connection.ledger).toEqual([
+      ...initialLedger(),
+      ...recorded,
+      distanceMatricesEntry,
+    ]);
+  });
+
+  it("does not run migration DDL or insert a ledger row when 0005 is already recorded", async () => {
     const recorded = [
       ...initialLedger(),
       asRecorded(ordersEntry),
       asRecorded(dummyOperationsEntry),
       asRecorded(benchmarkCasesEntry),
+      asRecorded(distanceMatricesEntry),
     ];
     connection.ledger.push(...recorded.slice(2));
     expect(await runDevelopmentMigration(environment)).toBe(0);
@@ -653,6 +699,16 @@ describe("installed Drizzle migration parity through the Development runner", ()
       entry: benchmarkCasesEntry,
       writes: benchmarkCasesWrites,
     },
+    {
+      migration: "0005",
+      recorded: [
+        asRecorded(ordersEntry),
+        asRecorded(dummyOperationsEntry),
+        asRecorded(benchmarkCasesEntry),
+      ],
+      entry: distanceMatricesEntry,
+      writes: distanceMatricesWrites,
+    },
   ])(
     "stops after a lost $migration ledger acknowledgement without mutation retry",
     async ({ recorded, entry, writes }) => {
@@ -680,11 +736,13 @@ describe("installed Drizzle migration parity through the Development runner", ()
       ordersEntry,
       dummyOperationsEntry,
       benchmarkCasesEntry,
+      distanceMatricesEntry,
     ]);
     expect(migrationWrites(connection)).toEqual([
       ...ordersWrites,
       ...dummyOperationsWrites,
       ...benchmarkCasesWrites,
+      ...distanceMatricesWrites,
     ]);
     expect(connection.connection.stream.closed).toBe(true);
     expect(info).not.toHaveBeenCalled();

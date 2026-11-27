@@ -271,7 +271,10 @@ describe("Benchmark Case history and detail", () => {
           nextCursor: null,
         }),
       )
-      .mockImplementationOnce(async () => data(committed));
+      .mockImplementationOnce(async () => data(committed))
+      .mockImplementationOnce(async () =>
+        Response.json({ data: [], nextCursor: null, generationAvailable: false }),
+      );
     const { unmount } = render(<BenchmarkCaseHistory />);
     expect(
       await screen.findByRole("link", { name: "Snapshot Scenario" }),
@@ -280,9 +283,11 @@ describe("Benchmark Case history and detail", () => {
     render(<BenchmarkCaseDetail caseId={caseId} />);
     expect(await screen.findByText(/FK RESTRICT/)).toBeInTheDocument();
     expect(screen.getByText("Snapshot Customer")).toBeInTheDocument();
+    expect(await screen.findByText("Belum ada distance matrix.")).toBeInTheDocument();
     expect(fetcher.mock.calls.map(([url]) => url)).toEqual([
       "/api/benchmark-cases",
       "/api/benchmark-cases/" + caseId,
+      "/api/benchmark-cases/" + caseId + "/distance-matrices",
     ]);
     expect(postCalls()).toHaveLength(0);
   });

@@ -21,6 +21,10 @@ const tableMetadata = z.object({
   sources: z.array(waypoint),
   destinations: z.array(waypoint),
 });
+const frozenTableNodes = z.array(stop.extend({
+  index: z.number().int().nonnegative(),
+  kind: z.enum(["depot", "order"]),
+})).min(2);
 const routeResponse = z.object({
   waypoints: z.array(waypoint),
   routes: z.array(z.object({
@@ -85,7 +89,7 @@ export type OsrmTable = Readonly<{
   directed: true;
   baseUrl: string;
   profile: string;
-  options: typeof tableOptions;
+  options: typeof tableOptions & { radiuses?: string };
   dataVersion: string | null;
 }>;
 
@@ -239,37 +243,63 @@ export function createOsrmClient({
     }
   }
 
+  async function getTable(
+    nodes: readonly OrderedNode[],
+    options: OsrmTable["options"],
+    signal?: AbortSignal,
+  ): Promise<OsrmTable> {
+    const payload = await request("table", nodes, options, signal);
+    if (payload.distances === undefined)
+      throw new OsrmError("DISTANCE_UNSUPPORTED", "table");
+    const fallback = payload.fallback_speed_cells;
+    if (fallback !== undefined && (!Array.isArray(fallback) || fallback.length !== 0))
+      throw new OsrmError("INVALID_MATRIX", "table");
+
+    const matrix = validateMatrix(payload.distances, nodes.length);
+    const metadata = tableMetadata.safeParse(payload);
+    if (
+      !metadata.success || metadata.data.sources.length !== nodes.length ||
+      metadata.data.destinations.length !== nodes.length
+    ) throw new OsrmError("INVALID_RESPONSE", "table");
+    return Object.freeze({
+      nodes,
+      matrix,
+      sources: freezeWaypoints(metadata.data.sources),
+      destinations: freezeWaypoints(metadata.data.destinations),
+      unit: "meter",
+      directed: true,
+      baseUrl: providerBase,
+      profile,
+      options,
+      dataVersion: payload.data_version || null,
+    });
+  }
+
   return {
     async getDistanceTable(
       input: Readonly<{ depot: Stop; orders: readonly Stop[] }>,
       signal?: AbortSignal,
-    ): Promise<OsrmTable> {
-      const nodes = orderedNodes(input);
-      const payload = await request("table", nodes, tableOptions, signal);
-      if (payload.distances === undefined)
-        throw new OsrmError("DISTANCE_UNSUPPORTED", "table");
-      const fallback = payload.fallback_speed_cells;
-      if (fallback !== undefined && (!Array.isArray(fallback) || fallback.length !== 0))
-        throw new OsrmError("INVALID_MATRIX", "table");
+    ) {
+      return getTable(orderedNodes(input), tableOptions, signal);
+    },
 
-      const matrix = validateMatrix(payload.distances, nodes.length);
-      const metadata = tableMetadata.safeParse(payload);
+    async getOrderedDistanceTable(
+      input: readonly (OrderedNode & { index: number })[],
+      snapRadiusM: number,
+      signal?: AbortSignal,
+    ) {
+      const parsed = frozenTableNodes.safeParse(input);
       if (
-        !metadata.success || metadata.data.sources.length !== nodes.length ||
-        metadata.data.destinations.length !== nodes.length
-      ) throw new OsrmError("INVALID_RESPONSE", "table");
-      return Object.freeze({
-        nodes,
-        matrix,
-        sources: freezeWaypoints(metadata.data.sources),
-        destinations: freezeWaypoints(metadata.data.destinations),
-        unit: "meter",
-        directed: true,
-        baseUrl: providerBase,
-        profile,
-        options: tableOptions,
-        dataVersion: payload.data_version || null,
-      });
+        !parsed.success || !Number.isFinite(snapRadiusM) || snapRadiusM <= 0 ||
+        parsed.data.some(({ index, kind }, position) =>
+          index !== position || kind !== (position === 0 ? "depot" : "order")) ||
+        new Set(parsed.data.slice(1).map(({ id }) => id)).size !== parsed.data.length - 1
+      ) throw new OsrmError("INVALID_INPUT", "table");
+      // The benchmark snapshot already defines the only valid row/column order.
+      const nodes = Object.freeze(parsed.data.map(({ id, kind, latitude, longitude }) =>
+        Object.freeze({ id, kind, latitude, longitude })));
+      const radiuses = nodes.map(() => String(snapRadiusM)).join(";");
+      return getTable(nodes, Object.freeze({ ...tableOptions, radiuses }), signal);
     },
 
     async getRouteGeometry(

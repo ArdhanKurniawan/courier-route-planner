@@ -1,6 +1,6 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Scenario Freeze API and UI. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, updated 2026-11-27 for Phase 3B Distance Matrix Freeze publication. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
@@ -17,7 +17,7 @@ Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Scenario Fr
 | `docs/05_NEXTJS_FOR_PHP_DEVS.md` | 3502 | `14addd62cb19a7964bda86ed1862633ae80c7391587d94613aa61a4467de08a0` |
 | `docs/06_VERCEL_GUIDE.md` | 3055 | `8f651af30bd484a6071d38da0443c4240224c2d4eacee709b5284aba62ba8b3d` |
 | `docs/07_TIDB_GUIDE.md` | 15467 | `42871120db1234f93f4db857d0e19000b9f3c4837611e880250aebd465657d91` |
-| `docs/08_DATABASE_DESIGN.md` | 15815 | `c3816695aa5f2445ee8307028d8586ba508d7b6092aaa3a97480ce4fc4673019` |
+| `docs/08_DATABASE_DESIGN.md` | 16343 | `bc461934493a12473457171c323af397ad97a0f2347406584b97fb77110e77c4` |
 | `docs/09_REPO_STRUCTURE.md` | 12952 | `fb9a25f4a74aadc05c696d208a55d9c965bf47efe395a27aa7650fd12298f4ba` |
 | `docs/10_ENVIRONMENTS_SECRETS.md` | 11353 | `32adad89774bf0926d04c05ca32a675e209e581a4362bc3dc0e661b38acbdb46` |
 | `docs/11_GIT_WORKFLOW.md` | 5479 | `297e2928f0b868a2acd70e05e9669cbf815f2066ad4c0f9a8f7aab6028be22a5` |
@@ -43,7 +43,7 @@ Actual filesystem bytes and SHA-256, updated 2026-11-25 for Phase 3A Scenario Fr
 | `docs/31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | 11924 | `b2cd214540634a62ea6cc0326942746156e60ccf59a6c865353a95b5c10f43e6` |
 | `docs/32_RESEARCH_DECISIONS.md` | 8041 | `4f8c2ca7c9c59adf8cdbdf0c0c9372fd69e37b7457bf2629c492c68e586da610` |
 | `docs/33_ALGORITHM_SPECIFICATION.md` | 13294 | `ef25c633cc725737a1768ee10f27af8a0f9c72c0e26f1dc70b86192ebbc10660` |
-| `docs/34_OSRM_DISTANCE_CONTRACT.md` | 8627 | `853329066ad8fd730fe4c081dccf19c6667b83c28c6cc6d133efe0fa0d0aa98c` |
+| `docs/34_OSRM_DISTANCE_CONTRACT.md` | 13043 | `3fecf0408099975931b5d7a73c0f931aaca09030e0714b9769b065ab02a95a0a` |
 | `templates/ADR_TEMPLATE.md` | 417 | `a50522470baf11c2d1a3b1e08d1827ef961e892bc0c6f66dfdfca8385509d9ca` |
 | `templates/BUG_REPORT_TEMPLATE.md` | 512 | `971fa591198119e7cbef98ba8a5d19111ecafabc993fe745e640d42e6f35ec84` |
 | `templates/FEATURE_TASK_TEMPLATE.md` | 435 | `df6e31a97d8e7a7e4baa0f28066c4054b82f5b9a44a63d2feac10bb303a8d70e` |
