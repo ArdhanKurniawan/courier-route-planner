@@ -90,12 +90,8 @@ src/domain/routing/
 │   └── matrix-validator.ts
 ├── nn/
 │   └── nearest-neighbor.ts
-├── two-opt/
-│   └── two-opt.ts
-└── aco/
-    ├── ant-colony.ts
-    ├── rng.ts
-    └── types.ts
+└── two-opt/
+    └── two-opt.ts
 ```
 
 ## Rule of dependency direction

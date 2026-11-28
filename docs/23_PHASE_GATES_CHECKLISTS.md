@@ -114,48 +114,43 @@ UAT Part E.5 di Testing mengonfirmasi edit dan hapus generated Order serta perpi
 - [ ] routability validation dan coordinate/snap evidence;
 - [ ] OSRM Table road-network matrix produced, unit meter;
 - [ ] directed/asymmetric NxN validation, depot index 0, stable node order;
-- [ ] no unreachable/null pair, common ACO zero-distance eligibility checked;
+- [ ] no unreachable/null pair, zero off-diagonal tercatat;
 - [ ] matrix hash stable and verified against actual values;
 - [ ] matrix frozen in immutable storage;
 - [ ] matrix validation/hash/freeze/replay tests.
 
 ## Gate 5 — NN + 2-Opt
 
-- [ ] known fixture pass;
-- [ ] route valid;
-- [ ] 2-Opt not worse;
-- [ ] no duplicate/missing point;
-- [ ] framework-independent.
-- [ ] NN deterministic directed minimum, lowest-node-index tie;
-- [ ] best-improvement 2-Opt full directed recomputation, asymmetric trap tests;
-- [ ] symmetric-only delta shortcut absent.
+Solver Phase 4 DONE di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). Checklist berikut mencakup scope solver. Acceptance benchmark formal mengikuti Gate 7.
 
-## Gate 6 — ACO
+- [x] known fixture pass;
+- [x] route valid dan tanpa customer duplikat atau hilang;
+- [x] jarak hasil 2-Opt tidak melebihi baseline NN;
+- [x] framework-independent;
+- [x] NN deterministic directed minimum, lowest-node-index tie;
+- [x] best-improvement 2-Opt full directed recomputation dan asymmetric trap tests;
+- [x] symmetric-only delta shortcut absent.
 
-- [ ] seeded reproducibility;
-- [ ] route valid;
-- [ ] parameter validation;
-- [ ] no NaN;
-- [ ] multi-run support;
-- [ ] no hidden default claimed scientific.
-- [ ] Classical Ant System, directed pheromone, all valid ants deposit, fixed iterations;
-- [ ] no 2-Opt after ACO in main comparison.
+## Gate 6 — ACO (deferred)
+
+Classical Ant System dipertahankan pada branch arsip sebagai Future Development melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Gate ini bukan prerequisite MVP atau Gate 7.
 
 ## Gate 7 — Benchmark engine
 
-- [ ] same frozen OSRM matrix values/order/input hash/matrix hash;
+- [ ] baseline NN dan hasil Hybrid memakai frozen OSRM matrix values, order, input hash, dan matrix hash yang sama;
+- [ ] Research Provider Lock dan actual provider provenance diverifikasi;
 - [ ] timing boundary correct;
 - [ ] raw runs stored;
 - [ ] summary reproducible;
 - [ ] CLI runner;
-- [ ] predetermined balanced execution order dan dataset ordinal mapping tersimpan sesuai [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
+- [ ] urutan eksekusi dan daftar dataset yang disetujui tersimpan sesuai [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] metadata/commit SHA captured.
 - [ ] timer excludes OSRM/DB/network/serialization/geometry/rendering;
-- [ ] 5 warm-ups excluded, 30 ACO seeded runs, 30 NN+2-Opt timing samples;
-- [ ] calibration separated, global configuration frozen;
-- [ ] main 10/25/50 × 10 random datasets; N=100 conditional and other patterns optional;
-- [ ] mean/median ACO primary comparison, raw failures retained, dataset-level observations;
-- [ ] Phase A verification → B calibration → C pilot → D main evidence per docs/15.
+- [ ] ukuran awal 10, 25, dan 50 customer serta rancangan evaluasi telah divalidasi secara akademik;
+- [ ] jumlah dataset, warm-up, repetisi, dan metode statistik disetujui sebelum evaluasi formal;
+- [ ] jarak NN awal, jarak Hybrid, perbaikan absolut/persentase, runtime, dan skalabilitas tercatat;
+- [ ] raw failures dipertahankan dan level observasi tetap dataset;
+- [ ] evidence verification, pilot, dan evaluasi mengikuti [protokol](15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
 ## Gate 8 — Public security
 

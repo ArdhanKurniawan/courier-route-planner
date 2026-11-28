@@ -13,9 +13,8 @@ Admin buka dashboard
 → generate/import/edit customer
 → validasi titik
 → freeze benchmark snapshot + OSRM Table directed matrix + hash/freeze
-→ run NN+2Opt
-→ run ACO
-→ lihat comparison
+→ run Hybrid NN + 2-Opt dan rekam baseline NN awal
+→ lihat perbaikan rute
 → lihat route di map
 → simpan/export hasil
 ```
@@ -94,9 +93,9 @@ Map harus:
 
 - matrix dibentuk dari frozen benchmark case melalui road validation + OSRM Table Service sesuai [docs/34](34_OSRM_DISTANCE_CONTRACT.md);
 - unit meter, NxN termasuk depot index 0, directed/asymmetric diterima tanpa asumsi symmetry;
-- diagonal 0, finite nonnegative values, null/unreachable ditolak; ACO eligibility untuk zero off-diagonal mengikuti docs/33;
+- diagonal 0, finite nonnegative values, null/unreachable ditolak, dan zero off-diagonal dilaporkan;
 - stable node order, input hash, matrix hash, provider/profile/version metadata;
-- freeze immutable matrix sebelum formal run; kedua algoritma memakai snapshot/hash identik.
+- freeze immutable matrix sebelum formal run. Baseline NN dan hasil Hybrid memakai snapshot/hash identik dengan actual provider provenance.
 
 ### FR-007 NN + 2-Opt
 
@@ -106,54 +105,19 @@ Map harus:
 - best-improvement 2-Opt reverse candidate segment dan recompute FULL directed route distance; symmetric-only delta shortcut dilarang;
 - accept strict improvement saja, depot fixed, hasil final distance <= NN initial distance, sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md).
 
-### FR-008 ACO
+### FR-008 Deferred — ACO
 
-Varian = Classical Ant System, seeded deterministic PRNG, directed pheromone, roulette-wheel selection, fixed iterations, semua valid ants deposit, best observed route tracked. Tidak menambahkan 2-Opt setelah ACO pada main comparison. Parameter typed explicit:
+Nomor ini dipertahankan untuk jejak historis. Classical Ant System diarsipkan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
-- ant count;
-- iterations;
-- alpha;
-- beta;
-- evaporation;
-- Q;
-- tau0;
-- seed.
+### FR-009 Benchmark evaluation
 
-Nilai default final **belum dikunci** sampai didukung metodologi.
+Run Optimization dan Experiments menargetkan satu pipeline Hybrid yang mencatat jarak baseline NN dan jarak akhir pada Benchmark Case serta frozen matrix yang sama. Research Mode memakai Research Provider Lock. Ukuran awal 10, 25, dan 50 customer. Jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. [Protokol evaluasi](15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
-### FR-009 Benchmark comparison
+Simpan input hash, matrix ID/hash, node order, actual provider provenance, versi algoritma, rute, jarak, runtime, dan status attempt.
 
-Satu benchmark case dan frozen OSRM matrix/hash harus digunakan oleh kedua algoritma. Main: 10/25/50 customer × 10 independent random datasets = 30 datasets; N=100 optional setelah pilot. Calibration wajib terpisah dan satu global ACO configuration frozen.
+### FR-010 Results
 
-ACO: 30 independent seeded runs per dataset. NN+2-Opt: satu deterministic quality result + 30 measured timing repetitions. Lakukan 5 warm-ups per algoritma/dataset; timer mengecualikan OSRM/DB/HTTP/network/serialization/geometry/rendering. Raw failed/poor runs dipertahankan. Detail [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md).
-
-Sistem menyimpan:
-
-- input hash;
-- distance matrix ID/hash dan node order;
-- distance metric/version;
-- algorithm name/version;
-- parameters;
-- run number;
-- seed;
-- route;
-- total distance;
-- execution time.
-
-### FR-010 Result comparison
-
-Minimal tampil:
-
-- algorithm;
-- deterministic NN+2-Opt distance;
-- mean dan median ACO sebagai primary descriptive comparison;
-- ACO best dan worst sebagai tambahan, bukan best-of-30 sebagai satu-satunya primary comparison;
-- standard deviation;
-- runtime;
-- route sequence;
-- improvement terhadap baseline bila dihitung.
-
-RQ3 menambahkan range dan CV ACO tanpa threshold baik/buruk yang tidak bersumber. Runtime: mean, median, SD dari measured repetitions. Dataset-level summaries adalah observasi scenario; 30 runs dalam satu dataset bukan 30 independent datasets.
+Tampilkan total jarak NN awal, jarak Hybrid, perbaikan absolut/persentase, runtime, dan urutan kunjungan. Hasil eksperimen mendukung ringkasan skalabilitas dan perbaikan menurut jumlah customer, sesuai metode yang disetujui.
 
 ### FR-011 Export
 
@@ -172,7 +136,6 @@ Minimal CSV untuk hasil benchmark.
 ### NFR-002 Reproducibility
 
 - dataset seed;
-- ACO seed;
 - input snapshot;
 - commit SHA;
 - parameter snapshot.

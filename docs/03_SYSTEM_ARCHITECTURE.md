@@ -37,7 +37,7 @@ Tidak boleh:
 
 - menyimpan DB credential;
 - menjalankan formal research benchmark;
-- berisi core ACO implementation.
+- berisi implementasi core solver.
 
 ### Server/API layer
 
@@ -65,10 +65,9 @@ Tanggung jawab:
 
 - distance matrix operation;
 - NN;
-- 2-Opt;
-- ACO.
+- best-improvement 2-Opt.
 
-Input/output harus plain typed structures. Algorithm domain menerima DistanceMatrix sebagai satu-satunya input geografis, ditambah params/seed; tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, atau OSRM HTTP client. Road validation, matrix construction/storage, dan hashing ditangani application/infrastructure.
+Input/output harus plain typed structures. Algorithm domain menerima DistanceMatrix sebagai input solver aktif; tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, atau OSRM HTTP client. Road validation, matrix construction/storage, dan hashing ditangani application/infrastructure.
 
 ## 3. Core flow — create scenario
 
@@ -91,16 +90,12 @@ Immutable Benchmark Case
 Road-network validation + OSRM Table adapter (infrastructure)
       ↓
 Validated frozen directed matrix (meter, input hash, matrix hash)
-      ├───────────────┐
-      ↓               ↓
-  NN → 2-Opt         Classical Ant System x 30 seeded runs
-      ↓               ↓
- Route result       Run results
-      └───────┬───────┘
-              ↓
-       Experiment summary
-              ↓
-            TiDB
+      ↓
+Hybrid solver: baseline NN → best-improvement 2-Opt
+      ↓
+Validated route + initial/final distance + improvement + runtime
+      ↓
+Experiments → Results → Export
 ```
 
 ## 5. Research reproducibility boundary
@@ -143,7 +138,7 @@ Jangan import Leaflet langsung dari Server Component karena bergantung pada brow
 Gunakan abstraction:
 
 ```text
-UI/API → Application → Algorithm Domain (matrix + params/seed → result)
+UI/API → Application → Algorithm Domain (matrix → NN baseline + Hybrid result)
               │
               └→ Matrix Builder / Storage → OSRM Table adapter
 ```
@@ -156,15 +151,17 @@ Optimizer sequence → RouteGeometryProvider → OSRM Route geometry → Leaflet
 
 DistanceProvider adalah port infrastructure untuk produksi matrix, bukan dependency algoritma. OSRM Table merupakan core formal input sesuai [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark). Geometry boleh menyusul sebagai pekerjaan visualisasi terpisah.
 
-Kedua algoritma memakai matrix hash/values/node order identik. NN deterministic (depot=0, lowest-index tie); 2-Opt best improvement full recomputation untuk directed costs; ACO Classical Ant System tanpa post-ACO 2-Opt. Detail [docs/33](33_ALGORITHM_SPECIFICATION.md) dan [docs/34](34_OSRM_DISTANCE_CONTRACT.md).
+Baseline NN dan hasil Hybrid memakai matrix hash, values, dan node order identik. NN deterministik dari Depot indeks 0 dengan lowest-index tie. Best-improvement 2-Opt menghitung ulang seluruh biaya berarah setiap kandidat. [Kontrak algoritma](33_ALGORITHM_SPECIFICATION.md)
 
 Formal runner terkontrol mengukur hanya solver call, termasuk initialisasi state algoritma. OSRM/DB/HTTP/network/serialization/geometry/rendering, external validation, dan hash verification di luar timer. Main design dan repetitions mengikuti [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md). Diagram adalah target architecture; current implementation ada di [README](../README.md#current-implementation-status).
+
+**Rencana Multi-Provider OSRM.** Just Routing Free menjadi primary dan OSRMPlus Free menjadi secondary. FOSSGIS bersifat opsional sambil menunggu jawaban operator. Operational Mode dirancang dengan eligibility, capability, quota, cooldown, failover dan failback. Research Mode dirancang dengan explicit Research Provider Lock. Setiap frozen matrix berasal dari satu provider dan menyimpan actual provider provenance. Kegagalan provider terkunci menghentikan generasi. OpenRouteService berada di luar pilihan. Kesiapan masing-masing provider masih perlu diverifikasi. [Kontrak OSRM](34_OSRM_DISTANCE_CONTRACT.md)
 
 ## 8. Failure boundaries
 
 - DB failure → tampilkan error yang aman; jangan kehilangan form state bila memungkinkan.
 - algorithm validation failure → fail closed; jangan simpan route invalid.
-- ACO one-run failure → tandai run failed; summary tidak boleh diam-diam menganggap sukses.
+- solver run failure → catat status dan alasan gagal pada attempt sebelum menghitung ringkasan.
 - migration failure → stop deployment path, jangan coba “fix otomatis” di production.
 
 ## 9. Architecture quality attributes

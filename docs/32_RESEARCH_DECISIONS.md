@@ -1,112 +1,49 @@
-# 32 — RESEARCH DECISIONS
+# 32 — RESEARCH DECISIONS & OPEN QUESTIONS
 
-**Status:** Accepted working research contract, keputusan manusia 2026-10-02.
-Dokumen ini menetapkan arah penelitian; prosedur eksekusi ada di [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md), kontrak algoritma di [specification](33_ALGORITHM_SPECIFICATION.md), dan input jalan di [OSRM contract](34_OSRM_DISTANCE_CONTRACT.md). Ini target yang disetujui, bukan klaim fitur sudah diimplementasikan.
+**Status — 2026-11-28.** Keputusan owner menetapkan lingkup aktif proyek. RQ, research gap, dan rancangan evaluasi di bawah masih berupa proposal untuk validasi akademik. [Protokol evaluasi](15_RESEARCH_BENCHMARK_PROTOCOL.md) · [Kontrak algoritma](33_ALGORITHM_SPECIFICATION.md) · [Kontrak matriks](34_OSRM_DISTANCE_CONTRACT.md)
 
-## 1. Research context
+## 1. Keputusan scope MVP
 
-Web Admin Courier Route Planner membantu admin menyiapkan customer, menghasilkan urutan kunjungan, dan membandingkan Hybrid Nearest Neighbor → 2-Opt dengan Ant Colony Optimization (ACO), varian Classical Ant System.
+- Hybrid Nearest Neighbor + 2-Opt menjadi satu-satunya metode optimasi aktif. Rute awal NN menjadi baseline untuk mengukur perbaikan 2-Opt dalam pipeline yang sama.
+- Problem tetap single-depot closed-tour TSP. Rute berangkat dari Depot, mengunjungi setiap customer tepat sekali, lalu kembali ke Depot.
+- Input formal berasal dari frozen Benchmark Case dan satu frozen OSRM Table distance matrix yang immutable. Matriks berarah dalam meter, dengan Depot indeks 0, node order stabil, input hash, dan matrix hash.
+- Run Optimization, Experiments, Results, dan Export tetap menjadi target pengembangan.
+- ACO Classical Ant System ditunda sebagai Future Development. Implementasi offline tersimpan pada [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55). Integrasi berada di luar scope MVP dan kelanjutan pengembangan tidak bergantung padanya. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
-## 2. Problem statement
+## 2. Posisi penelitian dan research gap
 
-Satu depot menjadi awal dan akhir: Depot → Customer → ... → Customer → Depot. Setiap customer dikunjungi tepat sekali. Problem adalah multi-stop route sequencing / TSP-like closed tour. Jumlah customer tidak termasuk depot.
+Studi yang diusulkan mengukur perubahan kualitas rute dari baseline NN setelah best-improvement 2-Opt diterapkan pada biaya jaringan jalan berarah. Kontribusi yang ditargetkan adalah hasil empiris terkontrol, input serta hasil yang dapat diaudit, dan Web Admin untuk menyiapkan dan menampilkan eksperimen.
 
-## 3. Why the problem matters / urgency
+Research gap masih memerlukan validasi literatur dan akademik. Petakan studi yang relevan berdasarkan problem, data, metode jarak, ukuran, pendekatan 2-Opt, metrik, dan keterulangan hasil. Hindari klaim novelty, keunggulan, atau optimum global tanpa bukti yang sesuai. [Source references](27_SOURCE_REFERENCES.md)
 
-Admin perlu menentukan urutan banyak tujuan dan menilai jarak serta waktu komputasi metode yang dipakai. Perbandingan terkontrol memberi dasar pemilihan metode pada konteks studi. Pengurangan biaya, jarak, atau waktu operasional belum boleh diklaim sebelum ada pengukuran.
+## 3. Usulan research questions
 
-## 4. Existing research position
+- **RQ1:** Seberapa besar pengurangan total jarak setelah penerapan 2-Opt pada rute awal Nearest Neighbor?
+- **RQ2:** Bagaimana waktu komputasi Hybrid NN + 2-Opt pada jumlah customer yang berbeda?
+- **RQ3:** Bagaimana pengaruh jumlah customer terhadap efektivitas perbaikan rute menggunakan 2-Opt?
 
-Studi terdahulu telah membandingkan NN/NN+2-Opt dan ACO pada TSP dan konteks optimasi lain. Posisi ini tidak mengklaim pasangan metode sebagai penemuan baru.
+## 4. Rancangan evaluasi awal
 
-**TODO-LIT-01:** petakan studi pembanding yang benar-benar dibaca: sitasi, problem, input jarak, ukuran, varian, parameter, repetitions, dan metrics. Daftar bibliografi yang memadai belum tersedia di repository; lihat [source references](27_SOURCE_REFERENCES.md). Jangan membuat sitasi fiktif.
-
-## 5. Research gap
-
-Working gap: bukti perbandingan empiris terkontrol dalam konteks pengiriman multi-customer dengan input road-network identik, beberapa ukuran masalah, route quality, computation time, repeated stochastic stability, dan implementasi Web Admin masih terbatas. Frasa **masih terbatas** adalah posisi kerja yang harus dibuktikan melalui TODO-LIT-01, bukan hasil systematic review yang sudah selesai. Hindari klaim universal “belum pernah ada”.
-
-## 6. Research questions
-
-- **RQ1:** Bagaimana perbandingan total jarak rute yang dihasilkan Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization pada jumlah customer yang berbeda?
-- **RQ2:** Bagaimana perbandingan waktu komputasi Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization ketika jumlah customer meningkat?
-- **RQ3:** Seberapa besar variasi hasil Ant Colony Optimization pada pengujian berulang, dengan hasil Hybrid Nearest Neighbor–2-Opt sebagai referensi deterministik?
-
-RQ ini tidak boleh diganti diam-diam oleh agent implementasi.
-
-## 7. Research objectives
-
-1. Membandingkan total jarak NN+2-Opt dengan mean/median ACO pada tiap ukuran customer.
-2. Membandingkan distribusi waktu eksekusi algoritma pada environment terkontrol.
-3. Mengukur variasi hasil ACO antar seed dengan NN+2-Opt sebagai referensi deterministik.
-
-## 8. Contribution
-
-Kontribusi yang ditargetkan adalah evidence empiris terkontrol, snapshot input/matrix dan raw results yang dapat diaudit, serta Web Admin untuk menyiapkan dan menampilkan eksperimen. Pattern generator tambahan dan penggunaan dua algoritma bukan klaim novelty dengan sendirinya.
-
-## 9. Independent, dependent, and control variables
-
-| Jenis | Variabel |
+| Unsur | Usulan |
 |---|---|
-| Independent | Metode (NN+2-Opt vs Classical Ant System), jumlah customer (10/25/50) |
-| Dependent | Total distance meter, algorithm execution time, variasi jarak ACO antar run |
-| Control | Depot/study area dan generation procedure yang dibekukan; node order, input dan matrix hash identik dalam tiap comparison; satu konfigurasi ACO global; daftar seed predetermined; versi algoritma/PRNG; hardware/runtime dan timing policy |
+| Ukuran awal | 10, 25, dan 50 customer, di luar Depot. |
+| Input berpasangan | Rute awal NN dan tur hasil 2-Opt memakai Benchmark Case, node order, dan matriks yang sama. |
+| Kualitas rute | Jarak NN awal, jarak Hybrid, perbaikan absolut dalam meter, dan persentase perbaikan. |
+| Skalabilitas | Waktu komputasi Hybrid dan perubahan efektivitas perbaikan menurut jumlah customer. |
+| Kontrol | Depot/study area, prosedur generator, provider lock, profil jaringan, versi solver, hardware/runtime, dan timer boundary. |
 
-Dataset adalah unit observasi scenario. Tiga puluh run ACO pada satu dataset adalah pengulangan stochastic, bukan tiga puluh dataset independen.
+Dataset adalah unit observasi. Pengulangan timing pada dataset identik dapat membantu mengukur variasi runtime dan tetap dihitung sebagai pengukuran dari dataset yang sama. Data valid dengan perbaikan kecil atau nol, serta percobaan gagal, dipertahankan.
 
-## 10. Primary experiment design
+Runner formal memakai environment terkontrol di luar runtime Vercel. OSRM, DB, HTTP/network, serialization, geometry, dan rendering berada di luar timer solver. OSRM Table membentuk input, sedangkan OSRM Route/geometry tetap terpisah untuk visualisasi.
 
-| Customer count | Independent evaluation datasets | Pattern |
-|---|---:|---|
-| 10 | 10 | random |
-| 25 | 10 | random |
-| 50 | 10 | random |
-| Total | 30 | Main evaluation |
+## 5. Keputusan yang masih memerlukan validasi
 
-- N=100 / **100 customers** conditional/optional setelah pilot feasibility; tidak wajib main experiment.
-- clustered, circular, directional boleh didukung engineering generator, tetapi optional/additional experiments dan bukan core novelty.
-- Calibration datasets wajib terpisah dari main evaluation. Freeze satu global ACO configuration setelah calibration; jangan memilih configuration berbeda untuk memenangkan N10/N25/N50.
-- ACO: **30 independent seeded runs per main dataset**, seed list ditentukan dan disimpan sebelum measured runs. Timestamp seed dilarang.
-- NN+2-Opt: satu deterministic quality result dan **30 measured timing repetitions** per dataset.
-- **5 warm-up executions** per algoritma per dataset sebelum measured runtime; hasil warm-up tidak masuk statistik penelitian.
-- Formal input adalah satu frozen OSRM road-network distance matrix per comparison, dalam meter dan berpotensi directed/asymmetric. Tidak ada asumsi global d(i,j)=d(j,i).
-- Formal benchmark dijalankan pada environment terkontrol yang dicatat, tidak bergantung pada runtime Vercel.
+- Research gap berbasis literatur dan wording final RQ.
+- Jumlah dataset independen per ukuran, prosedur sampling, lokasi studi, dan kriteria routability.
+- Jumlah warm-up dan repetisi, urutan eksekusi, ringkasan statistik, serta metode analisis.
+- Format pelaporan perubahan efektivitas berdasarkan jumlah customer dan kebutuhan eksperimen tambahan.
+- Provider yang memenuhi kontrak, profil, dan provenance yang cukup untuk pengumpulan data formal. Prioritas provider adalah rencana engineering. [Kontrak OSRM](34_OSRM_DISTANCE_CONTRACT.md)
 
-## 11. Primary metrics
+## 6. Keputusan historis
 
-| RQ | Laporan per dataset |
-|---|---|
-| RQ1: quality | NN+2-Opt total distance; ACO mean, median, best, worst, SD |
-| RQ2: time | Mean, median, SD dari 30 NN+2-Opt timing samples dan runtime 30 ACO runs; min/max optional |
-| RQ3: stability | ACO mean, median, best, worst, range, SD, coefficient of variation (CV) |
-
-Primary descriptive comparison memakai ACO median dan/atau mean. Best-of-30 adalah hasil tambahan, tidak dijadikan satu-satunya pembanding terhadap NN+2-Opt. Jangan menetapkan threshold CV baik/buruk tanpa sumber ilmiah. Definisi statistik dan failed-run policy ada di protocol v1.
-
-## 12. Main scope
-
-Web Admin, satu depot, customer dengan latitude/longitude, editable dummy orders/scenarios, immutable benchmark snapshots, frozen OSRM Table matrix, deterministic NN, best-improvement 2-Opt dengan full directed route recomputation, dan seeded Classical Ant System tanpa 2-Opt sesudah ACO pada main comparison.
-
-OSRM adalah core input infrastructure, bukan research algorithm. OSRM Route/geometry untuk Leaflet adalah concern terpisah. Timer formal mengecualikan OSRM request, DB, HTTP/network, serialization, route geometry generation, dan rendering.
-
-## 13. Out of scope
-
-Shortest-path A→B sebagai problem utama, Dijkstra/A* sebagai metode penelitian, VRP multi-vehicle/multi-depot, realtime courier navigation, live traffic, dan klaim optimum global. Task sinkronisasi ini tidak mengimplementasikan produk atau menjalankan eksperimen.
-
-## 14. Claims that MUST NOT be made
-
-- “NN+2-Opt vs ACO belum pernah dibandingkan” tanpa literature evidence yang mendukung.
-- Heuristic menghasilkan “optimal route” tanpa bukti optimum.
-- Lebih cepat/pendek/stabil tanpa metric dan benchmark yang sah.
-- OSRM Table distance otomatis mathematical shortest-distance route.
-- Best-of-30 sebagai typical ACO performance, atau run dalam satu dataset sebagai dataset independen.
-- ACO numeric defaults sudah final ketika belum ada literature/calibration record.
-
-## 15. Decisions still OPEN
-
-- Numerical ACO parameters, dengan justifikasi relevant literature atau small calibration experiment.
-- Exact depot, study area, batas generator dan kriteria sampling/routability sebelum data final dibentuk.
-- Public OSRM vs local/self-hosted untuk final data generation, berikut profile/network provenance yang akan dibekukan.
-- Apakah N=100 masuk eksperimen akhir setelah pilot.
-- Apakah clustered/additional scenarios dijalankan dan dilaporkan terpisah.
-- TODO-LIT-01: evidence bibliografi untuk posisi/gap. Tidak boleh dianggap sudah dipenuhi oleh dokumentasi teknis platform.
-
-Keputusan yang sudah dikunci (main counts, jumlah dataset, repetitions, warm-up, varian algoritma, input formal, dan RQ) tidak termasuk OPEN.
+Rancangan 2026-10-02 membandingkan NN + 2-Opt dan Classical Ant System. Rancangan itu mencatat 10 dataset per ukuran, kalibrasi ACO terpisah, 30 seeded runs ACO, 30 timing repetitions NN + 2-Opt, dan 5 warm-up. Rancangan itu **superseded untuk evaluasi aktif**. Riwayat keputusan dan spesifikasi ACO tetap tersedia. [Keputusan 2026-10-02](https://github.com/ArdhanKurniawan/courier-route-planner/blob/c5b8684b57141da0ccf196533e3a4bf25de4c5b8/docs/32_RESEARCH_DECISIONS.md) · [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)

@@ -20,22 +20,20 @@ Core problem adalah **multi-stop route sequencing / TSP-like closed tour**, buka
 2. Depot adalah titik awal dan titik akhir.
 3. Order/customer memiliki latitude dan longitude.
 4. Dummy order harus dapat diedit.
-5. Algoritma penelitian utama:
-   - Nearest Neighbor + 2-Opt.
-   - Ant Colony Optimization.
-6. Kedua algoritma harus menerima **input dan distance matrix yang sama** pada benchmark yang sama.
+5. Satu-satunya metode optimasi aktif dalam MVP adalah **Hybrid Nearest Neighbor + 2-Opt**. ACO ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
+6. Baseline NN dan hasil Hybrid memakai **input serta distance matrix frozen yang sama**.
 7. OSRM bukan algoritma penelitian utama. OSRM Table Service adalah approved core input infrastructure untuk formal road-network distance matrix; Route/geometry terpisah dari optimizer.
 8. Jangan mengganti problem menjadi Dijkstra/A* source-to-destination.
 9. Formal research benchmark **tidak boleh bergantung pada runtime Vercel**; benchmark resmi dijalankan pada environment terkontrol dan dicatat.
 10. Jangan memperlakukan latitude/longitude mentah sebagai Cartesian kilometer tanpa metode yang disetujui penelitian.
-11. Formal matrix frozen dalam meter, directed/asymmetric, stable node order, tanpa unreachable pair, dengan input hash dan matrix hash. Jangan mengasumsikan symmetry atau membangun matrix berbeda per algoritma.
+11. Formal matrix frozen dalam meter, directed/asymmetric, stable node order, tanpa unreachable pair, dengan input hash dan matrix hash. Jangan mengasumsikan symmetry atau menggunakan matriks berbeda untuk baseline NN dan hasil Hybrid.
 12. NN deterministic: depot index 0, minimum directed cost, tie-break lowest node index. 2-Opt best improvement wajib full route recomputation pada reversal dan hanya menerima strict improvement; hasil tidak lebih buruk dari NN.
-13. ACO = Classical Ant System, seeded PRNG, directed pheromone, fixed iterations, deposit semua valid ants. Jangan menambah 2-Opt setelah ACO pada main comparison atau mengarang final numeric parameters.
-14. Main: 10/25/50 customer, masing-masing 10 independent random datasets (30 total). N=100 conditional setelah pilot; clustered/circular/directional hanya optional/additional experiment.
-15. Calibration terpisah dari evaluation; satu global ACO configuration frozen. ACO 30 independent seeded runs per dataset, NN+2-Opt satu quality result + 30 measured timing repetitions; 5 warm-ups per algoritma/dataset, dikecualikan dari statistik.
-16. Algorithm timer mengecualikan OSRM, DB, HTTP/network, serialization, geometry generation, dan rendering. Raw failed/poor runs dipertahankan; ACO mean/median pembanding utama, best tambahan.
+13. Evaluasi mencatat jarak NN awal, jarak hasil 2-Opt, perbaikan absolut/persentase, waktu komputasi, serta skalabilitas berdasarkan jumlah customer.
+14. Ukuran dataset awal adalah 10, 25, dan 50 customer.
+15. RQ revisi, research gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik.
+16. Algorithm timer mengecualikan OSRM, DB, HTTP/network, serialization, geometry generation, dan rendering. Pertahankan raw results, termasuk run gagal dan hasil dengan perbaikan kecil atau nol.
 
-Kontrak penelitian wajib: [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md), [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md), [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md), serta [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Perubahan ini mencatat keputusan manusia 2026-10-02; parameter numerik ACO dan keputusan OPEN tetap memerlukan evidence/keputusan lanjutan.
+Kontrak penelitian wajib: [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md), [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md), [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md), serta [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Keputusan scope owner 2026-11-28 menggantikan rancangan comparison 2026-10-02 untuk MVP. Jejak historis tersedia pada dokumen penelitian.
 
 ## 3. Locked engineering stack
 
@@ -146,7 +144,7 @@ Pure input → pure-ish result
 **Dilarang:**
 
 ```text
-route.ts berisi 500 baris ACO + DB + UI concern
+route.ts mencampur core solver, DB, dan UI
 ```
 
 Algorithm module tidak boleh tahu tentang:
@@ -173,7 +171,6 @@ Setiap hasil closed tour harus memenuhi:
 - tidak ada customer duplikat;
 - total distance dapat direkomputasi dari route + matrix;
 - input tidak dimutasi secara tak terduga;
-- ACO dapat diberi random seed untuk reproducibility testing.
 - directed cost digunakan pada seluruh edges termasuk return ke depot;
 - 2-Opt asymmetric fixture dan best-improvement diuji;
 - NN+2-Opt distance <= NN distance.
@@ -213,7 +210,7 @@ Phase 0 tetap bertanggung jawab menyediakan lint/typecheck/test/build. Jika Phas
 Untuk perubahan algoritma, tambah:
 
 - invariant tests;
-- deterministic seed test;
+- deterministic rerun test pada matriks identik;
 - known small instance test;
 - edge cases 0/1/2 customer sesuai contract;
 - distance recomputation assertion.

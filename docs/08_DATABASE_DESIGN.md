@@ -171,7 +171,7 @@ generated_at DATETIME
 
 Metadata pendamping perlu merekam unit=meter, directed semantics, serialization/contract version, provider request options, original/snapped-coordinate evidence, serta OSRM/network version/extract provenance bila tersedia. Detail penyimpanan metadata ditetapkan saat task schema; jangan menganggap informasi unavailable sebagai known.
 
-Rules: NxN termasuk depot, diagonal zero, finite nonnegative values, no null/unreachable; no symmetry requirement. Common ACO eligibility mengikuti docs/33. Snapshot/hash bersifat immutable. Matrix regeneration menciptakan row/snapshot baru, tidak mengubah history. Jangan menghitung ulang matrix lama lewat OSRM pada saat replay benchmark.
+Rules: NxN termasuk depot, diagonal zero, finite nonnegative values, no null/unreachable; no symmetry requirement. Zero off-diagonal dilaporkan untuk review kualitas data sesuai docs/34. Snapshot/hash bersifat immutable. Matrix regeneration menciptakan row/snapshot baru, tidak mengubah history. Jangan menghitung ulang matrix lama lewat OSRM pada saat replay benchmark.
 
 Kandidat migrasi `0005_distance_matrices` menambahkan penyimpanan append-only dengan FK `RESTRICT` ke Benchmark Case. UUID request unik per case mencegah dua snapshot pada replay request yang sama. Generasi ulang dengan UUID baru membuat row baru, meski hash kontennya identik. Indeks case dan ID mendukung paginasi riwayat. Pemeriksaan detail dan recovery menghitung ulang hash serta memeriksa node terhadap Benchmark Case tersimpan. Migrasi ini belum diterapkan. [Kontrak dan aktivasi provider](34_OSRM_DISTANCE_CONTRACT.md)
 
@@ -198,16 +198,11 @@ created_at
 completed_at NULL
 ```
 
-Algorithm initial values:
+Nilai algoritma aktif untuk MVP adalah `NN_2OPT`. `ACO` tercatat pada rancangan historis dan ditunda sebagai Future Development.
 
-```text
-NN_2OPT
-ACO
-```
+Application wajib memastikan distance_matrix_id milik benchmark_case_id yang sama dan recorded matrix_hash sesuai content. Jarak baseline NN dan hasil Hybrid dalam satu evaluasi berasal dari matrix snapshot/hash yang sama dan menyimpan referensi actual provider provenance. Node mapping diperiksa terhadap benchmark_case_points; FK ID saja tidak membuktikan fairness.
 
-Application wajib memastikan distance_matrix_id milik benchmark_case_id yang sama dan recorded matrix_hash sesuai content. Experiments NN_2OPT dan ACO yang dibandingkan mereferensikan matrix snapshot/hash yang sama. Node mapping diperiksa terhadap benchmark_case_points; FK ID saja tidak membuktikan fairness.
-
-parameters_json menyimpan seluruh explicit ACO configuration, PRNG/version dan run policy. Calibration/evaluation case identities harus terpisah pada experiment metadata. Planned formal counts: 30 ACO measured runs dan 30 NN_2OPT timing repetitions; satu deterministic route quality NN cukup. Catat 5 warm-ups secara terpisah dari measured results dan tandai run role bila disimpan. Jangan menghitung warm-up sebagai measured run.
+`parameters_json` menampung metadata run policy bila dibutuhkan. Perincian data jarak baseline, improvement, dan runtime akan ditetapkan pada task schema yang terpisah. Jumlah run serta aturan warm-up mengikuti protokol setelah validasi akademik.
 
 ## 9. `experiment_runs`
 
@@ -229,7 +224,7 @@ started_at
 completed_at NULL
 ```
 
-`iteration_count` adalah optional diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
+`iteration_count` adalah field historis untuk diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
 
 Unique:
 

@@ -18,13 +18,13 @@ Pahami konsep
 → freeze snapshot + road validation + OSRM Table matrix + hash/freeze
 → NN
 → 2-Opt
-→ ACO
+→ Run Optimization, Experiments, Results, Export
 → benchmark
 → QA
 → production demo
 ```
 
-Jika langsung mengerjakan ACO sebelum foundation stabil, debugging akan tercampur antara framework, database, deployment, dan algoritma.
+Jika langsung mengerjakan pipeline optimasi sebelum foundation stabil, debugging akan tercampur antara framework, database, deployment, dan algoritma.
 
 ## Pembagian pemahaman
 
@@ -121,11 +121,11 @@ Lihat:
 ## Research contract yang wajib dibaca
 
 - [32 — Research Decisions](32_RESEARCH_DECISIONS.md): working RQ, main experiment dan OPEN decisions.
-- [33 — Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN deterministic, 2-Opt asymmetric-safe, ACO Classical Ant System.
+- [33 — Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN deterministik dan 2-Opt asymmetric-safe.
 - [34 — OSRM Distance Contract](34_OSRM_DISTANCE_CONTRACT.md): formal input memakai frozen directed OSRM road-network matrix dalam meter.
-- [15 — Protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 customer × 10 random datasets; 30 ACO seeded runs; 30 NN+2-Opt timing repetitions; 5 warm-ups.
+- [15 — Protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md) memuat proposal evaluasi NN awal dan hasil Hybrid pada 10, 25, dan 50 customer.
 
-Calibration/evaluation wajib terpisah dan satu ACO configuration global dibekukan. N=100 serta clustered/circular/directional optional setelah review/pilot. OPEN: nilai numerik ACO, depot/study area, endpoint public/local OSRM, dan eksperimen tambahan; jumlah run/main datasets serta peran OSRM bukan keputusan yang masih pending.
+RQ, gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. ACO diarsipkan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Status implementasi aktual ada di [README](../README.md#current-implementation-status). Target arsitektur dan checklist bukan evidence implementasi selesai.
 

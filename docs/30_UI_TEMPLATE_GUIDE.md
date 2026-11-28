@@ -268,10 +268,9 @@ Latest Benchmark
 
 Chart/visual yang mungkin dipakai nanti:
 
-- distance NN+2Opt vs ACO;
-- execution time vs customer count;
-- mean ± standard deviation ACO;
-- distribution pattern comparison bila optional/additional experiment dipilih; primary pattern tetap random.
+- jarak baseline NN dan hasil Hybrid;
+- perbaikan absolut dan persentase;
+- runtime dan efektivitas perbaikan berdasarkan jumlah customer sesuai rancangan evaluasi yang disetujui.
 
 Jangan tampilkan statistik palsu hanya agar dashboard terlihat penuh.
 

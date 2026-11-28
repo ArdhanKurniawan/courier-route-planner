@@ -10,7 +10,7 @@ Project tidak boleh menghasilkan biaya tak terduga.
 - jangan mengaktifkan paid feature tanpa persetujuan tim;
 - monitor usage dashboard;
 - hindari endpoint polling terus-menerus;
-- batasi compute-heavy web-triggered ACO.
+- batasi beban Hybrid dan benchmark yang dipicu dari web.
 
 ## 2. TiDB
 

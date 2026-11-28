@@ -73,7 +73,9 @@ Symptoms:
 
 Check migration history dan DB environment. Jangan manually patch production dulu.
 
-## ACO NaN
+## ACO NaN — historis
+
+Bagian ini untuk implementasi arsip, yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Check:
 

@@ -1,11 +1,11 @@
 # 34 — OSRM DISTANCE CONTRACT
 
-**Status:** Kontrak disetujui 2026-10-02. Kandidat Phase 3B menerapkan adapter dan penyimpanan snapshot. Verifikasi provider dan migrasi live masih menunggu persetujuan.
+**Status — 2026-11-28.** Phase 3B menyediakan adapter dan penyimpanan frozen snapshot. Migration `0005` berstatus SUCCESS + VERIFIED di Testing. Generasi tetap nonaktif. Arsitektur Multi-Provider OSRM masih berupa rencana.
 Keputusan: [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), [research decisions](32_RESEARCH_DECISIONS.md).
 
 ## 1. Purpose
 
-Membentuk satu frozen road-network distance matrix yang dapat dipakai ulang oleh kedua algoritma pada comparison yang sama.
+Membentuk satu frozen road-network distance matrix yang dipakai bersama oleh baseline Nearest Neighbor dan hasil Hybrid NN + 2-Opt.
 
 ## 2. OSRM role
 
@@ -14,14 +14,14 @@ Depot + Customer Coordinates
 → road-network validation
 → OSRM Table Service
 → validate + hash + freeze directed distance matrix
-→ NN → 2-Opt / ACO (Classical Ant System)
+→ baseline NN → best-improvement 2-Opt
 ```
 
-OSRM Table Service adalah approved core infrastructure untuk formal research input. Persetujuan ini tidak berarti adapter sudah diimplementasikan.
+OSRM Table Service adalah approved core infrastructure untuk input formal.
 
 ## 3. OSRM is NOT the research algorithm
 
-Penelitian membandingkan NN+2-Opt vs Classical Ant System untuk urutan customer. OSRM tidak menggantikan optimizer dengan shortest-path A→B atau OSRM Trip. Domain hanya menerima matrix, tidak memanggil OSRM.
+MVP memakai Hybrid NN + 2-Opt untuk urutan customer dengan rute awal NN sebagai baseline. OSRM tidak menggantikan optimizer dengan shortest-path A→B atau OSRM Trip. Domain hanya menerima matrix, tidak memanggil OSRM.
 
 ## 4. Table Service responsibility
 
@@ -43,7 +43,7 @@ Route Service menerima urutan hasil optimizer untuk visualisasi jalan. Geometri 
 - Validasi identitas customer dan tepat satu depot; duplicate identity ditolak.
 - Periksa road snapping/routability sebelum freeze matrix; coordinate range valid saja tidak menjamin jalur antar semua node.
 - Simpan original coordinates dan bukti returned/snapped coordinates bila tersedia. Toleransi snapping, study area, sampling/replacement rule harus ditetapkan dan dicatat sebelum data formal dibuat; jangan menebak threshold ilmiah pada implementasi.
-- ACO eta=1/d memerlukan positive off-diagonal. Zero-cost pair harus dilaporkan pada common preflight sesuai [algorithm contract](33_ALGORITHM_SPECIFICATION.md); tidak boleh diubah menjadi epsilon/fallback diam-diam.
+- Laporkan zero-cost pair dan pertahankan nilainya pada matriks. Kriteria sampling dan routability formal masih menunggu validasi akademik. [Kontrak algoritma](33_ALGORITHM_SPECIFICATION.md)
 
 OSRM request memakai urutan longitude,latitude; adapter wajib mencegah tertukarnya lat/lng. [Official request format](https://project-osrm.org/docs/v5.24.0/api/#general-options).
 
@@ -80,7 +80,7 @@ Simpan juga unit/contract version dan provider/network provenance jika tersedia.
 
 ## 13. Same-matrix fairness rule
 
-Kedua algoritma harus memakai exact matrix values, input hash, node order, dan matrix hash yang sama. Runner memverifikasi hash setelah load dan mencatat reference/hash pada setiap experiment/export. Hash mismatch menghentikan comparison. ACO dan NN tidak boleh melakukan provider request masing-masing.
+Baseline NN dan hasil Hybrid memakai exact matrix values, input hash, node order, matrix hash, dan actual provider provenance yang sama. Runner memverifikasi hash setelah load dan mencatat referensinya pada setiap experiment/export. Hash mismatch menghentikan evaluasi. Pengulangan timing memakai snapshot tersimpan.
 
 ## 14. Timing exclusion
 
@@ -92,9 +92,9 @@ Catat generation time, endpoint identity tanpa credential, profile/options, prov
 
 Network/profile/provider dapat berubah; coordinates yang sama belum tentu menghasilkan matrix yang sama saat diminta ulang. Reproduksi **algorithm results** memakai matrix tersimpan. Reproduksi **matrix generation** membutuhkan provider/network provenance lebih lengkap dan merupakan batas reproducibility terpisah.
 
-## 16. Public vs self-hosted / local consideration
+## 16. Phase 3B — kontrak provider yang tersedia
 
-Keputusan endpoint final masih OPEN. Evaluasi dukungan distance annotation, limits N+1 nodes, reproducibility/version pinning, availability, kebijakan penggunaan dan budget. Public service jangan diasumsikan unlimited atau stabil. Local/self-hosted memberi kontrol extract/profile tetapi membutuhkan setup/storage/compute. Pilihan dan keterbatasan wajib dicatat sebelum formal generation; tidak ada deployment OSRM pada task ini.
+Konfigurasi saat ini memakai satu endpoint. Prioritas provider tercatat sebagai rencana pada bagian 20. Setiap kandidat masih perlu menunjukkan distance annotation, kapasitas N+1, provenance yang tersedia, kestabilan, dan kepatuhan kebijakan sebelum dipakai untuk data formal.
 
 Untuk Phase 3B, ukuran utama 10, 25, dan 50 Order memerlukan masing-masing 11, 26, dan 51 titik termasuk Depot. Satu Table request menghasilkan 121, 676, dan 2.601 sel berarah. Ketiga ukuran lulus dengan respons sintetis. Batas `--max-table-size` OSRM dapat dikonfigurasi operator. Sebelum generasi formal, provider terpilih harus membuktikan dukungan `annotations=distance`, ukuran target, dan kebijakan pemakaian. FOSSGIS membatasi satu request per detik, melarang penggunaan berat, dan menyimpan permintaan di log. [Konfigurasi OSRM](https://project-osrm.org/docs/v26.4.0/tools) · [Kebijakan FOSSGIS](https://routing.openstreetmap.de/about.html#usage-policy)
 
@@ -106,14 +106,55 @@ Operator dapat mencatat versi dan hash extract yang sudah diverifikasi melalui `
 
 Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Retry terbatas hanya untuk transient infrastructure errors sebelum freeze dan dicatat. Jangan fallback ke metric lain atau overwrite snapshot sukses. Failed generation disimpan sebagai failure record, bukan successful benchmark case. Geometry error ditangani terpisah dari matrix/algorithm errors.
 
-Di Phase 3B, kode kegagalan generasi dicatat di log aplikasi tanpa koordinat atau payload provider. Kegagalan validasi tidak membuat snapshot. Jika hasil penyimpanan belum pasti, cari UUID request melalui recovery read-only. Hasil kosong tetap belum terkonfirmasi. Matriks dengan nol di luar diagonal dapat ditinjau dan memuat daftar pasangan berarah yang bermasalah. Matriks tersebut tidak memenuhi syarat common comparison ACO.
+Di Phase 3B, kode kegagalan generasi dicatat di log aplikasi tanpa koordinat atau payload provider. Kegagalan validasi tidak membuat snapshot. Jika hasil penyimpanan belum pasti, cari UUID request melalui recovery read-only. Hasil kosong tetap belum terkonfirmasi. Matriks dengan nol di luar diagonal dapat ditinjau dan memuat daftar pasangan berarah yang bermasalah. Perlakukan zero off-diagonal sebagai temuan kualitas data untuk direview sebelum evaluasi formal.
 
 Panel Distance Matrix berada di detail Benchmark Case. Route admin `/api/benchmark-cases/[id]/distance-matrices` memakai POST untuk generasi dan GET untuk riwayat. Query `requestId` melakukan recovery read-only. GET `/api/benchmark-cases/[id]/distance-matrices/[matrixId]` membaca snapshot tersimpan.
 
-## 18. Bukti acceptance dan urutan rilis Testing
+## 18. Bukti acceptance dan riwayat rilis Testing
 
 - **Phase 3A UAT di Testing lulus menurut konfirmasi owner.** Baseline `8fecbb0` mencakup [PR #72](https://github.com/ArdhanKurniawan/courier-route-planner/pull/72). Benchmark Case Testing #90001 menyimpan satu Depot dan 10 Order untuk total 11 titik. [Bukti acceptance persistence](14_TESTING_QA.md#26-live-acceptance-benchmark-case-persistence-di-testing-2026-11-25)
 - **Phase 3B offline lulus.** Kandidat mencatat 284/284 tes terfokus dan 1.297/1.297 tes penuh. ESLint, typecheck, `db:check`, dan `git diff --check` lulus. Mock OSRM mencakup 11, 26, dan 51 titik. Build Turbopack lokal dihentikan saat kompilasi. Percobaan webpack gagal pada loader `icon.svg` yang tetap sama. Build standar diperiksa lewat Quality Gate.
 - **Kompatibilitas sebelum `0005` berdasarkan review kode.** Detail Benchmark Case memakai pembacaan Phase 3A. Panel riwayat matriks memuat secara terpisah dan menampilkan status tidak tersedia saat tabel belum ada. Tombol generasi tetap nonaktif. Endpoint baru dapat mengembalikan `503 UNAVAILABLE` pada lookup storage sebelum sempat memanggil OSRM.
 
-Tunggu Quality Gate PR lulus. Dengan persetujuan terpisah, terapkan `0005_distance_matrices` pada TiDB Testing dari commit kandidat yang sudah diperiksa. Verifikasi entri ledger, tabel, FK, dan indeks sebelum merge ke `testing`. Pertahankan flag generasi nonaktif ketika deployment pertama diuji. Aktivasi dilakukan setelah endpoint khusus membuktikan dukungan distance annotation dan ukuran tabel yang dipakai.
+Urutan rilis historis mencatat verifikasi Quality Gate, migrasi `0005` dengan persetujuan tersendiri, verifikasi ledger/schema, dan generasi default nonaktif. PR #73 sudah merged dan migration `0005` terverifikasi di Testing. Aktivasi provider menunggu bukti kesiapan.
+
+## 19. Evaluasi awal FOSSGIS — historis dan superseded
+
+Catatan berikut menyimpan evaluasi saat FOSSGIS masih menjadi kandidat utama. Prioritas tersebut diganti oleh rencana pada bagian 20. Bukti teknis, kebijakan, dan pertanyaan kepada operator tetap relevan jika FOSSGIS dipilih sebagai provider opsional.
+
+Kandidat gratis adalah layanan FOSSGIS dengan base URL `https://routing.openstreetmap.de/routed-car`. `router.project-osrm.org` memakai backend mobil FOSSGIS yang sama. API upstream mendokumentasikan `annotations=distance` dalam meter pada rute tercepat. Konfigurasi publik FOSSGIS memakai CH. Batas default upstream adalah 100 titik, tetapi kapasitas Table aktif untuk 11, 26, dan 51 titik, opsi `radiuses`, dan bukti waypoint yang dibutuhkan aplikasi masih perlu dikonfirmasi ke operator. [Wiki demo OSRM](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server) · [Konfigurasi FOSSGIS](https://github.com/fossgis-routing-server/ansible_openstreetmap.de/blob/master/group_vars/osrm.yml#L98-L116) · [API OSRM v5.27.1](https://github.com/Project-OSRM/osrm-backend/blob/v5.27.1/docs/http.md#table-service) · [Default Table OSRM](https://github.com/Project-OSRM/osrm-backend/blob/v5.27.1/src/tools/routed.cpp#L120-L132)
+
+Rancangan historis menghitung 30 Table request sukses dari 10 kasus per ukuran, dengan pilot, kalibrasi terpisah, dan percobaan gagal di luar hitungan. Volume sebenarnya mengikuti rancangan revisi setelah validasi akademik. Pengulangan algoritma membaca matriks yang sudah disimpan. Penggunaan demo harus ringan dan nonkomersial. Kebijakan umum menetapkan maksimum satu request per detik dan satu koneksi untuk skrip. Konfigurasi publik Nginx menetapkan 6 request per menit per IP untuk kelompok Table, Match, dan Trip. Batas teknis itu tidak menetapkan jatah penelitian. Konfirmasi jadwal, volume, dan ukuran matriks ke operator sebelum uji. Kirim hanya koordinat sintetis atau titik referensi publik yang disetujui karena server mencatat request. [Protokol penelitian](15_RESEARCH_BENCHMARK_PROTOCOL.md) · [Ketentuan FOSSGIS](https://github.com/fossgis/fossgis-webseite/blob/master/content/arbeitsgruppen/osm-server/nutzungsbedingungen.md#english-version) · [Rate limit Table](https://github.com/fossgis-routing-server/ansible_openstreetmap.de/blob/master/roles/osrm/templates/nginx-ratelimit.conf.jinja#L10-L38) · [Kontak dan privasi layanan](https://routing.openstreetmap.de/about.html)
+
+Usulan FOSSGIS saat itu membatasi pengecualian guard ke endpoint HTTPS dan profil mobil yang disetujui pada Vercel Preview branch `testing`. Pasang reservasi Redis yang juga dipakai Map Testing pada dispatch Table baru, setelah pemeriksaan input dan lookup request tersimpan. Pertahankan satu reservasi lintas instance per 60 detik, fail-closed saat Redis gagal, dan tanpa retry otomatis. Gunakan User-Agent proyek yang sudah ada dan `Referer` dari `AUTH_ORIGIN` Testing yang tepercaya. Tampilkan sumber OSRM/FOSSGIS, kredit OpenStreetMap dan lisensi ODbL, [Perbaiki peta](https://www.openstreetmap.org/fixthemap), serta kontak operator aplikasi. [Atribusi OpenStreetMap](https://www.openstreetmap.org/copyright)
+
+Tabel berikut adalah usulan konfigurasi historis untuk FOSSGIS. Konfirmasi operator dan perubahan kode menjadi prasyarat jika opsi ini diteruskan. Generasi tetap nonaktif selama evaluasi.
+
+| Environment variable | Nilai Testing yang direncanakan |
+|---|---|
+| `APP_ENV` | `testing` pada Preview branch `testing`. Metadata branch dan target berasal dari Vercel. |
+| `DISTANCE_MATRIX_GENERATION` | Kosong atau `0` saat ini. `1` setelah persetujuan dan pengujian. |
+| `DISTANCE_MATRIX_OSRM_URL` | `https://routing.openstreetmap.de/routed-car` |
+| `DISTANCE_MATRIX_OSRM_PROFILE` | `driving`, sesuai profil mobil yang diuji. |
+| `DISTANCE_MATRIX_OSRM_MAX_POINTS` | `11` untuk pilot awal. Naikkan ke `26` dan `51` setelah ukuran terkait dikonfirmasi dan lulus uji. |
+| `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` | Radius meter positif yang ditetapkan pada protokol sebelum pengumpulan data. |
+| `AUTH_ORIGIN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Pakai origin Testing dan Redis Testing yang sama dengan Map. |
+| `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION`, `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256` | Opsional. Isi jika bukti untuk instance aktif tersedia. |
+
+## 20. Rencana Multi-Provider OSRM — belum diimplementasikan
+
+| Prioritas | Provider | Status |
+|---|---|---|
+| Primary | Just Routing Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
+| Secondary | OSRMPlus Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
+| Optional | FOSSGIS | Menunggu respons operator. Pengembangan MVP dapat berjalan tanpa provider ini. |
+
+OpenRouteService berada di luar pilihan proyek. Prioritas ini belum membuktikan quota atau limit, credential readiness, kompatibilitas Table API, maupun persetujuan penggunaan. Verifikasi jarak berarah, kapasitas 11/26/51 titik, snapping, provenance, autentikasi jika diperlukan, serta kebijakan penggunaan sebelum aktivasi.
+
+### Operational Mode
+
+Evaluasi eligibility tiap provider berdasarkan capability, quota, status tersedia, dan cooldown. Automatic failover pindah ke kandidat eligible berikutnya saat kegagalan yang sesuai kebijakan. Automatic failback dapat mengembalikan prioritas ke provider utama setelah pulih dan cooldown terpenuhi. Catat provider yang benar-benar menghasilkan hasil. Pertahankan setiap matriks tersimpan sebagai hasil dari satu provider.
+
+### Research Mode
+
+Operator memilih **Research Provider Lock** secara eksplisit sebelum generasi matriks. Gunakan satu provider yang telah diverifikasi untuk seluruh sel matriks. Jika provider terkunci gagal atau melewati batas, hentikan generasi dan catat kegagalan. Setiap snapshot menyimpan actual provider provenance. Baseline NN dan Hybrid memakai satu frozen matrix, hash, dan node order yang sama. Regenerasi yang disengaja menghasilkan snapshot terpisah.
