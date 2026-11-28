@@ -78,8 +78,8 @@ const summary = {
 const data = (value: unknown) => Response.json({ data: value });
 const error = (code: string, status: number) =>
   Response.json({ error: { code } }, { status });
-function history(generationAvailable = true, items: unknown[] = []) {
-  return Response.json({ data: items, nextCursor: null, generationAvailable });
+function history(generationAvailable = true, items: unknown[] = [], generationProviders?: string[]) {
+  return Response.json({ data: items, nextCursor: null, generationAvailable, generationProviders });
 }
 
 const fetcher = vi.fn<typeof fetch>();
@@ -126,6 +126,7 @@ describe("Distance matrix on a stored Benchmark Case", () => {
     expect(JSON.parse(String(postCalls()[0][1]?.body))).toEqual({
       requestId,
       expectedInputHash: inputHash,
+      selection: { mode: "operational" },
     });
     expect(screen.getByRole("button", { name: /membuat distance matrix/i })).toBeDisabled();
     await act(async () => finish(data(storedMatrix)));
@@ -133,6 +134,73 @@ describe("Distance matrix on a stored Benchmark Case", () => {
     expect(await screen.findByText("Distance matrix tersimpan.")).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Distance matrix terarah (meter)" })).toBeInTheDocument();
     expect(await screen.findByRole("button", { name: "Lihat matriks #" + matrixId })).toBeInTheDocument();
+    expect(window.sessionStorage.length).toBe(0);
+  });
+
+  it("offers only configured research providers and displays the actual provider in history and detail", async () => {
+    fetcher
+      .mockImplementationOnce(async () => data(storedCase))
+      .mockImplementationOnce(async () => history(true, [], ["osrm-plus"]))
+      .mockImplementationOnce(async () => data({
+        ...storedMatrix,
+        provenance: { ...storedMatrix.provenance, actualProvider: "osrm-plus" },
+      }))
+      .mockImplementationOnce(async () => history(
+        true,
+        [{ ...summary, actualProvider: "osrm-plus" }],
+        ["osrm-plus"],
+      ));
+    render(<BenchmarkCaseDetail caseId={caseId} />);
+
+    const mode = await screen.findByRole("combobox", { name: "Mode pembuatan" });
+    expect(mode).toHaveValue("operational");
+    expect(within(mode).queryByRole("option", { name: /Just Routing/i })).not.toBeInTheDocument();
+    fireEvent.change(mode, { target: { value: "osrm-plus" } });
+    fireEvent.click(await generateButton());
+
+    expect(JSON.parse(String(postCalls()[0][1]?.body))).toEqual({
+      requestId,
+      expectedInputHash: inputHash,
+      selection: { mode: "research", provider: "osrm-plus" },
+    });
+    expect(await screen.findByText("Distance matrix tersimpan.")).toBeInTheDocument();
+    expect(screen.getByText("OSRMPlus")).toBeInTheDocument();
+    expect(await screen.findByRole("cell", { name: "OSRMPlus / driving" })).toBeInTheDocument();
+  });
+
+  it("retains the research lock during read-only recovery after remount", async () => {
+    fetcher
+      .mockImplementationOnce(async () => data(storedCase))
+      .mockImplementationOnce(async () => history(true, [], ["just-routing", "osrm-plus"]))
+      .mockImplementationOnce(async () => error("STORE_UNKNOWN", 503))
+      .mockImplementationOnce(async () => data(storedCase))
+      .mockImplementationOnce(async () => history(false))
+      .mockImplementationOnce(async () => data({
+        ...storedMatrix,
+        provenance: { ...storedMatrix.provenance, actualProvider: "osrm-plus" },
+      }))
+      .mockImplementationOnce(async () => data({
+        ...storedMatrix,
+        provenance: { ...storedMatrix.provenance, actualProvider: "just-routing" },
+      }))
+      .mockImplementationOnce(async () => history(false));
+    const page = render(<BenchmarkCaseDetail caseId={caseId} />);
+    fireEvent.change(await screen.findByRole("combobox", { name: "Mode pembuatan" }), {
+      target: { value: "just-routing" },
+    });
+    fireEvent.click(await generateButton());
+    expect(await screen.findByRole("alert")).toHaveTextContent(/hasil penyimpanan belum pasti/i);
+    page.unmount();
+    render(<BenchmarkCaseDetail caseId={caseId} />);
+
+    const recover = await screen.findByRole("button", { name: "Periksa hasil pembuatan" });
+    expect(screen.getByText(/request pembuatan riset.*Just Routing/i)).toBeInTheDocument();
+    fireEvent.click(recover);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/hasil belum dapat diperiksa/i);
+    expect(await generateButton()).toBeDisabled();
+    fireEvent.click(recover);
+    expect(await screen.findByText("Distance matrix tersimpan.")).toBeInTheDocument();
+    expect(postCalls()).toHaveLength(1);
     expect(window.sessionStorage.length).toBe(0);
   });
 
@@ -157,7 +225,7 @@ describe("Distance matrix on a stored Benchmark Case", () => {
     expect(snap.getByRole("columnheader", { name: /koordinat awal/i })).toBeInTheDocument();
     expect(snap.getByRole("columnheader", { name: /deviasi tujuan/i })).toBeInTheDocument();
     expect(screen.getByText("Semua pasangan dapat dirutekan.")).toBeInTheDocument();
-    expect(screen.getByText(/ACO.*1 pasangan.*jarak nol/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 pasangan.*jarak nol/i)).toBeInTheDocument();
     expect(screen.getByText("Dari 1 · Order #4 ke 0 · Depot #3")).toBeInTheDocument();
     const provenance = screen.getByText("Provenance OSRM").closest("details")!;
     expect(within(provenance).getByText("https://example.test/osrm")).toBeInTheDocument();

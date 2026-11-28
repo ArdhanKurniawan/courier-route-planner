@@ -92,19 +92,17 @@ Catat generation time, endpoint identity tanpa credential, profile/options, prov
 
 Network/profile/provider dapat berubah; coordinates yang sama belum tentu menghasilkan matrix yang sama saat diminta ulang. Reproduksi **algorithm results** memakai matrix tersimpan. Reproduksi **matrix generation** membutuhkan provider/network provenance lebih lengkap dan merupakan batas reproducibility terpisah.
 
-## 16. Phase 3B — kontrak provider yang tersedia
+## 16. Phase 3B — kontrak provider dan validasi
 
-Konfigurasi saat ini memakai satu endpoint. Prioritas provider tercatat sebagai rencana pada bagian 20. Setiap kandidat masih perlu menunjukkan distance annotation, kapasitas N+1, provenance yang tersedia, kestabilan, dan kepatuhan kebijakan sebelum dipakai untuk data formal.
+Generasi default nonaktif. Adapter formal dan konfigurasi Multi-Provider dijelaskan pada bagian 20. Setiap provider harus membuktikan dukungan distance annotation, kapasitas N+1, provenance yang tersedia, dan kepatuhan kebijakan sebelum aktivasi.
 
 Untuk Phase 3B, ukuran utama 10, 25, dan 50 Order memerlukan masing-masing 11, 26, dan 51 titik termasuk Depot. Satu Table request menghasilkan 121, 676, dan 2.601 sel berarah. Ketiga ukuran lulus dengan respons sintetis. Batas `--max-table-size` OSRM dapat dikonfigurasi operator. Sebelum generasi formal, provider terpilih harus membuktikan dukungan `annotations=distance`, ukuran target, dan kebijakan pemakaian. FOSSGIS membatasi satu request per detik, melarang penggunaan berat, dan menyimpan permintaan di log. [Konfigurasi OSRM](https://project-osrm.org/docs/v26.4.0/tools) · [Kebijakan FOSSGIS](https://routing.openstreetmap.de/about.html#usage-policy)
 
-Generasi aplikasi default nonaktif. Untuk mengaktifkannya di lingkungan yang telah disetujui, operator mengatur `DISTANCE_MATRIX_GENERATION=1`, `DISTANCE_MATRIX_OSRM_URL` ke endpoint HTTPS khusus tanpa kredensial, `DISTANCE_MATRIX_OSRM_PROFILE`, `DISTANCE_MATRIX_OSRM_MAX_POINTS` hingga 51, dan `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` sesuai metode penelitian. Endpoint demo FOSSGIS dan Project OSRM ditolak. Server meminta distance saja dengan radius per titik, tanpa fallback atau retry otomatis. Bukti snap sumber dan tujuan harus tersedia, menunjuk koordinat yang sama untuk indeks tersebut, dan berada dalam radius. Pemeriksaan batas bawah geometris membantu menolak waypoint yang terkait ke indeks salah. Toleransi satu meter menampung kuantisasi koordinat, dan pemeriksaan ini tidak menentukan nilai matriks. Versi software atau network extract yang tidak diberikan provider ditampilkan sebagai tidak tersedia.
-
-Operator dapat mencatat versi dan hash extract yang sudah diverifikasi melalui `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION` dan `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256`. Versi data yang dikembalikan OSRM disimpan terpisah. Generasi tidak tersedia pada Production.
+Server meminta `annotations=distance` dengan radius meter per titik. Bukti snap sumber dan tujuan harus tersedia, menunjuk koordinat yang sama untuk indeks tersebut, dan berada dalam radius. Pemeriksaan batas bawah geometris membantu menolak waypoint yang terkait ke indeks salah. Toleransi satu meter menampung kuantisasi koordinat. Pemeriksaan ini tidak menentukan nilai matriks. Versi data, software, atau network extract tanpa bukti ditampilkan sebagai tidak tersedia.
 
 ## 17. Failure handling
 
-Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Retry terbatas hanya untuk transient infrastructure errors sebelum freeze dan dicatat. Jangan fallback ke metric lain atau overwrite snapshot sukses. Failed generation disimpan sebagai failure record, bukan successful benchmark case. Geometry error ditangani terpisah dari matrix/algorithm errors.
+Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Mode operasional dapat memilih provider berikutnya untuk kegagalan yang dibatasi pada bagian 20. Setiap provider mendapat paling banyak satu percobaan per operasi. Kegagalan tidak menghasilkan snapshot sukses. Geometry error ditangani terpisah dari matrix/algorithm errors.
 
 Di Phase 3B, kode kegagalan generasi dicatat di log aplikasi tanpa koordinat atau payload provider. Kegagalan validasi tidak membuat snapshot. Jika hasil penyimpanan belum pasti, cari UUID request melalui recovery read-only. Hasil kosong tetap belum terkonfirmasi. Matriks dengan nol di luar diagonal dapat ditinjau dan memuat daftar pasangan berarah yang bermasalah. Perlakukan zero off-diagonal sebagai temuan kualitas data untuk direview sebelum evaluasi formal.
 
@@ -141,20 +139,42 @@ Tabel berikut adalah usulan konfigurasi historis untuk FOSSGIS. Konfirmasi opera
 | `AUTH_ORIGIN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Pakai origin Testing dan Redis Testing yang sama dengan Map. |
 | `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION`, `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256` | Opsional. Isi jika bukti untuk instance aktif tersedia. |
 
-## 20. Rencana Multi-Provider OSRM — belum diimplementasikan
+## 20. Multi-Provider OSRM — implementasi offline
 
-| Prioritas | Provider | Status |
+| Prioritas | Provider | Bukti dan batas aktivasi |
 |---|---|---|
-| Primary | Just Routing Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
-| Secondary | OSRMPlus Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
-| Optional | FOSSGIS | Menunggu respons operator. Pengembangan MVP dapat berjalan tanpa provider ini. |
+| Primary | Just Routing Free | Dokumentasi mencakup Indonesia, satu negara per request, 100 × 100 sel per matriks, 100 request/hari, dan 5 request/detik. Satu matriks memakai satu request. Ukuran 11/26/51 berada dalam batas yang dipublikasikan. Reset harian dan ketentuan publikasi hasil perlu dikonfirmasi sebelum aktivasi. |
+| Secondary | OSRMPlus Free | Owner mengamati Table 3 × 3 dan Route Semarang pada Playground serta kuota akun 50.000 elemen dan 1.000 routing calls per bulan. Satu Table menggunakan satu routing call dan N × N elemen. Dokumentasi memakai reset awal bulan kalender dan menyebut batas harian serta burst per detik/menit. Timezone reset, angka batas harian/burst, kapasitas per request Free, dan dukungan `radiuses` dengan `annotations=distance` saja masih memerlukan bukti akun atau pilot. |
+| Optional | FOSSGIS | Tetap nonaktif untuk matriks formal. |
 
-OpenRouteService berada di luar pilihan proyek. Prioritas ini belum membuktikan quota atau limit, credential readiness, kompatibilitas Table API, maupun persetujuan penggunaan. Verifikasi jarak berarah, kapasitas 11/26/51 titik, snapping, provenance, autentikasi jika diperlukan, serta kebijakan penggunaan sebelum aktivasi.
+Just Routing memakai `https://api.justrouting.tech/table/v1/driving/{coordinates}` dengan `Authorization: Bearer`. Dokumentasinya mendukung jarak berarah dalam meter, `radiuses` per titik, waypoint sumber/tujuan, dan caching matriks. Batas Directions yang dipublikasikan adalah 100 koordinat. Konfirmasi retensi koordinat dan hak publikasi hasil terpisah dari dukungan caching. [Table](https://docs.justrouting.tech/api-reference/distance-matrix) · [Directions](https://docs.justrouting.tech/api-reference/directions) · [Coverage](https://docs.justrouting.tech/coverage) · [Limit Free](https://justrouting.tech/#pricing)
+
+OSRMPlus memakai `https://api.osrmplus.com/table/v1/driving/{coordinates}` dengan `x-api-key`. API memakai satu region berlisensi per request dan mendokumentasikan bentuk OSRM dengan jarak meter, termasuk contoh distance bersama duration. Batas numerik koordinat Route pada Free belum terverifikasi. Ketentuan mengizinkan penggunaan hasil routing dan menyatakan koordinat request tidak dicatat. Pertahankan kredit OpenStreetMap pada panel dan keluaran riset yang relevan. [API OSRMPlus](https://osrmplus.com/docs) · [Terms](https://osrmplus.com/terms) · [Atribusi OSM](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines#Routing_engines)
 
 ### Operational Mode
 
-Evaluasi eligibility tiap provider berdasarkan capability, quota, status tersedia, dan cooldown. Automatic failover pindah ke kandidat eligible berikutnya saat kegagalan yang sesuai kebijakan. Automatic failback dapat mengembalikan prioritas ke provider utama setelah pulih dan cooldown terpenuhi. Catat provider yang benar-benar menghasilkan hasil. Pertahankan setiap matriks tersimpan sebagai hasil dari satu provider.
+Manager memprioritaskan Just Routing dan hanya mempertimbangkan konfigurasi terverifikasi yang mampu menangani ukuran matriks. Capacity dari Redis, respons kuota/rate limit, timeout, jaringan, dan HTTP 5xx dapat memilih OSRMPlus. Kegagalan autentikasi, lisensi region, validasi input atau respons, pair unreachable, snapping, dan storage menghentikan operasi. Setiap provider mendapat paling banyak satu percobaan, dengan batas 8 detik per Table dan anggaran manager 20 detik.
+
+Redis mereservasi setiap percobaan secara atomik setelah input dan lookup UUID lolos. Reservasi tetap dihitung jika hasil upstream ambigu. Just Routing memakai jendela bergulir 24 jam. OSRMPlus memakai jendela aplikasi 31 hari yang konservatif untuk kuota bulanan, disertai batas harian dan burst. Hitungan Redis hanya mencakup aplikasi. Akun yang juga dipakai dari Playground atau client lain mungkin mencapai kuota vendor lebih awal. Respons vendor dan `Retry-After` diutamakan. Redis yang tidak dapat diverifikasi menghentikan dispatch. Request baru mengevaluasi ulang primary setelah cooldown atau kuota bergulir kembali tersedia. Failback tidak mengubah request berjalan atau snapshot historis.
 
 ### Research Mode
 
-Operator memilih **Research Provider Lock** secara eksplisit sebelum generasi matriks. Gunakan satu provider yang telah diverifikasi untuk seluruh sel matriks. Jika provider terkunci gagal atau melewati batas, hentikan generasi dan catat kegagalan. Setiap snapshot menyimpan actual provider provenance. Baseline NN dan Hybrid memakai satu frozen matrix, hash, dan node order yang sama. Regenerasi yang disengaja menghasilkan snapshot terpisah.
+Operator memilih **Research Provider Lock** sebelum generasi. Seluruh sel berasal dari satu provider dan kegagalan provider terkunci menghentikan operasi. Sebelum dispatch, Redis mengikat mode dan provider riset ke pasangan Benchmark Case dan UUID secara atomik. Pengikatan tetap disimpan setelah kegagalan dan tidak memakai TTL kuota. Preview harus memakai Redis Testing bersama yang mempertahankan key pengikatan. Replay dengan pilihan berbeda ditolak, termasuk bila snapshot pertama belum tersimpan. Snapshot baru mencatat `provenance.actualProvider` dan `provenance.generationMode`. Kolom database `provider` tetap `osrm` dan `distance-matrix/v1` tetap mengikat endpoint provider pada hash. Readback memeriksa kecocokan endpoint dengan identitas provider ketika tersedia, dan tetap menerima snapshot legacy tanpa field baru. Pada hasil penyimpanan ambigu, gunakan UUID yang sama di endpoint recovery read-only. Baseline NN dan Hybrid memakai frozen matrix, hash, dan node order yang sama. Operator harus mempertahankan pilihan yang sama sepanjang batch riset. Penyimpanan lock untuk formal batch masih menunggu Experiments.
+
+Estimasi satu matriks sukses per Benchmark Case adalah `d11 + d26 + d51` request dan `121 × d11 + 676 × d26 + 2.601 × d51` elemen. Sebagai contoh historis, 10 kasus per ukuran memerlukan 30 request dan 33.980 elemen, sebelum pilot, kegagalan, atau regenerasi. Jumlah dataset evaluasi tetap mengikuti validasi akademik. Repetisi solver tidak menambah request OSRM. [Protokol penelitian](15_RESEARCH_BENCHMARK_PROTOCOL.md)
+
+### Konfigurasi Testing Preview
+
+| Variabel | Ketentuan |
+|---|---|
+| `APP_ENV`, metadata Vercel | `testing` pada Preview branch `testing`. |
+| `DISTANCE_MATRIX_GENERATION` | Default kosong atau `0`. Gunakan `1` setelah persetujuan pilot. |
+| `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` | Radius meter positif sesuai protokol. |
+| `DISTANCE_MATRIX_JUST_ROUTING_VERIFIED`, `DISTANCE_MATRIX_OSRM_PLUS_VERIFIED` | Set `1` per provider setelah kontrak, akun, wilayah, batas ukuran, dan penggunaan data disetujui. |
+| `DISTANCE_MATRIX_JUST_ROUTING_API_KEY`, `DISTANCE_MATRIX_OSRM_PLUS_API_KEY` | Secret aplikasi server-side. Endpoint HTTPS dan profile `driving` ditetapkan di kode. |
+| `DISTANCE_MATRIX_JUST_ROUTING_MAX_POINTS`, `DISTANCE_MATRIX_OSRM_PLUS_MAX_POINTS` | Batas kuadrat terverifikasi termasuk Depot, dengan maksimum aplikasi 51. Gunakan batas yang mematuhi limit titik dan elemen provider. |
+| `DISTANCE_MATRIX_OSRM_PLUS_REQUESTS_PER_SECOND`, `DISTANCE_MATRIX_OSRM_PLUS_REQUESTS_PER_MINUTE`, `DISTANCE_MATRIX_OSRM_PLUS_REQUESTS_PER_DAY` | Cap aplikasi positif berdasarkan batas akun yang sudah diverifikasi. |
+| `DISTANCE_MATRIX_JUST_ROUTING_SOFTWARE_VERSION`, `DISTANCE_MATRIX_JUST_ROUTING_EXTRACT_SHA256`, `DISTANCE_MATRIX_OSRM_PLUS_SOFTWARE_VERSION`, `DISTANCE_MATRIX_OSRM_PLUS_EXTRACT_SHA256` | Opsional, isi berdasarkan bukti. |
+| `AUTH_ORIGIN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Konfigurasi autentikasi dan shared quota Testing yang sudah ada. |
+
+Pilot yang disetujui sebaiknya memakai fixture sintetis dan satu provider terkunci. Mulai dari matriks terkecil yang sudah dikonfirmasi, periksa directed distances, bukti snapping, quota usage, provenance, dan readback dari storage. Naikkan ukuran hanya setelah bukti sebelumnya lengkap. FOSSGIS Map demo tetap terpisah.

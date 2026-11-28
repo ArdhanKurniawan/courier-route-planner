@@ -4,6 +4,12 @@ import { depotId } from "@/lib/validation/depot";
 
 export const distanceMatrixVersion = "distance-matrix/v1";
 export const distanceMatrixPointLimit = 51;
+export const matrixProviderEndpoints = Object.freeze({
+  "just-routing": "https://api.justrouting.tech/",
+  "osrm-plus": "https://api.osrmplus.com/",
+});
+export type MatrixProviderId = keyof typeof matrixProviderEndpoints;
+export const matrixProviderId = z.enum(["just-routing", "osrm-plus"]);
 
 const normalized = (value: number) => (value === 0 ? 0 : value);
 const latitude = z.number().finite().min(-90).max(90).transform(normalized);
@@ -23,6 +29,7 @@ const snap = z
   .strictObject({ longitude, latitude, distanceM: meters })
   .readonly();
 const metadata = z.string().min(1).max(200).nullable();
+const nodeOrderSchema = z.array(node).min(2).max(distanceMatrixPointLimit).readonly();
 const inputSchema = z.strictObject({
   version: z.literal(distanceMatrixVersion),
   provider: z.literal("osrm"),
@@ -51,7 +58,7 @@ const inputSchema = z.strictObject({
   unit: z.literal("meter"),
   directed: z.literal(true),
   inputHash: digest,
-  nodeOrder: z.array(node).min(2).max(distanceMatrixPointLimit).readonly(),
+  nodeOrder: nodeOrderSchema,
   matrix: z
     .array(z.array(meters).max(distanceMatrixPointLimit).readonly())
     .max(distanceMatrixPointLimit)
@@ -64,6 +71,8 @@ const inputSchema = z.strictObject({
     .strictObject({
       generatedAt: z.iso.datetime({ precision: 3 }),
       apiVersion: z.literal("v1"),
+      actualProvider: matrixProviderId.optional(),
+      generationMode: z.enum(["operational", "research"]).optional(),
       dataVersion: metadata,
       softwareVersion: metadata,
       networkExtract: metadata,
@@ -94,6 +103,33 @@ export class DistanceMatrixValidationError extends Error {
 }
 
 type Coordinates = Pick<DistanceMatrixNode, "latitude" | "longitude">;
+function verifyNodeOrder(nodeOrder: readonly DistanceMatrixNode[]) {
+  const identities = new Set<string>();
+  for (const [index, point] of nodeOrder.entries()) {
+    const key = point.kind + ":" + point.id;
+    if (
+      point.index !== index ||
+      point.kind !== (index === 0 ? "depot" : "order") ||
+      identities.has(key)
+    )
+      throw new DistanceMatrixValidationError("INVALID_MATRIX");
+    identities.add(key);
+  }
+}
+
+export function validateDistanceMatrixRequest(inputHash: string, nodes: unknown) {
+  const parsed = nodeOrderSchema.safeParse(nodes);
+  if (!digest.safeParse(inputHash).success || !parsed.success)
+    throw new DistanceMatrixValidationError("INVALID_MATRIX");
+  verifyNodeOrder(parsed.data);
+  return parsed.data;
+}
+
+export function verifyMatrixProvider(endpoint: string, actualProvider?: MatrixProviderId) {
+  if (actualProvider && endpoint !== matrixProviderEndpoints[actualProvider])
+    throw new DistanceMatrixValidationError("INTEGRITY");
+}
+
 function snapChordM(original: Coordinates, snapped: Coordinates) {
   const vector = ({ latitude, longitude }: Coordinates) => {
     const lat = latitude * (Math.PI / 180);
@@ -163,17 +199,10 @@ export function buildDistanceMatrixSnapshot(
   const input = parsed.data;
   const { matrix, nodeOrder, snapping, options } = input;
   const size = nodeOrder.length;
-  const identities = new Set<string>();
-  for (const [index, point] of nodeOrder.entries()) {
-    const key = point.kind + ":" + point.id;
-    if (
-      point.index !== index ||
-      point.kind !== (index === 0 ? "depot" : "order") ||
-      identities.has(key)
-    )
-      throw new DistanceMatrixValidationError("INVALID_MATRIX");
-    identities.add(key);
-  }
+  verifyNodeOrder(nodeOrder);
+  verifyMatrixProvider(input.endpoint, input.provenance.actualProvider);
+  if (input.provenance.generationMode && !input.provenance.actualProvider)
+    throw new DistanceMatrixValidationError("INTEGRITY");
   if (
     matrix.length !== size ||
     matrix.some((row, index) => row.length !== size || row[index] !== 0)

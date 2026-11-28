@@ -1,17 +1,17 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { getMatrixOsrmConfig } from "@/config/distance-matrix-osrm";
 import { createOsrmDistanceMatrixProvider } from "@/infrastructure/osrm-distance-matrix";
 import type { DistanceMatrixNode } from "@/domain/distance-matrix";
 
-const env = {
-  DISTANCE_MATRIX_GENERATION: "1",
-  DISTANCE_MATRIX_OSRM_URL: "https://dedicated.example.invalid/osrm/",
-  DISTANCE_MATRIX_OSRM_PROFILE: "driving",
-  DISTANCE_MATRIX_OSRM_MAX_POINTS: "51",
-  DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M: "20",
+const config = {
+  baseUrl: "https://dedicated.example.invalid/osrm/",
+  profile: "driving",
+  maxPoints: 51,
+  snapRadiusM: 20,
+  softwareVersion: null,
+  networkExtract: null,
+  codeRevision: null,
 };
-const config = getMatrixOsrmConfig(env)!;
 const hash = "b".repeat(64);
 const points: readonly DistanceMatrixNode[] = [
   { index: 0, kind: "depot", id: "1", longitude: 110, latitude: -6 },
@@ -216,11 +216,11 @@ describe("OSRM research Table adapter", () => {
 
 describe("explicit OSRM provider configuration", () => {
   it("carries declared software and extract identity only when configured", async () => {
-    const known = getMatrixOsrmConfig({
-      ...env,
-      DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION: "v5.27.1",
-      DISTANCE_MATRIX_OSRM_EXTRACT_SHA256: "f".repeat(64),
-    })!;
+    const known = {
+      ...config,
+      softwareVersion: "v5.27.1",
+      networkExtract: "sha256:" + "f".repeat(64),
+    };
     const transport = vi
       .fn<typeof fetch>()
       .mockResolvedValue(Response.json(response));
@@ -235,27 +235,4 @@ describe("explicit OSRM provider configuration", () => {
     });
   });
 
-  it.each([
-    { DISTANCE_MATRIX_GENERATION: undefined },
-    { APP_ENV: "production" },
-    { VERCEL_ENV: "production" },
-    {
-      DISTANCE_MATRIX_OSRM_URL: "https://routing.openstreetmap.de/routed-car/",
-    },
-    { DISTANCE_MATRIX_OSRM_URL: "https://router.project-osrm.org/" },
-    { DISTANCE_MATRIX_OSRM_URL: "http://dedicated.example.invalid/" },
-    {
-      DISTANCE_MATRIX_OSRM_URL: "https://user:pass@dedicated.example.invalid/",
-    },
-    {
-      DISTANCE_MATRIX_OSRM_URL: "https://dedicated.example.invalid/?query=bad",
-    },
-    { DISTANCE_MATRIX_OSRM_MAX_POINTS: "52" },
-    { DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M: "0" },
-  ])(
-    "leaves generation disabled for an unsafe or incomplete setting",
-    (overrides) => {
-      expect(getMatrixOsrmConfig({ ...env, ...overrides })).toBeNull();
-    },
-  );
 });

@@ -10,12 +10,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { MatrixProviderId } from "@/domain/distance-matrix";
 import type {
   DistanceMatrixPage,
   DistanceMatrixSummary,
   StoredDistanceMatrix,
 } from "@/lib/validation/distance-matrix";
-import { isStoredMatrix, useMatrixGeneration } from "./distance-matrix-client";
+import {
+  isMatrixProviderId,
+  isStoredMatrix,
+  matrixProviderLabel,
+  useMatrixGeneration,
+} from "./distance-matrix-client";
 import DistanceMatrixSnapshot from "./distance-matrix-snapshot";
 
 const errorClass = "text-sm text-error-600 dark:text-error-400";
@@ -30,6 +36,7 @@ function isMatrixHistory(value: unknown) {
         item?.provider === "osrm" &&
         typeof item.id === "string" &&
         typeof item.profile === "string" &&
+        (item.actualProvider === undefined || isMatrixProviderId(item.actualProvider)) &&
         typeof item.generatedAt === "string" &&
         typeof item.matrixHash === "string" &&
         Number.isInteger(item.pointCount),
@@ -72,7 +79,7 @@ function MatrixHistory({
                   Lihat matriks #{item.id}
                 </Button>
               </td>
-              <td className={cellClass}>OSRM / {item.profile}</td>
+              <td className={cellClass}>{matrixProviderLabel(item.actualProvider)} / {item.profile}</td>
               <td className={cellClass}>{item.pointCount}</td>
               <td className={cellClass}><FrozenTime value={item.generatedAt} /></td>
               <td className="min-w-40 p-3 break-all font-mono">{item.matrixHash}</td>
@@ -134,6 +141,7 @@ export default function DistanceMatrixPanel({
 }) {
   const url = "/api/benchmark-cases/" + encodeURIComponent(caseId) + "/distance-matrices";
   const [after, setAfter] = useState<string | null>(null);
+  const [researchProvider, setResearchProvider] = useState<MatrixProviderId>();
   const [selection, setSelection] = useState<
     { id: string } | { snapshot: StoredDistanceMatrix }
   >();
@@ -143,15 +151,19 @@ export default function DistanceMatrixPanel({
   }, [selection]);
 
   const history = useBenchmarkRead<
-    DistanceMatrixPage & { generationAvailable: boolean }
+    DistanceMatrixPage & { generationAvailable: boolean; generationProviders?: MatrixProviderId[] }
   >(url + (after ? "?" + new URLSearchParams({ after }) : ""), isMatrixHistory);
   const historyPage =
     history.result && "data" in history.result ? history.result.data : undefined;
   const page =
     typeof historyPage?.generationAvailable === "boolean" &&
+    (historyPage.generationProviders === undefined ||
+      (Array.isArray(historyPage.generationProviders) && historyPage.generationProviders.every(isMatrixProviderId))) &&
     (historyPage.nextCursor === null || typeof historyPage.nextCursor === "string")
       ? historyPage
       : undefined;
+  const generationProviders = page?.generationProviders ?? [];
+  const researchUnavailable = researchProvider !== undefined && !generationProviders.includes(researchProvider);
   const generation = useMatrixGeneration({
     url,
     caseId,
@@ -164,6 +176,8 @@ export default function DistanceMatrixPanel({
       history.refresh();
     },
   });
+  const displayedProvider = generation.pending ? generation.lockedProvider : researchProvider;
+  const displayedProviderUnavailable = displayedProvider !== undefined && !generationProviders.includes(displayedProvider);
 
   return (
     <section
@@ -184,7 +198,10 @@ export default function DistanceMatrixPanel({
       )}
       {generation.pending && !generation.operation && (
         <p role="status" className={mutedClass}>
-          Request pembuatan tersimpan. Periksa hasil sebelum membuat matriks baru.
+          {generation.lockedProvider
+            ? `Request pembuatan riset dengan ${matrixProviderLabel(generation.lockedProvider)} tersimpan.`
+            : "Request pembuatan tersimpan."}{" "}
+          Periksa hasil sebelum membuat matriks baru.
         </p>
       )}
       {generation.invalidStorage && (
@@ -195,11 +212,44 @@ export default function DistanceMatrixPanel({
       {generation.error && (
         <p role="alert" className={errorClass}>{generation.error}</p>
       )}
+      {(generationProviders.length > 0 || displayedProvider) && (
+        <div className="max-w-md space-y-1">
+          <label htmlFor="distance-matrix-mode" className="block text-sm font-medium">
+            Mode pembuatan
+          </label>
+          <select
+            id="distance-matrix-mode"
+            aria-describedby="distance-matrix-mode-help"
+            className="min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand-500 disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900"
+            disabled={!!generation.operation || generation.pending}
+            value={displayedProvider ?? "operational"}
+            onChange={(event) => {
+              const value = event.target.value;
+              setResearchProvider(isMatrixProviderId(value) ? value : undefined);
+            }}
+          >
+            <option value="operational">Operasional (otomatis)</option>
+            {generationProviders.map((provider) => (
+              <option key={provider} value={provider}>Riset · {matrixProviderLabel(provider)}</option>
+            ))}
+            {displayedProviderUnavailable && (
+              <option value={displayedProvider} disabled>Riset · {matrixProviderLabel(displayedProvider)} (tidak tersedia)</option>
+            )}
+          </select>
+          <p id="distance-matrix-mode-help" className={mutedClass}>
+            Mode operasional dapat berganti provider secara otomatis. Mode riset mengunci provider yang dipilih.
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
-          disabled={!generation.canGenerate}
-          onClick={() => void generation.generate()}
+          disabled={!generation.canGenerate || researchUnavailable}
+          onClick={() => void generation.generate(
+            researchProvider
+              ? { mode: "research", provider: researchProvider }
+              : { mode: "operational" },
+          )}
         >
           {generation.operation === "generate"
             ? "Membuat distance matrix…"

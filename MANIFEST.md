@@ -1,12 +1,12 @@
 # MANIFEST
 
-Actual filesystem bytes and SHA-256, updated 2026-11-28 for Hybrid NN + 2-Opt research scope alignment. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
+Actual filesystem bytes and SHA-256, updated 2026-11-28 for the Multi-Provider OSRM contract. Scope: documentation-pack sources, MASTER_GUIDE.md and the Gate 1 closure report. MANIFEST.md is excluded to avoid a self-hash cycle. Regenerate after changing a covered source or its line endings.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|
 | `AGENTS.md` | 9661 | `1093d454e57dd4b8e65d5127e2db02dee033d62b44915cb95d37feda9781b082` |
 | `CONTRIBUTING.md` | 3374 | `5178a38f18e0a5fab959217819915c56c499e2067243e600a7c6aa91b67177c2` |
-| `MASTER_GUIDE.md` | 436042 | `dd21ebe3511d6fabc2e6ada7621a6d451cb29a1acfd6771da243d5ce82e7cff4` |
+| `MASTER_GUIDE.md` | 440481 | `249ec0dc6bbcd8d4dbad44592a6910560cf274ad8df773eeb66d64eb6d2e2264` |
 | `README.md` | 29950 | `36d6139a50286b6719eed21de80a9ced1424a5d49b7c7faa4177f67365c1125d` |
 | `THIRD_PARTY_NOTICES.md` | 2518 | `a9722a66fbf7e99a3990e6d419f4a4a80d4a55956af256a910bb698a9f284c7d` |
 | `docs/00_START_HERE.md` | 3209 | `750cc6bc2c124e1670463a4a40e490854448f5d9f804da14da491b1353e7f423` |
@@ -43,7 +43,7 @@ Actual filesystem bytes and SHA-256, updated 2026-11-28 for Hybrid NN + 2-Opt re
 | `docs/31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | 11924 | `b2cd214540634a62ea6cc0326942746156e60ccf59a6c865353a95b5c10f43e6` |
 | `docs/32_RESEARCH_DECISIONS.md` | 4657 | `3f8567f97aec7024a958bf81046440ebabb8fbdda122d43e5b866652707e05b4` |
 | `docs/33_ALGORITHM_SPECIFICATION.md` | 12748 | `899093e00464391a0b415c7977d26c22c9bbe3978a3e689bc681d067c1cf1d4c` |
-| `docs/34_OSRM_DISTANCE_CONTRACT.md` | 18737 | `74121a5ada9d26189f7dc97e2b38cef96b621b5853215905a6274fd8436e7d33` |
+| `docs/34_OSRM_DISTANCE_CONTRACT.md` | 23171 | `3cc46083769b201cc6026fbdf92964b6654f34105753b6b7c50e7bb56cddb984` |
 | `templates/ADR_TEMPLATE.md` | 417 | `a50522470baf11c2d1a3b1e08d1827ef961e892bc0c6f66dfdfca8385509d9ca` |
 | `templates/BUG_REPORT_TEMPLATE.md` | 512 | `971fa591198119e7cbef98ba8a5d19111ecafabc993fe745e640d42e6f35ec84` |
 | `templates/FEATURE_TASK_TEMPLATE.md` | 435 | `df6e31a97d8e7a7e4baa0f28066c4054b82f5b9a44a63d2feac10bb303a8d70e` |

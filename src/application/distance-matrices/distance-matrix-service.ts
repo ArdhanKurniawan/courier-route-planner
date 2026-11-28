@@ -5,10 +5,12 @@ import type { BenchmarkInputSnapshot } from "@/domain/benchmark-input";
 import type {
   DistanceMatrixNode,
   DistanceMatrixSnapshot,
+  MatrixProviderId,
 } from "@/domain/distance-matrix";
 import type {
   DistanceMatrixPage,
   DistanceMatrixQuery,
+  MatrixProviderSelection,
   StoredDistanceMatrix,
 } from "@/lib/validation/distance-matrix";
 
@@ -23,6 +25,11 @@ export type DistanceMatrixFailure =
   | "PROVIDER_UNAVAILABLE"
   | "PROVIDER_TIMEOUT"
   | "PROVIDER_UNSUPPORTED"
+  | "PROVIDER_AUTH"
+  | "PROVIDER_CONFIGURATION"
+  | "PROVIDER_CAPACITY"
+  | "PROVIDER_LOCK_MISMATCH"
+  | "QUOTA_UNAVAILABLE"
   | "CORRUPT_MATRIX"
   | "STORE_UNKNOWN"
   | "UNAVAILABLE";
@@ -56,13 +63,32 @@ export type DistanceMatrixRepository = {
 };
 
 export type DistanceMatrixProvider = {
+  providers?: readonly MatrixProviderId[];
   maxPoints: number;
   generate(
     inputHash: string,
     nodes: readonly DistanceMatrixNode[],
     signal?: AbortSignal,
+    selection?: MatrixProviderSelection,
   ): Promise<DistanceMatrixSnapshot>;
 };
+
+type RequestBinder = {
+  bindSelection(
+    caseId: string,
+    requestId: string,
+    selection: MatrixProviderSelection,
+  ): Promise<"allowed" | "conflict" | "unavailable">;
+};
+
+function assertProviderLock(snapshot: DistanceMatrixSnapshot, selection?: MatrixProviderSelection) {
+  const { generationMode, actualProvider } = snapshot.provenance;
+  if (
+    (generationMode && generationMode !== (selection?.mode ?? "operational")) ||
+    (selection?.mode === "research" && actualProvider !== selection.provider)
+  )
+    throw new DistanceMatrixError("PROVIDER_LOCK_MISMATCH");
+}
 
 function frozenNodes(benchmarkCase: BenchmarkInputSnapshot) {
   return benchmarkCase.nodes.map(
@@ -94,6 +120,7 @@ export function createDistanceMatrixService(
   findBenchmarkCase: (id: string) => Promise<BenchmarkInputSnapshot | null>,
   repository: DistanceMatrixRepository,
   provider: DistanceMatrixProvider | null,
+  requestBinder: RequestBinder | null,
 ) {
   async function loadCase(caseId: string) {
     const snapshot = await findBenchmarkCase(caseId);
@@ -103,7 +130,7 @@ export function createDistanceMatrixService(
     return snapshot;
   }
 
-  const generationAvailable = provider !== null;
+  const generationAvailable = provider !== null && requestBinder !== null;
   return {
     generationAvailable,
     async list(caseId: string, query: DistanceMatrixQuery) {
@@ -118,7 +145,11 @@ export function createDistanceMatrixService(
         )
       )
         throw new DistanceMatrixError("CORRUPT_MATRIX");
-      return { ...history, generationAvailable };
+      return {
+        ...history,
+        generationAvailable,
+        ...(provider?.providers ? { generationProviders: provider.providers } : {}),
+      };
     },
     async detail(caseId: string, id: string) {
       const benchmarkCase = await loadCase(caseId);
@@ -139,6 +170,7 @@ export function createDistanceMatrixService(
       requestId: string,
       expectedInputHash: string,
       signal?: AbortSignal,
+      selection?: MatrixProviderSelection,
     ) {
       const benchmarkCase = await loadCase(caseId);
       if (benchmarkCase.inputHash !== expectedInputHash)
@@ -147,31 +179,52 @@ export function createDistanceMatrixService(
       if (existing) {
         if (existing.requestId !== requestId)
           throw new DistanceMatrixError("CORRUPT_MATRIX");
+        assertProviderLock(existing, selection);
         return verifyMatrix(existing, caseId, benchmarkCase);
       }
-      if (!provider) throw new DistanceMatrixError("GENERATION_DISABLED");
+      if (!provider || !requestBinder)
+        throw new DistanceMatrixError("GENERATION_DISABLED");
       const nodes = frozenNodes(benchmarkCase);
       if (nodes.length > provider.maxPoints)
         throw new DistanceMatrixError("POINT_LIMIT");
+      if (signal?.aborted)
+        throw new DistanceMatrixError("PROVIDER_UNAVAILABLE");
+      const requestSelection = selection ?? { mode: "operational" };
+      const binding = await requestBinder.bindSelection(caseId, requestId, requestSelection);
+      if (binding === "conflict")
+        throw new DistanceMatrixError("PROVIDER_LOCK_MISMATCH");
+      if (binding !== "allowed")
+        throw new DistanceMatrixError("QUOTA_UNAVAILABLE");
       const snapshot = await provider.generate(
         benchmarkCase.inputHash,
         nodes,
         signal,
+        ...(selection ? [selection] : []),
       );
       if (
         snapshot.inputHash !== benchmarkCase.inputHash ||
         !isDeepStrictEqual(snapshot.nodeOrder, nodes)
       )
         throw new DistanceMatrixError("CORRUPT_MATRIX");
+      assertProviderLock(snapshot, selection);
       if (signal?.aborted)
         throw new DistanceMatrixError("PROVIDER_UNAVAILABLE");
       const stored = await repository.append({
         benchmarkCaseId: caseId,
         requestId,
-        snapshot,
+        snapshot: {
+          ...snapshot,
+          provenance: {
+            ...snapshot.provenance,
+            ...(snapshot.provenance.actualProvider
+              ? { generationMode: requestSelection.mode }
+              : {}),
+          },
+        },
       });
       if (stored.requestId !== requestId)
         throw new DistanceMatrixError("STORE_UNKNOWN");
+      assertProviderLock(stored, selection);
       return verifyMatrix(stored, caseId, benchmarkCase);
     },
   };

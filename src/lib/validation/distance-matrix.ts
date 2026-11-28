@@ -1,11 +1,23 @@
 import { z } from "zod";
-import type { DistanceMatrixSnapshot } from "@/domain/distance-matrix";
+import {
+  matrixProviderId,
+  type DistanceMatrixSnapshot,
+  type MatrixProviderId,
+} from "@/domain/distance-matrix";
 import { depotId } from "./depot";
 
 export const matrixRequestId = z.uuid().transform((id) => id.toLowerCase());
+const matrixProviderSelection = z.discriminatedUnion("mode", [
+  z.strictObject({ mode: z.literal("operational") }),
+  z.strictObject({
+    mode: z.literal("research"),
+    provider: matrixProviderId,
+  }),
+]);
 export const distanceMatrixGenerate = z.strictObject({
   requestId: matrixRequestId,
   expectedInputHash: z.string().regex(/^[a-f0-9]{64}$/u),
+  selection: matrixProviderSelection.optional(),
 });
 export const distanceMatrixQuery = z.strictObject({
   after: depotId.optional(),
@@ -17,6 +29,7 @@ export const distanceMatrixQuery = z.strictObject({
 });
 
 export type DistanceMatrixQuery = z.output<typeof distanceMatrixQuery>;
+export type MatrixProviderSelection = z.output<typeof matrixProviderSelection>;
 export type StoredDistanceMatrix = DistanceMatrixSnapshot &
   Readonly<{
     id: string;
@@ -27,6 +40,7 @@ export type DistanceMatrixSummary = Readonly<{
   id: string;
   benchmarkCaseId: string;
   provider: "osrm";
+  actualProvider?: MatrixProviderId;
   profile: string;
   pointCount: number;
   inputHash: string;

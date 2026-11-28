@@ -47,12 +47,16 @@ export function POST(request: Request, context: Context) {
     const id = depotId.parse((await context.params).id);
     const input = distanceMatrixGenerate.parse(await readJson(request, 4096));
     try {
-      const snapshot = await distanceMatrixService().generate(
+      const service = distanceMatrixService();
+      const args = [
         id,
         input.requestId,
         input.expectedInputHash,
         request.signal,
-      );
+      ] as const;
+      const snapshot = input.selection
+        ? await service.generate(...args, input.selection)
+        : await service.generate(...args);
       return privateJson({ data: snapshot }, 201);
     } catch (error) {
       console.warn("distance_matrix_generation_failed", {
