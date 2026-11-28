@@ -20,14 +20,21 @@ const mocks = vi.hoisted(() => ({
   config: vi.fn(),
   findCase: vi.fn(),
   generate: vi.fn<DistanceMatrixProvider["generate"]>(),
+  bindSelection: vi.fn(),
   append: vi.fn<DistanceMatrixRepository["append"]>(),
   findById: vi.fn<DistanceMatrixRepository["findById"]>(),
   findByRequestId: vi.fn<DistanceMatrixRepository["findByRequestId"]>(),
   list: vi.fn<DistanceMatrixRepository["list"]>(),
 }));
 vi.mock("@/lib/security/admin", () => ({ requireAdmin: mocks.auth }));
+vi.mock("@/config/auth", () => ({
+  parseAuthConfig: () => ({
+    redisUrl: "https://redis.example.invalid",
+    redisToken: "test-token",
+  }),
+}));
 vi.mock("@/config/distance-matrix-osrm", () => ({
-  getMatrixOsrmConfig: mocks.config,
+  getMatrixProviderConfigs: mocks.config,
 }));
 vi.mock("@/db/repositories/benchmark-case-repository", () => ({
   createBenchmarkCaseRepository: () => ({ findById: mocks.findCase }),
@@ -35,11 +42,15 @@ vi.mock("@/db/repositories/benchmark-case-repository", () => ({
 vi.mock("@/db/repositories/distance-matrix-repository", () => ({
   createDistanceMatrixRepository: () => mocks,
 }));
-vi.mock("@/infrastructure/osrm-distance-matrix", () => ({
-  createOsrmDistanceMatrixProvider: () => ({
+vi.mock("@/infrastructure/matrix-provider-manager", () => ({
+  createMatrixProviderManager: () => ({
     maxPoints: 51,
+    providers: ["just-routing", "osrm-plus"],
     generate: mocks.generate,
   }),
+}));
+vi.mock("@/lib/security/distance-matrix-quota", () => ({
+  createDistanceMatrixQuota: () => ({ bindSelection: mocks.bindSelection }),
 }));
 
 const caseId = "9007199254740995";
@@ -98,7 +109,7 @@ const point = (index: number) => ({
   latitude: nodes[index].latitude,
   distanceM: 0,
 });
-const snapshot = buildDistanceMatrixSnapshot({
+const snapshotInput = {
   version: "distance-matrix/v1",
   provider: "osrm",
   profile: "driving",
@@ -124,7 +135,8 @@ const snapshot = buildDistanceMatrixSnapshot({
     networkExtract: null,
     codeRevision: null,
   },
-});
+};
+const snapshot = buildDistanceMatrixSnapshot(snapshotInput);
 
 function get(suffix = "") {
   return new Request(origin + endpoint + suffix);
@@ -148,8 +160,16 @@ function post(
 beforeEach(() => {
   vi.resetAllMocks();
   const matrices = new Map<string, StoredDistanceMatrix>();
+  const selections = new Map<string, string>();
+  mocks.bindSelection.mockImplementation(async (caseId, requestId, selection) => {
+    const key = caseId + ":" + requestId;
+    const value = JSON.stringify(selection);
+    if (selections.has(key) && selections.get(key) !== value) return "conflict";
+    selections.set(key, value);
+    return "allowed";
+  });
   mocks.auth.mockResolvedValue({ origin });
-  mocks.config.mockReturnValue({});
+  mocks.config.mockReturnValue([{}]);
   mocks.findCase.mockResolvedValue(benchmark);
   mocks.findById.mockImplementation(
     async (caseId, id) =>
@@ -174,6 +194,7 @@ beforeEach(() => {
       id: matrix.id,
       benchmarkCaseId: matrix.benchmarkCaseId,
       provider: matrix.provider,
+      actualProvider: matrix.provenance.actualProvider,
       profile: matrix.profile,
       pointCount: matrix.nodeOrder.length,
       inputHash: matrix.inputHash,
@@ -246,7 +267,7 @@ describe("Distance Matrix admin API", () => {
     const { data: replacement } = await regeneration.json();
     expect(replacement.id).not.toBe(created.id);
     expect(replacement.matrixHash).toBe(created.matrixHash);
-    mocks.config.mockReturnValue(null);
+    mocks.config.mockReturnValue([]);
     const list = await GET(get("?limit=2"), caseContext);
     expect(await list.json()).toMatchObject({
       data: [{ id: created.id }, { id: replacement.id }],
@@ -262,6 +283,124 @@ describe("Distance Matrix admin API", () => {
     expect(mocks.append).toHaveBeenCalledTimes(2);
   });
 
+  it("passes an explicit research lock through generation", async () => {
+    const selection = { mode: "research", provider: "osrm-plus" };
+    mocks.generate.mockResolvedValueOnce(buildDistanceMatrixSnapshot({
+      ...snapshotInput,
+      endpoint: "https://api.osrmplus.com/",
+      provenance: { ...snapshotInput.provenance, actualProvider: "osrm-plus" },
+    }));
+    const response = await POST(
+      post({ requestId, expectedInputHash: benchmark.inputHash, selection }),
+      caseContext,
+    );
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({
+      data: { provenance: { actualProvider: "osrm-plus" } },
+    });
+    expect(mocks.generate).toHaveBeenCalledWith(
+      benchmark.inputHash,
+      nodes,
+      expect.any(AbortSignal),
+      selection,
+    );
+    expect(await (await GET(get(), caseContext)).json()).toMatchObject({
+      data: [{ id: matrixId, actualProvider: "osrm-plus" }],
+      generationProviders: ["just-routing", "osrm-plus"],
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      expect((await POST(post(), caseContext)).status).toBe(409);
+      expect(mocks.generate).toHaveBeenCalledTimes(1);
+      expect(mocks.bindSelection).toHaveBeenCalledTimes(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("rejects a snapshot from a provider other than the requested research lock", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const response = await POST(
+        post({
+          requestId,
+          expectedInputHash: benchmark.inputHash,
+          selection: { mode: "research", provider: "osrm-plus" },
+        }),
+        caseContext,
+      );
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({
+        error: { code: "PROVIDER_LOCK_MISMATCH" },
+      });
+      expect(mocks.append).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("binds the research UUID before dispatch and blocks conflicting replays even if generation fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const started = Promise.withResolvers<void>();
+    const outcome = Promise.withResolvers<never>();
+    mocks.generate.mockImplementationOnce(() => {
+      started.resolve();
+      return outcome.promise;
+    });
+    const request = { requestId, expectedInputHash: benchmark.inputHash };
+    const originalSelection = { mode: "research", provider: "just-routing" };
+    const conflicting = { ...request, selection: { mode: "research", provider: "osrm-plus" } };
+    const first = POST(post({ ...request, selection: originalSelection }), caseContext);
+    try {
+      await started.promise;
+      mocks.generate.mockResolvedValueOnce(buildDistanceMatrixSnapshot({
+        ...snapshotInput,
+        endpoint: "https://api.osrmplus.com/",
+        provenance: { ...snapshotInput.provenance, actualProvider: "osrm-plus" },
+      }));
+      const concurrent = await POST(post(conflicting), caseContext);
+      outcome.reject(new DistanceMatrixError("PROVIDER_TIMEOUT"));
+      expect((await first).status).toBe(504);
+      expect(concurrent.status).toBe(409);
+      const replay = await POST(post(request), caseContext);
+      expect(replay.status).toBe(409);
+      expect(await replay.json()).toMatchObject({ error: { code: "PROVIDER_LOCK_MISMATCH" } });
+      expect(mocks.generate).toHaveBeenCalledTimes(1);
+      expect(mocks.append).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("fails closed when the shared request binding cannot be verified", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      mocks.bindSelection.mockResolvedValueOnce("unavailable");
+      const response = await POST(post(), caseContext);
+      expect(response.status).toBe(503);
+      expect(await response.json()).toMatchObject({ error: { code: "QUOTA_UNAVAILABLE" } });
+      expect(mocks.generate).not.toHaveBeenCalled();
+      expect(mocks.append).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it.each([
+    { mode: "research" },
+    { mode: "research", provider: "unsupported" },
+    { mode: "operational", provider: "osrm-plus" },
+  ])("rejects invalid provider selection %j before generation", async (selection) => {
+    const response = await POST(
+      post({ requestId, expectedInputHash: benchmark.inputHash, selection }),
+      caseContext,
+    );
+
+    expect(response.status).toBe(400);
+    expect(mocks.generate).not.toHaveBeenCalled();
+  });
+
   it("does not call the provider with a stale hash, disabled config or invalid query", async () => {
     expect(
       (
@@ -271,7 +410,7 @@ describe("Distance Matrix admin API", () => {
         )
       ).status,
     ).toBe(409);
-    mocks.config.mockReturnValue(null);
+    mocks.config.mockReturnValue([]);
     expect((await POST(post(), caseContext)).status).toBe(503);
     expect(
       (await GET(get("?requestId=" + requestId + "&limit=3"), caseContext))

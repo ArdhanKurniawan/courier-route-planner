@@ -12,7 +12,24 @@ import {
   BenchmarkResponseError,
   fetchBenchmark,
 } from "@/components/benchmark-cases/benchmark-client";
-import type { StoredDistanceMatrix } from "@/lib/validation/distance-matrix";
+import type { MatrixProviderId } from "@/domain/distance-matrix";
+import type {
+  MatrixProviderSelection,
+  StoredDistanceMatrix,
+} from "@/lib/validation/distance-matrix";
+
+const matrixProviderLabels: Record<MatrixProviderId, string> = {
+  "just-routing": "Just Routing",
+  "osrm-plus": "OSRMPlus",
+};
+
+export function isMatrixProviderId(value: unknown): value is MatrixProviderId {
+  return typeof value === "string" && Object.hasOwn(matrixProviderLabels, value);
+}
+
+export function matrixProviderLabel(provider?: MatrixProviderId) {
+  return provider ? matrixProviderLabels[provider] : "OSRM (provider tidak tercatat)";
+}
 
 const pendingEvent = "crp:pending-distance-matrix-changed";
 const uncertainMessage =
@@ -29,6 +46,11 @@ const rejectedMessages: Readonly<Record<string, string>> = {
   PROVIDER_UNAVAILABLE: "OSRM belum dapat dihubungi. Coba lagi secara manual.",
   PROVIDER_TIMEOUT: "Waktu tunggu OSRM habis. Coba lagi secara manual.",
   PROVIDER_UNSUPPORTED: "OSRM tidak menyediakan hasil jarak yang dibutuhkan.",
+  PROVIDER_AUTH: "Provider OSRM menolak akun atau wilayah yang dikonfigurasi. Hubungi operator aplikasi.",
+  PROVIDER_CONFIGURATION: "Konfigurasi layanan OSRM bermasalah. Hubungi operator aplikasi.",
+  PROVIDER_CAPACITY: "Provider OSRM sedang membatasi permintaan. Coba lagi nanti.",
+  QUOTA_UNAVAILABLE: "Kuota provider OSRM belum dapat diperiksa. Coba lagi nanti.",
+  PROVIDER_LOCK_MISMATCH: "Request sudah terikat ke mode atau provider berbeda. Periksa riwayat distance matrix.",
   FORBIDDEN: "Akses pembuatan distance matrix ditolak.",
   UNAUTHORIZED: "Sesi berakhir. Silakan login kembali.",
 };
@@ -46,11 +68,25 @@ function readInitialPending() {
   return undefined;
 }
 
-function isRequestId(value: string | null | undefined): value is string {
+function isRequestId(value: unknown): value is string {
   return (
     typeof value === "string" &&
     /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/iu.test(value)
   );
+}
+
+type PendingMatrixRequest = { requestId: string; lockedProvider?: MatrixProviderId };
+
+function parsePending(raw: string | null | undefined): PendingMatrixRequest | undefined {
+  if (isRequestId(raw)) return { requestId: raw };
+  if (!raw) return;
+  try {
+    const { requestId, lockedProvider } = JSON.parse(raw);
+    if (isRequestId(requestId) && isMatrixProviderId(lockedProvider))
+      return { requestId, lockedProvider };
+  } catch {
+    return undefined;
+  }
 }
 
 export function isStoredMatrix(value: unknown): value is StoredDistanceMatrix {
@@ -65,6 +101,8 @@ export function isStoredMatrix(value: unknown): value is StoredDistanceMatrix {
     typeof matrix.inputHash === "string" &&
     typeof matrix.matrixHash === "string" &&
     typeof matrix.provenance?.generatedAt === "string" &&
+    (matrix.provenance.actualProvider === undefined ||
+      isMatrixProviderId(matrix.provenance.actualProvider)) &&
     typeof matrix.options?.snapRadiusM === "number" &&
     Array.isArray(matrix.nodeOrder) &&
     matrix.nodeOrder.length > 1 &&
@@ -137,7 +175,7 @@ export function useMatrixGeneration({
     readPending,
     readInitialPending,
   );
-  const pending = isRequestId(rawPending);
+  const pending = parsePending(rawPending);
   const locked = useRef(false);
   const mounted = useRef(false);
   useLayoutEffect(() => {
@@ -151,19 +189,26 @@ export function useMatrixGeneration({
   const [generationDisabled, setGenerationDisabled] = useState(false);
   const disabled = !available || generationDisabled;
 
-  function writePending(requestId: string | null) {
-    if (requestId) window.sessionStorage.setItem(storageKey, requestId);
-    else window.sessionStorage.removeItem(storageKey);
+  function writePending(request: PendingMatrixRequest | null) {
+    if (request) {
+      window.sessionStorage.setItem(
+        storageKey,
+        request.lockedProvider ? JSON.stringify(request) : request.requestId,
+      );
+    } else {
+      window.sessionStorage.removeItem(storageKey);
+    }
     window.dispatchEvent(new Event(pendingEvent));
   }
 
-  function acceptReceipt(receipt: unknown, requestId: string) {
+  function acceptReceipt(receipt: unknown, { requestId, lockedProvider }: PendingMatrixRequest) {
     if (
       !isStoredMatrix(receipt) ||
       receipt.requestId !== requestId ||
       receipt.benchmarkCaseId !== caseId ||
       receipt.inputHash !== inputHash ||
-      receipt.nodeOrder.length !== pointCount
+      receipt.nodeOrder.length !== pointCount ||
+      (lockedProvider !== undefined && receipt.provenance.actualProvider !== lockedProvider)
     )
       throw new Error("Unexpected distance matrix receipt.");
     // Leave the request recoverable after the user navigates away.
@@ -172,11 +217,15 @@ export function useMatrixGeneration({
     onSaved(receipt);
   }
 
-  async function generate() {
+  async function generate(selection: MatrixProviderSelection) {
     if (disabled || locked.current || readPending() !== null) return;
+    const lockedProvider = selection.mode === "research" ? selection.provider : undefined;
+    const modeLabel = lockedProvider
+      ? `mode riset dengan ${matrixProviderLabel(lockedProvider)}`
+      : "mode operasional";
     if (
       !window.confirm(
-        `Buat snapshot distance matrix OSRM untuk ${pointCount} titik pada Benchmark Case #${caseId}?`,
+        `Buat snapshot distance matrix OSRM untuk ${pointCount} titik pada Benchmark Case #${caseId} dalam ${modeLabel}?`,
       )
     )
       return;
@@ -185,10 +234,10 @@ export function useMatrixGeneration({
     setOperation("generate");
     setError(null);
     try {
-      let requestId: string;
+      let request: PendingMatrixRequest;
       try {
-        requestId = crypto.randomUUID();
-        writePending(requestId);
+        request = { requestId: crypto.randomUUID(), lockedProvider };
+        writePending(request);
       } catch {
         setError("Penyimpanan browser tidak tersedia. Request belum dikirim.");
         return;
@@ -196,9 +245,9 @@ export function useMatrixGeneration({
       const { data } = await fetchBenchmark<{ data: unknown }>(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId, expectedInputHash: inputHash }),
+        body: JSON.stringify({ requestId: request.requestId, expectedInputHash: inputHash, selection }),
       });
-      acceptReceipt(data, requestId);
+      acceptReceipt(data, request);
     } catch (failure) {
       if (!mounted.current) return;
       if (
@@ -224,20 +273,20 @@ export function useMatrixGeneration({
   }
 
   async function recover() {
-    const requestId = readPending();
-    if (!isRequestId(requestId) || locked.current) return;
+    const request = parsePending(readPending());
+    if (!request || locked.current) return;
     locked.current = true;
     setOperation("recover");
     setError(null);
     try {
       const { data } = await fetchBenchmark<{ data: unknown }>(
-        url + "?" + new URLSearchParams({ requestId }),
+        url + "?" + new URLSearchParams({ requestId: request.requestId }),
       );
       if (data === null) {
         if (mounted.current)
           setError("Belum ada hasil terverifikasi. Identitas request tetap tersimpan.");
       } else {
-        acceptReceipt(data, requestId);
+        acceptReceipt(data, request);
       }
     } catch (failure) {
       if (!mounted.current) return;
@@ -252,7 +301,8 @@ export function useMatrixGeneration({
 
   return {
     operation,
-    pending,
+    pending: pending !== undefined,
+    lockedProvider: pending?.lockedProvider,
     error,
     clearFeedback: () => {
       setGenerationDisabled(false);

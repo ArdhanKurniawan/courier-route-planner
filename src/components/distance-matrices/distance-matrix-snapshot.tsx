@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { StoredDistanceMatrix } from "@/lib/validation/distance-matrix";
+import { matrixProviderLabel } from "./distance-matrix-client";
 
 const columnClass = "px-3 py-2 whitespace-nowrap";
 const headerClass = "bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-white";
@@ -66,7 +67,7 @@ export default function DistanceMatrixSnapshot({
   const zeroPairCount = zeroPairs.length;
   const remainingZeroPairs = zeroPairCount - zeroPairPreviewLimit;
   const metadata: [string, ReactNode][] = [
-    ["Provider", "OSRM"],
+    ["Provider", matrixProviderLabel(provenance.actualProvider)],
     ["Profil", snapshot.profile],
     ["Jumlah titik", nodeOrder.length],
     ["Waktu pembuatan", <FrozenTime key="time" value={provenance.generatedAt} />],
@@ -95,14 +96,16 @@ export default function DistanceMatrixSnapshot({
         />
       </details>
       <div className="space-y-1 text-sm">
+        <p>
+          Data jaringan jalan <a href="https://www.openstreetmap.org/copyright" className="underline">© OpenStreetMap contributors</a>.
+        </p>
         <p>Semua pasangan dapat dirutekan.</p>
-        {snapshot.comparisonEligible ? (
-          <p>ACO memenuhi syarat jarak. Semua pasangan antar titik memiliki jarak positif.</p>
+        {zeroPairCount === 0 ? (
+          <p>Semua pasangan antar titik memiliki jarak positif.</p>
         ) : (
           <>
             <p className="text-warning-700 dark:text-warning-400">
-              ACO tidak memenuhi syarat jarak karena {zeroPairCount} pasangan antar
-              titik memiliki jarak nol.
+              {zeroPairCount} pasangan antar titik memiliki jarak nol. Periksa titik-titik ini sebelum evaluasi formal.
             </p>
             <ul className="list-disc space-y-1 pl-5" aria-label="Pasangan terarah berjarak nol">
               {zeroPairs.slice(0, zeroPairPreviewLimit).map(({ from, to }) => (

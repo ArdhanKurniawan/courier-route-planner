@@ -69,11 +69,25 @@ export class OsrmError extends Error {
     readonly service: Service,
     readonly httpStatus?: number,
     readonly providerCode?: string,
+    readonly retryAfterMs?: number,
   ) {
     super(`OSRM ${service} failed (${code})`);
     this.name = "OsrmError";
   }
 }
+
+function retryAfter(response: Response): number | undefined {
+  const value = response.headers.get("Retry-After");
+  if (!value) return undefined;
+  const duration = /^\d+$/u.test(value)
+    ? Number(value) * 1_000
+    : Date.parse(value) - Date.now();
+  return Number.isSafeInteger(duration) && duration >= 0 ? duration : undefined;
+}
+
+const hostedError = z.object({
+  error: z.object({ code: z.enum(["table_size_exceeds_plan", "daily_limit_exceeded"]) }),
+});
 
 type Stop = Readonly<z.infer<typeof stop>>;
 type OrderedNode = Stop & Readonly<{ kind: "depot" | "order" }>;
@@ -105,6 +119,7 @@ type Options = {
   timeoutMs?: number;
   userAgent?: string;
   fetcher?: typeof fetch;
+  hostedTable?: boolean;
 };
 
 function orderedNodes(
@@ -187,6 +202,7 @@ export function createOsrmClient({
   timeoutMs = 5_000,
   userAgent,
   fetcher = fetch,
+  hostedTable = false,
 }: Options) {
   const base = URL.parse(baseUrl);
   if (
@@ -214,12 +230,31 @@ export function createOsrmClient({
     const timeout = new AbortController();
     const signal = callerSignal ? AbortSignal.any([callerSignal, timeout.signal]) : timeout.signal;
     const timer = setTimeout(() => timeout.abort(), timeoutMs);
+    const hosted = hostedTable && service === "table";
     let response: Response | undefined;
     try {
-      response = await fetcher(url, { method: "GET", cache: "no-store", redirect: "error", signal, headers });
+      response = await fetcher(url, {
+        method: "GET", cache: "no-store", redirect: hosted ? "manual" : "error", signal, headers,
+      });
+      if (hosted && (
+        [401, 402, 403, 404, 405].includes(response.status) ||
+        (response.status >= 300 && response.status < 400)
+      )) {
+        // Hosted gateways can return HTML, JSON with sensitive details, or
+        // even an empty body. The transport status is authoritative here.
+        void response.body?.cancel().catch(() => {});
+        throw new OsrmError("HTTP_ERROR", service, response.status, undefined, retryAfter(response));
+      }
       const raw: unknown = await response.json();
       signal.throwIfAborted();
       const parsed = providerEnvelope.safeParse(raw);
+      if (hosted && [400, 429].includes(response.status)) {
+        const hosted = hostedError.safeParse(raw);
+        if (hosted.success && response.status === 400 && hosted.data.error.code === "table_size_exceeds_plan")
+          throw new OsrmError("PROVIDER_ERROR", service, 400, "TooBig");
+        if (hosted.success && response.status === 429 && hosted.data.error.code === "daily_limit_exceeded")
+          throw new OsrmError("HTTP_ERROR", service, 429, "daily_limit_exceeded", retryAfter(response));
+      }
       // Provider error codes like NoRoute are returned with a non-2xx status.
       if (parsed.success && parsed.data.code !== "Ok") {
         const code = parsed.data.code;
@@ -227,17 +262,19 @@ export function createOsrmClient({
           throw new OsrmError("UNREACHABLE", service, response.status, code);
         if (service === "table" && code === "NotImplemented")
           throw new OsrmError("DISTANCE_UNSUPPORTED", service, response.status, code);
-        throw new OsrmError("PROVIDER_ERROR", service, response.status, code);
+        throw new OsrmError("PROVIDER_ERROR", service, response.status, code, retryAfter(response));
       }
-      if (!response.ok) throw new OsrmError("HTTP_ERROR", service, response.status);
+      if (!response.ok) throw new OsrmError("HTTP_ERROR", service, response.status, undefined, retryAfter(response));
       if (!parsed.success) throw new OsrmError("INVALID_RESPONSE", service, response.status);
       return parsed.data;
     } catch (error) {
+      if (hosted && response && !response.ok && signal.aborted)
+        throw new OsrmError("HTTP_ERROR", service, response.status, undefined, retryAfter(response));
       if (signal.aborted)
         throw new OsrmError(timeout.signal.aborted ? "TIMEOUT" : "ABORTED", service);
       if (error instanceof OsrmError) throw error;
       if (!response) throw new OsrmError("NETWORK", service);
-      throw new OsrmError(response.ok ? "INVALID_RESPONSE" : "HTTP_ERROR", service, response.status);
+      throw new OsrmError(response.ok ? "INVALID_RESPONSE" : "HTTP_ERROR", service, response.status, undefined, retryAfter(response));
     } finally {
       clearTimeout(timer);
     }

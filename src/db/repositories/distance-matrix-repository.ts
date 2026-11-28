@@ -10,7 +10,11 @@ import {
 import { assertDepotEnvironment } from "@/config/depot-env";
 import { getDatabase } from "@/db/client";
 import { distanceMatrices as matrices } from "@/db/schema";
-import { restoreDistanceMatrixSnapshot } from "@/domain/distance-matrix";
+import {
+  matrixProviderId,
+  restoreDistanceMatrixSnapshot,
+  verifyMatrixProvider,
+} from "@/domain/distance-matrix";
 import { depotId } from "@/lib/validation/depot";
 import type { DistanceMatrixQuery } from "@/lib/validation/distance-matrix";
 
@@ -62,6 +66,10 @@ const detail = summary.extend({
   provenance: z.unknown(),
 });
 const detailRows = z.tuple([z.object({ snapshot: z.string().nullable() })]);
+const historySummary = summary.extend({
+  endpoint: z.string().optional(),
+  actualProvider: matrixProviderId.nullish(),
+});
 const summaryRows = z
   .array(z.object({ summary: z.string().nullable() }))
   .min(1);
@@ -107,6 +115,8 @@ function selectHistory(benchmarkCaseId: string, query: DistanceMatrixQuery) {
       'benchmarkCaseId', CAST(page.benchmark_case_id AS CHAR),
       'provider', page.provider,
       'profile', page.profile,
+      'endpoint', page.endpoint,
+      'actualProvider', JSON_UNQUOTE(JSON_EXTRACT(page.provenance, '$.actualProvider')),
       'pointCount', page.point_count,
       'inputHash', page.input_hash,
       'matrixHash', page.matrix_hash,
@@ -115,7 +125,7 @@ function selectHistory(benchmarkCaseId: string, query: DistanceMatrixQuery) {
     ) END AS CHAR) AS summary
     FROM (SELECT 1) anchor
     LEFT JOIN (
-      SELECT id, benchmark_case_id, provider, profile, point_count,
+      SELECT id, benchmark_case_id, provider, profile, endpoint, provenance, point_count,
              input_hash, matrix_hash, generated_at, zero_pair_count
       FROM ${matrices}
       WHERE benchmark_case_id = ${BigInt(depotId.parse(benchmarkCaseId))} ${cursor}
@@ -163,7 +173,9 @@ function decodeHistory(
   }
   let previous = after === undefined ? undefined : BigInt(after);
   const summaries = rows.map(({ summary: encoded }) => {
-    const row = summary.parse(encoded === null ? null : JSON.parse(encoded));
+    const { endpoint, actualProvider, ...row } = historySummary.parse(
+      encoded === null ? null : JSON.parse(encoded),
+    );
     const id = BigInt(row.id);
     if (
       row.benchmarkCaseId !== caseId ||
@@ -173,7 +185,9 @@ function decodeHistory(
       throw new DistanceMatrixError("CORRUPT_MATRIX");
     }
     previous = id;
-    return row;
+    if (!actualProvider) return row;
+    verifyMatrixProvider(endpoint ?? "", actualProvider);
+    return { ...row, actualProvider };
   });
   const data = summaries.slice(0, limit);
   return {

@@ -81,6 +81,26 @@ describe("distance-matrix/v1", () => {
     );
   });
 
+  it("binds provider identity through the hashed endpoint without changing the v1 preimage", () => {
+    const endpoint = "https://api.justrouting.tech/";
+    const original = buildDistanceMatrixSnapshot({ ...input, endpoint });
+    const hosted = {
+      ...input,
+      endpoint,
+      provenance: { ...input.provenance, actualProvider: "just-routing" },
+    };
+    expect(restoreDistanceMatrixSnapshot(hosted, original.matrixHash).provenance.actualProvider)
+      .toBe("just-routing");
+    expect(() => restoreDistanceMatrixSnapshot({
+      ...hosted, provenance: { ...input.provenance, actualProvider: "osrm-plus" },
+    }, original.matrixHash)).toThrow("INTEGRITY");
+    expect(() => restoreDistanceMatrixSnapshot({
+      ...hosted,
+      endpoint: "https://api.osrmplus.com/",
+      provenance: { ...input.provenance, actualProvider: "osrm-plus" },
+    }, original.matrixHash)).toThrow("INTEGRITY");
+  });
+
   it.each([
     ["shape", [[0, 1], [2]]],
     [
