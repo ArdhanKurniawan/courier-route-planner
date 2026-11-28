@@ -9,8 +9,8 @@ Dokumen project harus diperbarui bila platform mengubah plan/feature/runtime.
 
 Current source-of-truth:
 
-- [Research Decisions](32_RESEARCH_DECISIONS.md): accepted human decisions 2026-10-02, working RQ/gap dan OPEN decisions.
-- [Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN, directed 2-Opt, Classical Ant System.
+- [Research Decisions](32_RESEARCH_DECISIONS.md): keputusan scope 2026-11-28, usulan RQ, dan keputusan historis.
+- [Algorithm Specification](33_ALGORITHM_SPECIFICATION.md): NN, directed 2-Opt, dan kontrak ACO historis.
 - [OSRM Distance Contract](34_OSRM_DISTANCE_CONTRACT.md): frozen directed matrix dan infrastructure boundary.
 - [Benchmark Protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): experiment procedure.
 - [ADR-012](04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark): supersedes historical ADR-010.
@@ -24,7 +24,7 @@ Legacy external/workspace source names (tidak ditemukan sebagai file tracked pad
 
 ### Research literature TODO
 
-TODO-LIT-01: tambahkan bibliografi studi NN/NN+2-Opt vs ACO yang benar-benar diperiksa, dengan evidence untuk wording gap “masih terbatas”. TODO-LIT-02: simpan sumber nilai parameter Classical Ant System atau laporan calibration terpisah. Tidak ada numerical final ACO defaults atau referensi jurnal baru yang dibuat pada task ini. Official platform/API docs di bawah bukan pengganti literature evidence penelitian.
+TODO-LIT-01. Petakan literatur evaluasi kualitas NN sebelum dan sesudah 2-Opt, biaya berarah, dan skala dataset. Wording gap dan metode evaluasi memerlukan validasi akademik. TODO-LIT-02 untuk parameter atau kalibrasi Classical Ant System adalah catatan historis yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Dokumentasi platform melengkapi evidence engineering.
 
 ## OSRM technical sources
 
@@ -32,7 +32,7 @@ TODO-LIT-01: tambahkan bibliografi studi NN/NN+2-Opt vs ACO yang benar-benar dip
 - [Route Service API](https://project-osrm.org/docs/v5.24.0/api/#route-service): geometry sesuai supplied coordinate order.
 - [General request format](https://project-osrm.org/docs/v5.24.0/api/#general-options): longitude,latitude dan profile/options.
 
-Endpoint capabilities, usage policy, network extract/profile/version dan public vs local/self-hosted choice tetap perlu diverifikasi sebelum final generation. Referensi API ini membatasi engineering claims, tidak menetapkan scientific ACO parameters.
+Eligibility, compatibility, policy, dan provenance provider dalam rencana Multi-Provider perlu diverifikasi sebelum generasi formal. [Kontrak OSRM](34_OSRM_DISTANCE_CONTRACT.md)
 
 ## Official Next.js sources
 

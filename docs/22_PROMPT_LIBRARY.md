@@ -321,8 +321,7 @@ Implement seeded Dummy Order Generator.
 Primary pattern: random.
 Optional engineering patterns sesuai task: clustered, circular, directional.
 Optional patterns bukan mandatory primary experiment atau core novelty.
-Main evaluation adalah 10/25/50 customer, 10 independent datasets per ukuran.
-N=100 conditional/optional setelah pilot.
+Ukuran awal adalah 10, 25, dan 50 customer. Jumlah dataset per ukuran mengikuti validasi akademik.
 
 Requirements:
 - same seed+config => same generated coordinates/order identity;
@@ -371,10 +370,10 @@ Requirements:
 - depot=0 and stable saved customer/node order;
 - NxN including depot, unit meter, directed matrix, no symmetry assumption;
 - reject null/unreachable, invalid values/shape, no fallback metric;
-- reject zero off-diagonal at common ACO eligibility without epsilon substitution;
+- report zero off-diagonal without substituting values;
 - canonical input hash and matrix hash with versioned serialization;
 - immutable snapshot, provider/profile/options/version provenance;
-- same matrix/hash for NN+2-Opt and ACO;
+- use the same frozen matrix/hash for NN baseline and Hybrid;
 - tests for request/response order, failures, hashing, freeze, and replay;
 - no algorithm timing contamination by OSRM/DB/network/serialization.
 
@@ -437,7 +436,9 @@ Do not change NN behavior except integration adapter if necessary.
 
 ---
 
-# L. ACO PROMPT
+# L. ACO PROMPT — historical and deferred
+
+Template historis untuk Future Development. Gunakan hanya jika scope ACO dibuka kembali secara eksplisit. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ```text
 Implement Ant Colony Optimization domain module only, variant = Classical Ant System according to docs/33.
@@ -462,7 +463,7 @@ Mandatory tests:
 - no NaN/Infinity probabilities;
 - small matrix sanity.
 
-Do NOT add 2-Opt after ACO in main comparison or substitute another ACO variant.
+The archived contract keeps Classical Ant System without post-ACO 2-Opt.
 Require explicit parameters; do NOT hardcode final scientific numeric defaults.
 Fixture values are tests only. Final research values require literature/calibration evidence and one global configuration frozen separately from main evaluation datasets.
 ```
@@ -496,21 +497,19 @@ Implement benchmark orchestration according to docs/15_RESEARCH_BENCHMARK_PROTOC
 
 Requirements:
 - one frozen case -> frozen OSRM directed meter matrix with verified input/matrix hash;
-- run NN+2Opt and Classical Ant System against exact same matrix/order/hash;
-- main 10/25/50 x 10 independent random datasets; 100 optional after pilot;
-- separate calibration/evaluation, one frozen global ACO configuration;
-- 5 warmups per algorithm/dataset, excluded from measured statistics;
-- 30 independent seeded ACO runs with predetermined saved seeds;
-- NN+2Opt one deterministic quality output plus 30 timing repetitions;
+- run Hybrid NN + 2-Opt and record initial NN distance and final distance from the exact same matrix/order/hash;
+- use Research Provider Lock and save actual provider provenance;
+- initial sizes are 10, 25, and 50 customers;
+- evaluate only with an academically reviewed dataset, warm-up, repetition, and statistical plan;
 - timing only around algorithm execution;
 - OSRM/DB/HTTP/network/serialization/geometry/rendering excluded from execution timer;
-- seed/run metadata saved;
+- save dataset seed when used and preserve run metadata;
 - invalid route rejected;
 - raw run results saved before summary;
 - summary computed from raw runs.
 - keep all poor valid/failed run records, no silent replacements/cherry-picking;
-- primary quality comparison ACO mean/median, best additional; report SD/range/CV;
-- dataset-level summaries are independent observations, not 30 runs as 30 datasets;
+- report before/after distance, absolute/percentage improvement, computation runtime, and scalability;
+- aggregate at dataset level and keep timing repetitions within their source dataset;
 - mark incomplete planned run sets, preserve attempt identities and failure causes.
 
 Do NOT use Vercel timing as formal scientific benchmark result.
@@ -529,7 +528,7 @@ Check:
 - auth/authorization gaps;
 - SQL injection/raw SQL;
 - XSS/dangerouslySetInnerHTML;
-- unbounded ACO parameters/resource abuse;
+- unbounded optimization or benchmark requests/resource abuse;
 - destructive endpoints;
 - production DB reachable from preview;
 - error leakage;

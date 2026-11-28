@@ -24,7 +24,7 @@ Test:
 - asymmetric matrix accepted; tidak mengasumsikan d(i,j)==d(j,i);
 - null/unreachable/missing pair rejected;
 - stable node order, canonical meter, input/matrix hashes;
-- ACO preflight zero off-diagonal rejection sesuai [docs/33](33_ALGORITHM_SPECIFICATION.md), tanpa mengganti nilai matrix.
+- zero off-diagonal dilaporkan tanpa mengubah nilai matrix sesuai [docs/34](34_OSRM_DISTANCE_CONTRACT.md).
 
 ### Nearest Neighbor
 
@@ -50,9 +50,11 @@ Test:
 - symmetric-only delta shortcut tidak boleh lolos tests;
 - equal/worse candidate tidak diterima, hasil <= NN input.
 
-### ACO
+### ACO — referensi historis
 
-Test:
+Checklist ACO berikut disimpan sebagai referensi Future Development. Scope QA aktif memeriksa Hybrid NN + 2-Opt dan baseline NN. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
+
+Tes historis:
 
 - valid route;
 - fixed seed reproducibility;
@@ -77,7 +79,7 @@ valid closed tour
 + recomputed distance matches
 ```
 
-Tambahkan 0/1/2 customer sesuai contract, known small instances, input immutability, fixed-seed reproducibility, dan generated directed matrices. ACO tidak diwajibkan selalu menang atas NN. Fixtures adalah test data, bukan final scientific defaults atau main datasets.
+Tambahkan 0/1/2 customer, known small instances, immutable input, deterministic reruns, dan generated directed matrices. Fixture sintetis dipakai untuk verifikasi solver. Dataset evaluasi ditetapkan terpisah.
 
 ## 4. Integration tests
 
@@ -88,11 +90,11 @@ Test service + TiDB Dev/Test database untuk:
 - save experiment;
 - route history reconstruction.
 - frozen matrix persistence, immutable setelah order edit;
-- same matrix hash/values/node order untuk kedua algorithms;
+- same matrix hash/values/node order untuk baseline NN dan hasil Hybrid, dengan actual provider provenance;
 - timer excludes OSRM/DB/HTTP/network/serialization/geometry/rendering;
 - raw run persistence sebelum summary; failed/poor runs tidak cherry-picked away;
-- 5 warm-ups dikecualikan, 30 seeded ACO runs dan 30 NN+2-Opt timing samples per dataset;
-- calibration/main identities terpisah, satu global config, dataset-level aggregation;
+- warm-up dan repetisi mengikuti protokol setelah validasi akademik;
+- pilot dan evaluasi dipisahkan, dengan dataset-level aggregation;
 - failed run tetap tersimpan dan incomplete dataset tidak dianggap complete.
 
 OSRM adapter tests memakai mocked responses untuk timeout/provider/null/shape/hash errors; live routability/provider verification terpisah sebelum freeze data formal. Unit algorithms tidak bergantung network.
@@ -108,7 +110,7 @@ Playwright critical flows:
 3. open map;
 4. run small optimization;
 5. view result;
-6. compare algorithms.
+6. compare NN initial distance dan Hybrid distance, lalu verifikasi improvement.
 
 ## 6. Manual QA
 

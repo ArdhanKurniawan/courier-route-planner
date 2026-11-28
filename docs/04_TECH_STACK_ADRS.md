@@ -190,6 +190,8 @@ Detail: `docs/30_UI_TEMPLATE_GUIDE.md`.
 **Date:** 2026-10-02
 **Authority:** Keputusan eksplisit manusia pada task corrective documentation + research contract sync.
 
+**Addendum scope — 2026-11-28.** Keputusan MVP mengganti comparison ACO di bawah dengan baseline NN dan hasil Hybrid NN + 2-Opt pada matriks yang sama. Persyaratan frozen directed OSRM Table dan pemisahan geometry tetap berlaku. Rencana Multi-Provider OSRM dan Research Provider Lock dicatat sebagai target. Paragraf keputusan 2026-10-02 dipertahankan sebagai riwayat. [Research decisions](32_RESEARCH_DECISIONS.md) · [Kontrak OSRM](34_OSRM_DISTANCE_CONTRACT.md)
+
 ### Context
 
 ADR-010 menunda OSRM dan dokumen sebelumnya mengarahkan formal input pada distance methodology yang belum dikunci. Penelitian sekarang memerlukan identical road-network input untuk comparison NN+2-Opt vs ACO, serta input yang bisa diaudit ulang meski layanan jalan berubah.

@@ -1,11 +1,11 @@
 # 33 — ALGORITHM SPECIFICATION
 
-**Status:** Approved implementation contract, 2026-10-02; belum merupakan implementasi.
+**Status — 2026-11-28.** Phase 4 Hybrid NN + 2-Opt selesai di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). ACO merupakan kontrak historis yang ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 Rujukan: [research decisions](32_RESEARCH_DECISIONS.md), [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md), [matrix contract](34_OSRM_DISTANCE_CONTRACT.md).
 
 ## 1. Common optimizer input contract
 
-Input geografi optimizer hanya **DistanceMatrix** yang sudah divalidasi, ditambah parameter algoritma/seed bila diperlukan. Tidak ada coordinates, provider, HTTP, DB, atau UI dalam core. Metadata ID/hash dipetakan application layer di luar solver.
+Input solver aktif adalah **DistanceMatrix** tervalidasi. Tidak ada coordinates, provider, HTTP, DB, atau UI dalam core. Metadata ID/hash dipetakan application layer di luar solver.
 
 ```ts
 type DistanceMatrix = ReadonlyArray<ReadonlyArray<number>>;
@@ -15,28 +15,15 @@ type NNTwoOptDiagnostics = Readonly<{
   twoOptPasses?: number;
   acceptedImprovements?: number;
 }>;
-type AntSystemDiagnostics = Readonly<{
-  iterationsCompleted?: number;
-  bestIteration?: number;
-}>;
-type AntSystemParameters = Readonly<{
-  alpha: number;
-  beta: number;
-  rho: number;
-  Q: number;
-  tau0: number;
-  antCount: number;
-  maxIterations: number;
-}>;
 type OptimizerResult = Readonly<{
   route: Route;
   totalDistanceM: number;
-  algorithm: 'NN_2OPT' | 'ACO';
-  diagnostics?: NNTwoOptDiagnostics | AntSystemDiagnostics;
+  algorithm: 'NN_2OPT';
+  diagnostics: NNTwoOptDiagnostics;
 }>;
 ```
 
-Ini conceptual types, bukan file source yang sudah tersedia. Seed dan PRNG version harus eksplisit pada pemanggilan ACO dan run metadata. Core tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, OSRM HTTP client, atau session/cookies. Tidak boleh memutasi matrix atau initial route milik caller.
+Implementasi ada di [solver Hybrid](../src/domain/nn-two-opt.ts) dan [validator](../src/domain/route-validator.ts). Core tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, OSRM HTTP client, atau session/cookies. Tidak boleh memutasi matrix atau initial route milik caller.
 
 ## 2. Directed matrix and route distance
 
@@ -50,7 +37,7 @@ L(R) = sum(k=0..n) D[r_k][r_(k+1)]     [meter]
 
 Gunakan seluruh directed edges, termasuk return edge ke depot. Jangan round matrix sebelum optimasi; pembulatan hanya display. Penjumlahan yang overflow/non-finite adalah error.
 
-ACO dengan eta=1/d memerlukan off-diagonal distance positif pada kasus nontrivial. Matrix dengan zero off-diagonal dapat lolos validasi bentuk/jarak umum, tetapi harus ditolak pada ACO preflight dengan error eksplisit. Jangan diam-diam memasukkan epsilon, mengganti jarak, atau menggabungkan customer. Aturan penerimaan koordinat yang menyebabkan zero distance harus diselesaikan sebelum freeze data formal; semua algoritma memakai eligibility dataset yang sama.
+Laporkan zero off-diagonal sebagai bukti kualitas data dan tetapkan penanganannya sebelum pengumpulan formal. Biaya tetap sesuai matriks frozen, termasuk nilai nol. [Kontrak matriks](34_OSRM_DISTANCE_CONTRACT.md)
 
 ## 3. Nearest Neighbor (NN)
 
@@ -82,7 +69,7 @@ Invariant: **distance(NN + 2-Opt) <= distance(NN)**. n=0/1 tidak punya reversal 
 
 ## 5. ACO variant: Classical Ant System
 
-Main comparison menggunakan **Classical Ant System**, tanpa 2-Opt setelah ACO, tanpa elitist/best-only deposit, ACS local update, atau Max-Min clipping tersembunyi.
+**Historis dan deferred.** Bagian ini menyimpan kontrak varian Classical Ant System sebagai referensi. ACO tidak menjadi prerequisite MVP, Run Optimization, Experiments, Results, atau Export. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75) · [Implementasi arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55)
 
 ### Explicit parameters and validation
 
@@ -92,7 +79,7 @@ Main comparison menggunakan **Classical Ant System**, tanpa 2-Opt setelah ACO, t
 - antCount, maxIterations: positive safe integers;
 - seed: eksplisit dalam format yang didukung seeded PRNG version yang dicatat.
 
-Tidak ada nilai numerik final/default ilmiah di specification ini. Runner formal mewajibkan parameter lengkap dari satu global configuration yang dibekukan setelah literature justification/calibration. Numeric unit-test values harus diberi label fixture, bukan rekomendasi penelitian.
+Tidak ada nilai numerik final/default ilmiah di specification ini. Rancangan ACO historis menetapkan parameter eksplisit dari satu konfigurasi global setelah justifikasi literatur dan kalibrasi. Numeric unit-test values harus diberi label fixture, bukan rekomendasi penelitian.
 
 ### Initialization and transition
 
@@ -126,21 +113,21 @@ Track best observed valid route pada seluruh ant/iterasi; pada equal cost pertah
 
 Same matrix + parameters + seed + PRNG/algorithm version + compatible runtime → route, cost, dan iteration count yang reproducible; execution time tidak diwajibkan identik. Jangan gunakan Math.random/timestamp seed untuk formal run. Seed list predetermined dicatat runner.
 
-n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
+n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung.
 
 ## 6. Output and RouteValidator
 
-Common result mengembalikan route indices, totalDistanceM dan algorithm. `diagnostics` opsional dan mengikuti algorithm; field berikut hanya dikembalikan bila diperlukan, bukan shared mandatory fields atau main research metrics baru.
+Hasil Hybrid mengembalikan route indices, `totalDistanceM`, `algorithm`, dan `diagnostics`. `nnInitialDistanceM` menyediakan baseline untuk menghitung perbaikan absolut dan persentase dengan matriks yang sama.
 
 | Algorithm | Optional diagnostic | Arti bila disertakan |
 |---|---|---|
 | NN_2OPT | nnInitialDistanceM | Full directed distance hasil NN sebelum 2-Opt, dalam meter |
 | NN_2OPT | twoOptPasses | Jumlah pass evaluasi candidate yang selesai, termasuk pass terakhir tanpa improvement; 0 bila tidak ada candidate (n=0/1) |
 | NN_2OPT | acceptedImprovements | Jumlah penggantian route dengan best strict improvement yang diterima; tidak menghitung pass terakhir tanpa improvement |
-| ACO | iterationsCompleted | Jumlah iterasi Ant System yang selesai; maxIterations pada successful nontrivial run, 0 pada n=0 |
-| ACO | bestIteration | Nomor iterasi mulai dari 1 saat final best route pertama ditemukan; tidak ada pada n=0 |
+| ACO (historis) | iterationsCompleted | Jumlah iterasi Ant System yang selesai pada implementasi arsip. |
+| ACO (historis) | bestIteration | Iterasi ketika best route pertama ditemukan pada implementasi arsip. |
 
-`iterationsCompleted` tidak dipakai untuk NN/2-Opt dan tidak disamakan dengan twoOptPasses atau acceptedImprovements. Diagnostic tidak mengubah stopping criterion atau failure policy; run parsial tetap failure. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
+`iterationsCompleted` berbeda dari `twoOptPasses` dan `acceptedImprovements`. Application layer menambahkan matrix/input hash, actual provider provenance, node mapping, versi, identitas pengukuran, timer, status, dan metadata environment.
 
 RouteValidator independen memeriksa:
 
@@ -155,18 +142,18 @@ Route invalid tidak boleh diperbaiki dengan dedupe/reordering setelah solver lal
 
 ## 7. Timer boundaries
 
-Runner controlled local environment melakukan matrix load/hash verification, external validation dan penyusunan parameter sebelum timer. Timer monotonic high-resolution membungkus pemanggilan algoritma saja. NN+2-Opt diukur sebagai satu pipeline; ACO mencakup PRNG initialization, pheromone initialization, konstruksi ant, update, dan best tracking. Tidak ada cached solver state antar repetition.
+Runner controlled local environment melakukan matrix load/hash verification, external validation dan penyusunan parameter sebelum timer. Timer monotonic high-resolution membungkus pemanggilan algoritma saja. NN + 2-Opt diukur sebagai satu pipeline. Tidak ada cached solver state antar repetition.
 
-Independent post-run RouteValidator, persistence, aggregation, serialization, OSRM/HTTP/network, DB, geometry generation, dan Leaflet/rendering berada di luar timer. Pemeriksaan internal yang memang dilakukan solver tetap termasuk computation. Ikuti 5 warm-ups dan 30 repetitions pada [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md).
+Independent post-run RouteValidator, persistence, aggregation, serialization, OSRM/HTTP/network, DB, geometry generation, dan Leaflet/rendering berada di luar timer. Pemeriksaan internal yang memang dilakukan solver tetap termasuk computation. Warm-up dan repetisi mengikuti keputusan setelah validasi akademik. [Protokol evaluasi](15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 ## 8. Error taxonomy
 
 | Code | Boundary / meaning |
 |---|---|
 | DISTANCE_MATRIX_INVALID | Shape, diagonal, range, non-finite, null/unreachable invalid |
-| ALGORITHM_PARAMETER_ERROR | Parameter/seed tidak sesuai contract |
-| ALGORITHM_DISTANCE_DOMAIN_ERROR | Nontrivial ACO input mengandung zero off-diagonal |
-| ALGORITHM_NUMERICAL_ERROR | Non-finite route sum, invalid probability/pheromone |
+| ALGORITHM_PARAMETER_ERROR | Historis ACO. Parameter/seed di luar kontrak arsip. |
+| ALGORITHM_DISTANCE_DOMAIN_ERROR | Historis ACO. Input nontrivial mengandung zero off-diagonal. |
+| ALGORITHM_NUMERICAL_ERROR | Non-finite route sum. Dalam ACO arsip juga mencakup invalid probability/pheromone. |
 | ALGORITHM_INVALID_ROUTE | RouteValidator gagal atau initial 2-Opt route invalid |
 | BENCHMARK_INPUT_MISMATCH | Runner menemukan input/node order/matrix hash berbeda |
 | BENCHMARK_RUN_FAILED | Run interrupted/exception; simpan cause dan run identity |
@@ -204,8 +191,8 @@ Valid initial route [0,1,2,3,0] cost 16. Reversal [1..2] memberi [0,2,1,3,0] cos
 - All off-diagonal=1 untuk lowest-index NN tie: [0,1,2,...,n,0].
 - 0/1/2 customer, empty matrix rejected, invalid route, asymmetric/symmetric inputs.
 - Best-improvement fixture: enumerasi semua candidates secara independen, pastikan accepted move terbaik, bukan sekadar yang pertama membaik.
-- Seeded ACO repeatability, invalid params, zero off-diagonal rejection, finite probabilities/pheromone; directed deposit termasuk return edge dari **semua** ants.
+- Fixture ACO historis tersedia pada [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55).
 
 ## 10. Property/invariant tests
 
-Generated finite matrices (positive off-diagonal untuk ACO), termasuk asymmetric, harus selalu menghasilkan valid closed tours, preserve input, dan cost recomputation cocok. 2-Opt tidak lebih buruk dari NN. ACO fixed-seed result identik; jangan mewajibkan ACO mengalahkan NN atau mencapai optimum pada setiap fixture. Pada small instance boleh exhaustive enumeration sebagai test oracle tanpa mengubah metode penelitian.
+Generated finite matrices, termasuk matriks asimetris, harus menghasilkan valid closed tours dan mempertahankan input. Recompute directed cost secara independen dan verifikasi jarak Hybrid tidak melebihi baseline NN. Exhaustive enumeration pada fixture kecil dapat dipakai sebagai test oracle.

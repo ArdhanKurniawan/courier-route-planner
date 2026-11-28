@@ -113,13 +113,15 @@ Dan set customer output = set customer input.
 
 Recompute route distance secara fungsi terpisah. Jangan mempercayai `totalDistance` yang dikembalikan algoritma sendiri.
 
-Gunakan frozen OSRM directed matrix dalam meter; cocokkan input hash, node order dan matrix hash di kedua metode. Jangan hanya mencocokkan coordinates atau nama scenario. Matrix/benchmark case tetap immutable setelah orders diedit.
+Gunakan frozen OSRM directed matrix dalam meter; cocokkan input hash, node order dan matrix hash pada baseline NN dan hasil Hybrid. Jangan hanya mencocokkan coordinates atau nama scenario. Matrix/benchmark case tetap immutable setelah orders diedit.
 
 ### NN and 2-Opt
 
 NN: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt: best improvement setelah semua candidates, reverse segment dan full directed recomputation. Jalankan asymmetric fixtures di [docs/33](33_ALGORITHM_SPECIFICATION.md); jangan menerima symmetric-only two-boundary-edge delta. Hasil final harus <= NN distance.
 
-### ACO reproducibility
+### ACO reproducibility — historical review criteria
+
+Kriteria ini berlaku pada implementasi arsip yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Run dua kali dengan same seed + same matrix + same params.
 
@@ -133,11 +135,11 @@ Pastikan varian Classical Ant System: directed pheromone, semua valid ants depos
 
 ### Benchmark evidence
 
-Periksa [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 × 10 random datasets; N=100 conditional, other patterns optional; calibration terpisah dan satu global configuration frozen. Per dataset ada 30 independent seeded ACO runs, 30 NN+2-Opt timing samples, dan 5 warm-ups yang dikeluarkan. ACO mean/median pembanding utama, best tambahan. Dataset-level observations tidak diganti dengan jumlah runs. Raw poor-valid/failed runs tetap ada.
+Periksa usulan ukuran 10, 25, dan 50 customer, exact frozen matrix, provenance, dan metrik jarak NN awal, jarak Hybrid, improvement, runtime, serta skalabilitas. RQ, jumlah dataset, repetisi, warm-up, dan statistik memerlukan validasi akademik. Simpan raw attempts dan gunakan dataset sebagai unit observasi. [Protokol evaluasi](15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 Timer harus mengecualikan OSRM/DB/network/serialization/geometry/rendering dan dijalankan terkontrol di luar runtime Vercel. Untuk task dokumentasi, periksa keselarasan sumber dengan MASTER_GUIDE/MANIFEST; application lint/build tidak membuktikan metodologi penelitian.
 
-Periksa dataset ordinal mapping dan balanced execution schedule yang disimpan terhadap [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary), termasuk warm-up tepat sebelum masing-masing measured block.
+Periksa pemetaan dataset dan jadwal eksekusi yang disetujui terhadap [protocol bagian 6](15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary).
 
 ## 8. AI review trap
 

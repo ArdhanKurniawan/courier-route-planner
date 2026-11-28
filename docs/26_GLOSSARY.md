@@ -28,7 +28,7 @@
 
 **ACO** — Ant Colony Optimization, metaheuristic stochastic berbasis pheromone/heuristic information.
 
-**Classical Ant System** — varian ACO main comparison: directed pheromone, roulette-wheel selection, fixed iterations, evaporation dan deposit dari semua valid ants, tanpa post-ACO 2-Opt.
+**Classical Ant System** — varian ACO yang diarsipkan sebagai Future Development: directed pheromone, roulette-wheel selection, fixed iterations, evaporation dan deposit dari semua valid ants, tanpa post-ACO 2-Opt.
 
 **Seed** — nilai awal RNG agar data/run stochastic dapat direproduksi.
 
@@ -38,7 +38,7 @@
 
 **Matrix Hash** — SHA-256 canonical content yang mengikat input hash, node order, provider/config/unit dan matrix values; dipakai untuk memverifikasi same-matrix fairness.
 
-**Calibration Dataset** — input tuning yang terpisah dari main evaluation; menghasilkan satu global ACO configuration frozen.
+**Calibration Dataset (historis)** — input tuning yang terpisah dari main evaluation dalam rancangan ACO terdahulu.
 
 **CV** — coefficient of variation, SD/mean (atau persen bila dilabeli); tidak ada threshold baik/buruk tanpa source.
 

@@ -36,8 +36,7 @@ Fokus adalah **sequence of visits**, bukan shortest path satu pasangan node.
 - frozen directed OSRM Table road-network distance matrix, meter, input/matrix hash;
 - Nearest Neighbor;
 - best-improvement 2-Opt dengan full directed route recomputation;
-- ACO / Classical Ant System tanpa post-ACO 2-Opt;
-- benchmark pada input yang sama;
+- evaluasi NN awal dan hasil Hybrid pada frozen Benchmark Case serta matriks yang sama;
 - total distance;
 - execution time;
 - route sequence;
@@ -58,7 +57,8 @@ Fokus adalah **sequence of visits**, bukan shortest path satu pasangan node.
 - fleet payroll;
 - multi-depot VRP;
 - dynamic vehicle capacity;
-- optimization menggunakan paid map API.
+- optimization menggunakan paid map API;
+- integrasi ACO Classical Ant System yang ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 ## 6. Constraints
 
@@ -79,11 +79,11 @@ MVP dianggap berhasil bila:
 3. dummy order dapat dibuat dan diedit;
 4. map menampilkan depot dan customer;
 5. NN+2-Opt menghasilkan closed tour valid;
-6. ACO menghasilkan closed tour valid;
-7. kedua metode menerima benchmark input yang identik;
+6. baseline NN menghasilkan closed tour valid;
+7. jarak NN dan Hybrid dihitung dengan matriks dan identitas snapshot yang sama;
 8. hasil jarak dapat diverifikasi ulang;
 9. execution time tercatat;
-10. ACO mendukung seeded run;
+10. perbaikan absolut dan persentase dapat ditelusuri ke dua jarak tersebut;
 11. CI lulus sebelum release;
 12. tidak ada secret di Git;
 13. production DB tidak digunakan oleh preview branch.
@@ -96,10 +96,10 @@ MVP dianggap berhasil bila:
 - algorithm parameter dicatat;
 - git commit SHA dicatat;
 - environment benchmark dicatat;
-- hasil ACO multi-run dapat dianalisis;
+- jarak sebelum/sesudah, besaran perbaikan, dan runtime dapat dianalisis menurut jumlah customer;
 - hasil route dapat direkonstruksi.
 
-Main design: 10/25/50 customer, masing-masing 10 independent random datasets. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan. ACO 30 independent seeded runs, NN+2-Opt satu quality result dan 30 timing repetitions, 5 warm-ups per algoritma/dataset. Calibration datasets terpisah dan satu global ACO configuration dibekukan. RQ/metrics mengikuti [research decisions](32_RESEARCH_DECISIONS.md) dan [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md).
+Ukuran awal adalah 10, 25, dan 50 customer. RQ dan rincian rancangan evaluasi, termasuk jumlah dataset, repetisi, dan analisis, masih memerlukan validasi akademik. [Research decisions](32_RESEARCH_DECISIONS.md) · [Protokol evaluasi](15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 OSRM adalah input infrastructure, bukan algoritma penelitian. Geometry terpisah; timer formal hanya algorithm execution pada environment terkontrol, tanpa OSRM/DB/network/serialization/geometry/rendering.
 

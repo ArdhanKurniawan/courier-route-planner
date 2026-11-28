@@ -4,13 +4,15 @@
 > **DO NOT EDIT AS PRIMARY SOURCE**
 > If conflict exists, AGENTS.md + individual source documents + latest accepted ADR/human decision win. Follow the precedence and STOP rule in AGENTS.md for unresolved conflicts.
 
-Derived from the source list below, in order. Regenerated 2026-11-21. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
+Derived from the source list below, in order. Bagian scope penelitian dan rujukan terdampak diperbarui 2026-11-28. Relative Markdown links are rebased to this repository root; fragment-only links point back to their source file. Source content otherwise remains unchanged (line endings normalized to LF).
 
 Current administrative status: **Gate 1 CLOSED — 2026-10-24** after final human acceptance. Phase 1A–1C and Phase 2A are implemented on Testing. Phase 1C Order CRUD live integration and migration 0002 Development/Testing passed. The owner observed the synthetic Order and Map flow. Browser/security QA for the Phase 1C and 2A release passed based on the owner's Testing Preview evidence received on 2026-11-13. Gate 2 remains OPEN. [Gate 1 closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) · [Testing UAT](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 Live Acceptance Phase 2B untuk Dummy Generator, Save & Regenerate, Orders, dan Map lulus di Testing pada 2026-11-15. Migrasi `0003` dan cleanup fixture terverifikasi di Testing. Part E.5 mengonfirmasi edit dan hapus generated Order. Owner mengonfirmasi kontrak GET detail Part E.6 di Testing pada 21 November 2026. Fault injection live `COMMIT_UNKNOWN` tetap **NOT TESTED**. Phase 2B di Production **NOT RELEASED** dan writer belum diaktifkan. Mode Production default `disabled`. Mode `recovery` membuka status dan rekonsiliasi ledger. Mode `enabled` memerlukan konfigurasi eksplisit, kesiapan database Production, dan persetujuan aktivasi. [Bukti Live Acceptance](docs/14_TESTING_QA.md#23-live-acceptance-phase-2b-di-testing-2026-11-15) · [Bukti Part E.5 dan E.6](docs/14_TESTING_QA.md#25-kontrak-get-setelah-cleanup-phase-2b-part-e5) · [Kontrak writer Part E](docs/04_TECH_STACK_ADRS.md#addendum-part-e--production-safe-writer)
 
 Production migrations `0001` and `0002` were applied and verified on 2026-11-13. The mysql2 and Drizzle runner from Testing baseline `eba494b` completed in one invocation with exit code `0`. A read-only check verified the ledger and schema. Release review and post-deployment smoke testing are pending. [Production migration evidence](docs/14_TESTING_QA.md#migrasi-production-dan-status-rilis-2026-11-13)
+
+**Scope aktif — 2026-11-28.** Phase 4 Hybrid NN + 2-Opt selesai di Testing. Baseline NN dan hasil Hybrid berbagi frozen Benchmark Case serta OSRM matrix. ACO diarsipkan melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). RQ dan rancangan evaluasi menunggu validasi akademik. Multi-Provider OSRM masih direncanakan. [Keputusan penelitian](docs/32_RESEARCH_DECISIONS.md) · [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ---
 
@@ -26,8 +28,6 @@ Production migrations `0001` and `0002` were applied and verified on 2026-11-13.
 **Tujuan:** menjadi source-of-truth teknis, proses kerja tim, panduan onboarding, panduan penggunaan AI coding agent, dan protokol verifikasi untuk project **Sistem Optimasi Rute Pengiriman Paket Berbasis Web**.
 
 > Dokumen ini dirancang dengan standar engineering yang ketat, tetapi tetap disesuaikan dengan konteks project mahasiswa S1, tim kecil, dan target biaya **Rp0**. Istilah “production” di dokumen ini berarti environment live/demo yang stabil; bukan klaim SLA enterprise/commercial production.
-
-> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
 
 **Phase 1C dan 2A:** Migrasi `0002` Development/Testing, Testing Order CRUD live integration, dan Quality Gate Testing sudah PASS. Owner mengamati alur Order sintetis dari pembuatan, edit koordinat dan perpindahan marker, hingga penghapusan dan daftar kembali kosong. Browser/security QA masih **PARTIAL**. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
@@ -47,17 +47,19 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 - Branch: `main`, `testing`, `feature/*`, `fix/*`, `hotfix/*`, `chore/*`.
 - CI: **GitHub Actions** untuk lint/typecheck/test/build.
 - Deploy: **Vercel Git Integration**.
-- Algoritma penelitian:
-  - Hybrid **Nearest Neighbor + 2-Opt**.
-  - **Ant Colony Optimization (ACO) / Classical Ant System**, tanpa 2-Opt sesudah ACO pada main comparison.
-- Fokus pengujian: total distance, execution time, scalability, consistency/stability.
+- **Hybrid Nearest Neighbor + 2-Opt** adalah satu-satunya optimizer aktif dalam MVP. Rute awal NN menjadi baseline evaluasi pada matriks yang sama. ACO tersimpan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
+- Evaluasi yang diusulkan mencatat jarak awal NN, jarak akhir, perbaikan absolut dan persentase, waktu komputasi, serta skalabilitas.
 - OSRM Table Service: **approved core infrastructure** untuk frozen road-network distance matrix formal, unit meter, directed/asymmetric. OSRM bukan algoritma penelitian; Route/geometry terpisah untuk visualisasi.
 - NN deterministic: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt best improvement memakai full directed route recomputation.
-- Main experiment: **10/25/50 customer × 10 independent random datasets = 30 datasets**. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
-- Calibration terpisah dari evaluation; satu global ACO configuration dibekukan. ACO 30 independent seeded runs per dataset; NN+2-Opt satu quality result dan 30 timing repetitions; 5 warm-ups per algoritma/dataset.
-- Kedua metode memakai input dan matrix hash identik. Timer hanya algoritma, tanpa OSRM/DB/network/serialization/geometry/rendering, pada environment terkontrol di luar runtime Vercel.
+- Ukuran dataset awal **10, 25, dan 50 customer**. RQ, research gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
+- Jarak NN awal dan Hybrid memakai frozen Benchmark Case dan matriks/hash identik. Timer solver berada di environment terkontrol di luar Vercel.
+- Rencana Multi-Provider OSRM memakai Just Routing Free sebagai primary, OSRMPlus Free sebagai secondary, serta FOSSGIS opsional. Operational Mode dirancang dengan failover/failback. Research Mode dirancang dengan explicit provider lock. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## Current Implementation Status
+
+**Status Testing — 2026-11-28.** Phase 4 Hybrid NN + 2-Opt selesai melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74) dengan post-merge Quality Gate lulus pada baseline `c5b8684`. Migration `0005` lulus verifikasi Testing. Multi-Provider OSRM, Run Optimization, Experiments, Results, dan Export masih target pengembangan dalam scope Hybrid. Bukti fondasi sebelumnya dicatat di bawah.
+
+### Historical Gate 1 — accepted foundation 2026-10-24
 
 Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890` mempunyai file tree identik setelah PR #26. Quality Gate kedua SHA PASS; reproduksi Chacha pada laptop kedua Windows 10 PASS berdasarkan evidence owner/human attestation. Production deployment dan minimum smoke 24 Oktober diterima secara composite; pemisahan environment memakai accepted provisioning/configuration evidence dan konektivitas, bukan direct physical runtime SQL identity. Runtime audit 0; full audit 4 Moderate dev-only tetap residual risk. [Gate 1](docs/23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) CLOSED; [closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) mencatat provenance dan limitations.
 
@@ -223,7 +225,7 @@ Setelah itu baca dokumen spesifik sesuai pekerjaan.
 | `30_UI_TEMPLATE_GUIDE.md` | Keputusan TailAdmin, download, cleanup, license & UI adoption |
 | `31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | Pencegahan commit/push tidak sengaja ke main/testing, GitHub protection, local hooks & recovery |
 | [32_RESEARCH_DECISIONS.md](docs/32_RESEARCH_DECISIONS.md) | RQ, scope, design eksperimen, metrics, dan keputusan OPEN |
-| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, Classical Ant System, validator dan fixtures |
+| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, validator, fixtures, dan referensi ACO historis |
 | [34_OSRM_DISTANCE_CONTRACT.md](docs/34_OSRM_DISTANCE_CONTRACT.md) | OSRM Table matrix, hashing/freeze, fairness dan reproducibility |
 | `THIRD_PARTY_NOTICES.md` | Provenance/license third-party penting |
 
@@ -272,22 +274,20 @@ Core problem adalah **multi-stop route sequencing / TSP-like closed tour**, buka
 2. Depot adalah titik awal dan titik akhir.
 3. Order/customer memiliki latitude dan longitude.
 4. Dummy order harus dapat diedit.
-5. Algoritma penelitian utama:
-   - Nearest Neighbor + 2-Opt.
-   - Ant Colony Optimization.
-6. Kedua algoritma harus menerima **input dan distance matrix yang sama** pada benchmark yang sama.
+5. Satu-satunya metode optimasi aktif dalam MVP adalah **Hybrid Nearest Neighbor + 2-Opt**. ACO ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
+6. Baseline NN dan hasil Hybrid memakai **input serta distance matrix frozen yang sama**.
 7. OSRM bukan algoritma penelitian utama. OSRM Table Service adalah approved core input infrastructure untuk formal road-network distance matrix; Route/geometry terpisah dari optimizer.
 8. Jangan mengganti problem menjadi Dijkstra/A* source-to-destination.
 9. Formal research benchmark **tidak boleh bergantung pada runtime Vercel**; benchmark resmi dijalankan pada environment terkontrol dan dicatat.
 10. Jangan memperlakukan latitude/longitude mentah sebagai Cartesian kilometer tanpa metode yang disetujui penelitian.
-11. Formal matrix frozen dalam meter, directed/asymmetric, stable node order, tanpa unreachable pair, dengan input hash dan matrix hash. Jangan mengasumsikan symmetry atau membangun matrix berbeda per algoritma.
+11. Formal matrix frozen dalam meter, directed/asymmetric, stable node order, tanpa unreachable pair, dengan input hash dan matrix hash. Jangan mengasumsikan symmetry atau menggunakan matriks berbeda untuk baseline NN dan hasil Hybrid.
 12. NN deterministic: depot index 0, minimum directed cost, tie-break lowest node index. 2-Opt best improvement wajib full route recomputation pada reversal dan hanya menerima strict improvement; hasil tidak lebih buruk dari NN.
-13. ACO = Classical Ant System, seeded PRNG, directed pheromone, fixed iterations, deposit semua valid ants. Jangan menambah 2-Opt setelah ACO pada main comparison atau mengarang final numeric parameters.
-14. Main: 10/25/50 customer, masing-masing 10 independent random datasets (30 total). N=100 conditional setelah pilot; clustered/circular/directional hanya optional/additional experiment.
-15. Calibration terpisah dari evaluation; satu global ACO configuration frozen. ACO 30 independent seeded runs per dataset, NN+2-Opt satu quality result + 30 measured timing repetitions; 5 warm-ups per algoritma/dataset, dikecualikan dari statistik.
-16. Algorithm timer mengecualikan OSRM, DB, HTTP/network, serialization, geometry generation, dan rendering. Raw failed/poor runs dipertahankan; ACO mean/median pembanding utama, best tambahan.
+13. Evaluasi mencatat jarak NN awal, jarak hasil 2-Opt, perbaikan absolut/persentase, waktu komputasi, serta skalabilitas berdasarkan jumlah customer.
+14. Ukuran dataset awal adalah 10, 25, dan 50 customer.
+15. RQ revisi, research gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik.
+16. Algorithm timer mengecualikan OSRM, DB, HTTP/network, serialization, geometry generation, dan rendering. Pertahankan raw results, termasuk run gagal dan hasil dengan perbaikan kecil atau nol.
 
-Kontrak penelitian wajib: [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md), [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md), [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md), serta [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Perubahan ini mencatat keputusan manusia 2026-10-02; parameter numerik ACO dan keputusan OPEN tetap memerlukan evidence/keputusan lanjutan.
+Kontrak penelitian wajib: [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md), [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md), [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md), serta [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Keputusan scope owner 2026-11-28 menggantikan rancangan comparison 2026-10-02 untuk MVP. Jejak historis tersedia pada dokumen penelitian.
 
 ## 3. Locked engineering stack
 
@@ -398,7 +398,7 @@ Pure input → pure-ish result
 **Dilarang:**
 
 ```text
-route.ts berisi 500 baris ACO + DB + UI concern
+route.ts mencampur core solver, DB, dan UI
 ```
 
 Algorithm module tidak boleh tahu tentang:
@@ -425,7 +425,6 @@ Setiap hasil closed tour harus memenuhi:
 - tidak ada customer duplikat;
 - total distance dapat direkomputasi dari route + matrix;
 - input tidak dimutasi secara tak terduga;
-- ACO dapat diberi random seed untuk reproducibility testing.
 - directed cost digunakan pada seluruh edges termasuk return ke depot;
 - 2-Opt asymmetric fixture dan best-improvement diuji;
 - NN+2-Opt distance <= NN distance.
@@ -465,7 +464,7 @@ Phase 0 tetap bertanggung jawab menyediakan lint/typecheck/test/build. Jika Phas
 Untuk perubahan algoritma, tambah:
 
 - invariant tests;
-- deterministic seed test;
+- deterministic rerun test pada matriks identik;
 - known small instance test;
 - edge cases 0/1/2 customer sesuai contract;
 - distance recomputation assertion.
@@ -732,13 +731,13 @@ Pahami konsep
 → freeze snapshot + road validation + OSRM Table matrix + hash/freeze
 → NN
 → 2-Opt
-→ ACO
+→ Run Optimization, Experiments, Results, Export
 → benchmark
 → QA
 → production demo
 ```
 
-Jika langsung mengerjakan ACO sebelum foundation stabil, debugging akan tercampur antara framework, database, deployment, dan algoritma.
+Jika langsung mengerjakan pipeline optimasi sebelum foundation stabil, debugging akan tercampur antara framework, database, deployment, dan algoritma.
 
 ## Pembagian pemahaman
 
@@ -835,11 +834,11 @@ Lihat:
 ## Research contract yang wajib dibaca
 
 - [32 — Research Decisions](docs/32_RESEARCH_DECISIONS.md): working RQ, main experiment dan OPEN decisions.
-- [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md): NN deterministic, 2-Opt asymmetric-safe, ACO Classical Ant System.
+- [33 — Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md): NN deterministik dan 2-Opt asymmetric-safe.
 - [34 — OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md): formal input memakai frozen directed OSRM road-network matrix dalam meter.
-- [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 customer × 10 random datasets; 30 ACO seeded runs; 30 NN+2-Opt timing repetitions; 5 warm-ups.
+- [15 — Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md) memuat proposal evaluasi NN awal dan hasil Hybrid pada 10, 25, dan 50 customer.
 
-Calibration/evaluation wajib terpisah dan satu ACO configuration global dibekukan. N=100 serta clustered/circular/directional optional setelah review/pilot. OPEN: nilai numerik ACO, depot/study area, endpoint public/local OSRM, dan eksperimen tambahan; jumlah run/main datasets serta peran OSRM bukan keputusan yang masih pending.
+RQ, gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. ACO diarsipkan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Status implementasi aktual ada di [README](README.md#current-implementation-status). Target arsitektur dan checklist bukan evidence implementasi selesai.
 
@@ -890,8 +889,7 @@ Fokus adalah **sequence of visits**, bukan shortest path satu pasangan node.
 - frozen directed OSRM Table road-network distance matrix, meter, input/matrix hash;
 - Nearest Neighbor;
 - best-improvement 2-Opt dengan full directed route recomputation;
-- ACO / Classical Ant System tanpa post-ACO 2-Opt;
-- benchmark pada input yang sama;
+- evaluasi NN awal dan hasil Hybrid pada frozen Benchmark Case serta matriks yang sama;
 - total distance;
 - execution time;
 - route sequence;
@@ -912,7 +910,8 @@ Fokus adalah **sequence of visits**, bukan shortest path satu pasangan node.
 - fleet payroll;
 - multi-depot VRP;
 - dynamic vehicle capacity;
-- optimization menggunakan paid map API.
+- optimization menggunakan paid map API;
+- integrasi ACO Classical Ant System yang ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 ## 6. Constraints
 
@@ -933,11 +932,11 @@ MVP dianggap berhasil bila:
 3. dummy order dapat dibuat dan diedit;
 4. map menampilkan depot dan customer;
 5. NN+2-Opt menghasilkan closed tour valid;
-6. ACO menghasilkan closed tour valid;
-7. kedua metode menerima benchmark input yang identik;
+6. baseline NN menghasilkan closed tour valid;
+7. jarak NN dan Hybrid dihitung dengan matriks dan identitas snapshot yang sama;
 8. hasil jarak dapat diverifikasi ulang;
 9. execution time tercatat;
-10. ACO mendukung seeded run;
+10. perbaikan absolut dan persentase dapat ditelusuri ke dua jarak tersebut;
 11. CI lulus sebelum release;
 12. tidak ada secret di Git;
 13. production DB tidak digunakan oleh preview branch.
@@ -950,10 +949,10 @@ MVP dianggap berhasil bila:
 - algorithm parameter dicatat;
 - git commit SHA dicatat;
 - environment benchmark dicatat;
-- hasil ACO multi-run dapat dianalisis;
+- jarak sebelum/sesudah, besaran perbaikan, dan runtime dapat dianalisis menurut jumlah customer;
 - hasil route dapat direkonstruksi.
 
-Main design: 10/25/50 customer, masing-masing 10 independent random datasets. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan. ACO 30 independent seeded runs, NN+2-Opt satu quality result dan 30 timing repetitions, 5 warm-ups per algoritma/dataset. Calibration datasets terpisah dan satu global ACO configuration dibekukan. RQ/metrics mengikuti [research decisions](docs/32_RESEARCH_DECISIONS.md) dan [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
+Ukuran awal adalah 10, 25, dan 50 customer. RQ dan rincian rancangan evaluasi, termasuk jumlah dataset, repetisi, dan analisis, masih memerlukan validasi akademik. [Research decisions](docs/32_RESEARCH_DECISIONS.md) · [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 OSRM adalah input infrastructure, bukan algoritma penelitian. Geometry terpisah; timer formal hanya algorithm execution pada environment terkontrol, tanpa OSRM/DB/network/serialization/geometry/rendering.
 
@@ -988,9 +987,8 @@ Admin buka dashboard
 → generate/import/edit customer
 → validasi titik
 → freeze benchmark snapshot + OSRM Table directed matrix + hash/freeze
-→ run NN+2Opt
-→ run ACO
-→ lihat comparison
+→ run Hybrid NN + 2-Opt dan rekam baseline NN awal
+→ lihat perbaikan rute
 → lihat route di map
 → simpan/export hasil
 ```
@@ -1069,9 +1067,9 @@ Map harus:
 
 - matrix dibentuk dari frozen benchmark case melalui road validation + OSRM Table Service sesuai [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md);
 - unit meter, NxN termasuk depot index 0, directed/asymmetric diterima tanpa asumsi symmetry;
-- diagonal 0, finite nonnegative values, null/unreachable ditolak; ACO eligibility untuk zero off-diagonal mengikuti docs/33;
+- diagonal 0, finite nonnegative values, null/unreachable ditolak, dan zero off-diagonal dilaporkan;
 - stable node order, input hash, matrix hash, provider/profile/version metadata;
-- freeze immutable matrix sebelum formal run; kedua algoritma memakai snapshot/hash identik.
+- freeze immutable matrix sebelum formal run. Baseline NN dan hasil Hybrid memakai snapshot/hash identik dengan actual provider provenance.
 
 ### FR-007 NN + 2-Opt
 
@@ -1081,54 +1079,19 @@ Map harus:
 - best-improvement 2-Opt reverse candidate segment dan recompute FULL directed route distance; symmetric-only delta shortcut dilarang;
 - accept strict improvement saja, depot fixed, hasil final distance <= NN initial distance, sesuai [docs/33](docs/33_ALGORITHM_SPECIFICATION.md).
 
-### FR-008 ACO
+### FR-008 Deferred — ACO
 
-Varian = Classical Ant System, seeded deterministic PRNG, directed pheromone, roulette-wheel selection, fixed iterations, semua valid ants deposit, best observed route tracked. Tidak menambahkan 2-Opt setelah ACO pada main comparison. Parameter typed explicit:
+Nomor ini dipertahankan untuk jejak historis. Classical Ant System diarsipkan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
-- ant count;
-- iterations;
-- alpha;
-- beta;
-- evaporation;
-- Q;
-- tau0;
-- seed.
+### FR-009 Benchmark evaluation
 
-Nilai default final **belum dikunci** sampai didukung metodologi.
+Run Optimization dan Experiments menargetkan satu pipeline Hybrid yang mencatat jarak baseline NN dan jarak akhir pada Benchmark Case serta frozen matrix yang sama. Research Mode memakai Research Provider Lock. Ukuran awal 10, 25, dan 50 customer. Jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
-### FR-009 Benchmark comparison
+Simpan input hash, matrix ID/hash, node order, actual provider provenance, versi algoritma, rute, jarak, runtime, dan status attempt.
 
-Satu benchmark case dan frozen OSRM matrix/hash harus digunakan oleh kedua algoritma. Main: 10/25/50 customer × 10 independent random datasets = 30 datasets; N=100 optional setelah pilot. Calibration wajib terpisah dan satu global ACO configuration frozen.
+### FR-010 Results
 
-ACO: 30 independent seeded runs per dataset. NN+2-Opt: satu deterministic quality result + 30 measured timing repetitions. Lakukan 5 warm-ups per algoritma/dataset; timer mengecualikan OSRM/DB/HTTP/network/serialization/geometry/rendering. Raw failed/poor runs dipertahankan. Detail [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
-
-Sistem menyimpan:
-
-- input hash;
-- distance matrix ID/hash dan node order;
-- distance metric/version;
-- algorithm name/version;
-- parameters;
-- run number;
-- seed;
-- route;
-- total distance;
-- execution time.
-
-### FR-010 Result comparison
-
-Minimal tampil:
-
-- algorithm;
-- deterministic NN+2-Opt distance;
-- mean dan median ACO sebagai primary descriptive comparison;
-- ACO best dan worst sebagai tambahan, bukan best-of-30 sebagai satu-satunya primary comparison;
-- standard deviation;
-- runtime;
-- route sequence;
-- improvement terhadap baseline bila dihitung.
-
-RQ3 menambahkan range dan CV ACO tanpa threshold baik/buruk yang tidak bersumber. Runtime: mean, median, SD dari measured repetitions. Dataset-level summaries adalah observasi scenario; 30 runs dalam satu dataset bukan 30 independent datasets.
+Tampilkan total jarak NN awal, jarak Hybrid, perbaikan absolut/persentase, runtime, dan urutan kunjungan. Hasil eksperimen mendukung ringkasan skalabilitas dan perbaikan menurut jumlah customer, sesuai metode yang disetujui.
 
 ### FR-011 Export
 
@@ -1147,7 +1110,6 @@ Minimal CSV untuk hasil benchmark.
 ### NFR-002 Reproducibility
 
 - dataset seed;
-- ACO seed;
 - input snapshot;
 - commit SHA;
 - parameter snapshot.
@@ -1221,7 +1183,7 @@ Tidak boleh:
 
 - menyimpan DB credential;
 - menjalankan formal research benchmark;
-- berisi core ACO implementation.
+- berisi implementasi core solver.
 
 ### Server/API layer
 
@@ -1249,10 +1211,9 @@ Tanggung jawab:
 
 - distance matrix operation;
 - NN;
-- 2-Opt;
-- ACO.
+- best-improvement 2-Opt.
 
-Input/output harus plain typed structures. Algorithm domain menerima DistanceMatrix sebagai satu-satunya input geografis, ditambah params/seed; tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, atau OSRM HTTP client. Road validation, matrix construction/storage, dan hashing ditangani application/infrastructure.
+Input/output harus plain typed structures. Algorithm domain menerima DistanceMatrix sebagai input solver aktif; tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, atau OSRM HTTP client. Road validation, matrix construction/storage, dan hashing ditangani application/infrastructure.
 
 ## 3. Core flow — create scenario
 
@@ -1275,16 +1236,12 @@ Immutable Benchmark Case
 Road-network validation + OSRM Table adapter (infrastructure)
       ↓
 Validated frozen directed matrix (meter, input hash, matrix hash)
-      ├───────────────┐
-      ↓               ↓
-  NN → 2-Opt         Classical Ant System x 30 seeded runs
-      ↓               ↓
- Route result       Run results
-      └───────┬───────┘
-              ↓
-       Experiment summary
-              ↓
-            TiDB
+      ↓
+Hybrid solver: baseline NN → best-improvement 2-Opt
+      ↓
+Validated route + initial/final distance + improvement + runtime
+      ↓
+Experiments → Results → Export
 ```
 
 ## 5. Research reproducibility boundary
@@ -1327,7 +1284,7 @@ Jangan import Leaflet langsung dari Server Component karena bergantung pada brow
 Gunakan abstraction:
 
 ```text
-UI/API → Application → Algorithm Domain (matrix + params/seed → result)
+UI/API → Application → Algorithm Domain (matrix → NN baseline + Hybrid result)
               │
               └→ Matrix Builder / Storage → OSRM Table adapter
 ```
@@ -1340,15 +1297,17 @@ Optimizer sequence → RouteGeometryProvider → OSRM Route geometry → Leaflet
 
 DistanceProvider adalah port infrastructure untuk produksi matrix, bukan dependency algoritma. OSRM Table merupakan core formal input sesuai [ADR-012](docs/04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark). Geometry boleh menyusul sebagai pekerjaan visualisasi terpisah.
 
-Kedua algoritma memakai matrix hash/values/node order identik. NN deterministic (depot=0, lowest-index tie); 2-Opt best improvement full recomputation untuk directed costs; ACO Classical Ant System tanpa post-ACO 2-Opt. Detail [docs/33](docs/33_ALGORITHM_SPECIFICATION.md) dan [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md).
+Baseline NN dan hasil Hybrid memakai matrix hash, values, dan node order identik. NN deterministik dari Depot indeks 0 dengan lowest-index tie. Best-improvement 2-Opt menghitung ulang seluruh biaya berarah setiap kandidat. [Kontrak algoritma](docs/33_ALGORITHM_SPECIFICATION.md)
 
 Formal runner terkontrol mengukur hanya solver call, termasuk initialisasi state algoritma. OSRM/DB/HTTP/network/serialization/geometry/rendering, external validation, dan hash verification di luar timer. Main design dan repetitions mengikuti [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Diagram adalah target architecture; current implementation ada di [README](README.md#current-implementation-status).
+
+**Rencana Multi-Provider OSRM.** Just Routing Free menjadi primary dan OSRMPlus Free menjadi secondary. FOSSGIS bersifat opsional sambil menunggu jawaban operator. Operational Mode dirancang dengan eligibility, capability, quota, cooldown, failover dan failback. Research Mode dirancang dengan explicit Research Provider Lock. Setiap frozen matrix berasal dari satu provider dan menyimpan actual provider provenance. Kegagalan provider terkunci menghentikan generasi. OpenRouteService berada di luar pilihan. Kesiapan masing-masing provider masih perlu diverifikasi. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## 8. Failure boundaries
 
 - DB failure → tampilkan error yang aman; jangan kehilangan form state bila memungkinkan.
 - algorithm validation failure → fail closed; jangan simpan route invalid.
-- ACO one-run failure → tandai run failed; summary tidak boleh diam-diam menganggap sukses.
+- solver run failure → catat status dan alasan gagal pada attempt sebelum menghitung ringkasan.
 - migration failure → stop deployment path, jangan coba “fix otomatis” di production.
 
 ## 9. Architecture quality attributes
@@ -1566,6 +1525,8 @@ Detail: `docs/30_UI_TEMPLATE_GUIDE.md`.
 **Status:** Accepted
 **Date:** 2026-10-02
 **Authority:** Keputusan eksplisit manusia pada task corrective documentation + research contract sync.
+
+**Addendum scope — 2026-11-28.** Keputusan MVP mengganti comparison ACO di bawah dengan baseline NN dan hasil Hybrid NN + 2-Opt pada matriks yang sama. Persyaratan frozen directed OSRM Table dan pemisahan geometry tetap berlaku. Rencana Multi-Provider OSRM dan Research Provider Lock dicatat sebagai target. Paragraf keputusan 2026-10-02 dipertahankan sebagai riwayat. [Research decisions](docs/32_RESEARCH_DECISIONS.md) · [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ### Context
 
@@ -2292,7 +2253,9 @@ generated_at DATETIME
 
 Metadata pendamping perlu merekam unit=meter, directed semantics, serialization/contract version, provider request options, original/snapped-coordinate evidence, serta OSRM/network version/extract provenance bila tersedia. Detail penyimpanan metadata ditetapkan saat task schema; jangan menganggap informasi unavailable sebagai known.
 
-Rules: NxN termasuk depot, diagonal zero, finite nonnegative values, no null/unreachable; no symmetry requirement. Common ACO eligibility mengikuti docs/33. Snapshot/hash bersifat immutable. Matrix regeneration menciptakan row/snapshot baru, tidak mengubah history. Jangan menghitung ulang matrix lama lewat OSRM pada saat replay benchmark.
+Rules: NxN termasuk depot, diagonal zero, finite nonnegative values, no null/unreachable; no symmetry requirement. Zero off-diagonal dilaporkan untuk review kualitas data sesuai docs/34. Snapshot/hash bersifat immutable. Matrix regeneration menciptakan row/snapshot baru, tidak mengubah history. Jangan menghitung ulang matrix lama lewat OSRM pada saat replay benchmark.
+
+Kandidat migrasi `0005_distance_matrices` menambahkan penyimpanan append-only dengan FK `RESTRICT` ke Benchmark Case. UUID request unik per case mencegah dua snapshot pada replay request yang sama. Generasi ulang dengan UUID baru membuat row baru, meski hash kontennya identik. Indeks case dan ID mendukung paginasi riwayat. Pemeriksaan detail dan recovery menghitung ulang hash serta memeriksa node terhadap Benchmark Case tersimpan. Migrasi ini belum diterapkan. [Kontrak dan aktivasi provider](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## 8. `experiments`
 
@@ -2317,16 +2280,11 @@ created_at
 completed_at NULL
 ```
 
-Algorithm initial values:
+Nilai algoritma aktif untuk MVP adalah `NN_2OPT`. `ACO` tercatat pada rancangan historis dan ditunda sebagai Future Development.
 
-```text
-NN_2OPT
-ACO
-```
+Application wajib memastikan distance_matrix_id milik benchmark_case_id yang sama dan recorded matrix_hash sesuai content. Jarak baseline NN dan hasil Hybrid dalam satu evaluasi berasal dari matrix snapshot/hash yang sama dan menyimpan referensi actual provider provenance. Node mapping diperiksa terhadap benchmark_case_points; FK ID saja tidak membuktikan fairness.
 
-Application wajib memastikan distance_matrix_id milik benchmark_case_id yang sama dan recorded matrix_hash sesuai content. Experiments NN_2OPT dan ACO yang dibandingkan mereferensikan matrix snapshot/hash yang sama. Node mapping diperiksa terhadap benchmark_case_points; FK ID saja tidak membuktikan fairness.
-
-parameters_json menyimpan seluruh explicit ACO configuration, PRNG/version dan run policy. Calibration/evaluation case identities harus terpisah pada experiment metadata. Planned formal counts: 30 ACO measured runs dan 30 NN_2OPT timing repetitions; satu deterministic route quality NN cukup. Catat 5 warm-ups secara terpisah dari measured results dan tandai run role bila disimpan. Jangan menghitung warm-up sebagai measured run.
+`parameters_json` menampung metadata run policy bila dibutuhkan. Perincian data jarak baseline, improvement, dan runtime akan ditetapkan pada task schema yang terpisah. Jumlah run serta aturan warm-up mengikuti protokol setelah validasi akademik.
 
 ## 9. `experiment_runs`
 
@@ -2348,7 +2306,7 @@ started_at
 completed_at NULL
 ```
 
-`iteration_count` adalah optional diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](docs/33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
+`iteration_count` adalah field historis untuk diagnostic ACO yang memetakan `diagnostics.iterationsCompleted` sesuai [docs/33](docs/33_ALGORITHM_SPECIFICATION.md#6-output-and-routevalidator); untuk NN_2OPT tetap NULL. Jangan menyimpan twoOptPasses atau acceptedImprovements sebagai iteration_count. Penyimpanan diagnostic lain ditetapkan hanya bila diperlukan pada task schema.
 
 Unique:
 
@@ -2505,12 +2463,8 @@ src/domain/routing/
 │   └── matrix-validator.ts
 ├── nn/
 │   └── nearest-neighbor.ts
-├── two-opt/
-│   └── two-opt.ts
-└── aco/
-    ├── ant-colony.ts
-    ├── rng.ts
-    └── types.ts
+└── two-opt/
+    └── two-opt.ts
 ```
 
 ## Rule of dependency direction
@@ -2575,6 +2529,20 @@ DistanceProvider port dan OSRM HTTP implementation berada di luar algorithm core
 Protected page: src/app/(admin)/orders/page.tsx. UI: src/components/orders/order-manager.tsx and order-form.tsx. Nested API lives under the existing Scenario [id] directory: src/app/api/scenarios/[id]/orders/route.ts and orders/[orderId]/route.ts; [id] represents scenarioId, without introducing a conflicting Next slug. API helper src/lib/http/order-api.ts uses the existing auth/Origin/body/environment guards, then application/orders/order-service.ts and db/repositories/order-repository.ts. Zod/DTOs are in lib/validation/order.ts. All identifiers remain strings at HTTP boundaries. Scenario repository adds only an Order reference precondition; existing authentication/database client/dependencies are unchanged.
 
 Migration `0002_orders`, snapshot and journal append are versioned with Order source. The migration passed in Development and Testing. `tests/integration/order-crud.integration.test.ts` uses the fixture registry and lookup under `tests/fixtures/` for durable receipts and scoped cleanup. Testing live integration remains **NOT EXECUTED**. [Evidence and pending checkpoints](docs/14_TESTING_QA.md#21-phase-1c-verification-and-draft-pr-readiness-2026-11-07).
+
+## Phase 3A — Scenario Freeze API dan UI
+
+Pada daftar Scenario, buka **Preview Freeze** untuk Scenario berstatus draft. Halaman `/scenarios/[id]/freeze` memvalidasi kelayakan data sumber melalui preview dan menampilkan urutan node, perbedaan jumlah pelanggan, serta hash input. Konfirmasi eksplisit menyimpan snapshot. Menu **Research → Benchmark Cases** membuka riwayat pada `/benchmark-cases` dan detail read-only pada `/benchmark-cases/[id]`. Detail memakai snapshot tersimpan. Data operasional tetap dapat diedit, dan FK `RESTRICT` melindungi Scenario sumber yang masih direferensikan.
+
+| Metode dan endpoint | Kontrak |
+|---|---|
+| `GET /api/scenarios/[id]/freeze-preview` | Preview canonical dari data sumber, tanpa mutasi. |
+| `POST /api/benchmark-cases` | Konfirmasi dengan `scenarioId`, UUID `requestId`, dan `expectedInputHash`. Sukses mengembalikan HTTP 201. `SOURCE_CHANGED` dan `FREEZE_REQUEST_CONFLICT` mengembalikan HTTP 409. |
+| `GET /api/benchmark-cases` | Riwayat snapshot dengan `limit` dan cursor `after` opsional. |
+| `GET /api/benchmark-cases/[id]` | Detail snapshot dan points tersimpan, dengan pemeriksaan urutan dan hash. |
+| `GET /api/benchmark-cases/recovery/[requestId]` | Recovery read-only. Query memerlukan `scenarioId` dan `expectedInputHash`. Hasil `data: null` berarti belum terkonfirmasi. |
+
+Semua endpoint memerlukan sesi admin dan memakai `Cache-Control: private, no-store`. POST juga memeriksa Origin dan Host. ID BIGINT tetap berupa string. UI menyimpan identitas request dalam sesi tab sebelum POST agar refresh tetap dapat memeriksa hasil ambigu dengan GET. UI mempertahankan request ketika hasil recovery kosong dan tidak mengulang POST otomatis. [Bukti Live Acceptance persistence](docs/14_TESTING_QA.md#26-live-acceptance-benchmark-case-persistence-di-testing-2026-11-25)
 
 ---
 
@@ -3021,7 +2989,7 @@ Minimal:
 4. safe write/read/delete on production demo data bila sesuai;
 5. map render;
 6. run small NN+2Opt scenario;
-7. run small ACO scenario;
+7. run small Hybrid NN + 2-Opt scenario dan verifikasi baseline NN serta biaya akhir;
 8. verify no console/server critical error.
 
 ## 9. Rollback principle
@@ -3139,7 +3107,7 @@ Gunakan Drizzle/parameterized query. Raw SQL harus memakai parameter binding dan
 
 ## 9. Rate/resource abuse
 
-ACO dapat menjadi compute-heavy. Batasi input di server:
+Optimasi dan benchmark dapat membebani server. Batasi input dan kerja per permintaan:
 
 - max customer for web-triggered run;
 - max iterations;
@@ -3202,7 +3170,7 @@ Test:
 - asymmetric matrix accepted; tidak mengasumsikan d(i,j)==d(j,i);
 - null/unreachable/missing pair rejected;
 - stable node order, canonical meter, input/matrix hashes;
-- ACO preflight zero off-diagonal rejection sesuai [docs/33](docs/33_ALGORITHM_SPECIFICATION.md), tanpa mengganti nilai matrix.
+- zero off-diagonal dilaporkan tanpa mengubah nilai matrix sesuai [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md).
 
 ### Nearest Neighbor
 
@@ -3228,9 +3196,11 @@ Test:
 - symmetric-only delta shortcut tidak boleh lolos tests;
 - equal/worse candidate tidak diterima, hasil <= NN input.
 
-### ACO
+### ACO — referensi historis
 
-Test:
+Checklist ACO berikut disimpan sebagai referensi Future Development. Scope QA aktif memeriksa Hybrid NN + 2-Opt dan baseline NN. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
+
+Tes historis:
 
 - valid route;
 - fixed seed reproducibility;
@@ -3255,7 +3225,7 @@ valid closed tour
 + recomputed distance matches
 ```
 
-Tambahkan 0/1/2 customer sesuai contract, known small instances, input immutability, fixed-seed reproducibility, dan generated directed matrices. ACO tidak diwajibkan selalu menang atas NN. Fixtures adalah test data, bukan final scientific defaults atau main datasets.
+Tambahkan 0/1/2 customer, known small instances, immutable input, deterministic reruns, dan generated directed matrices. Fixture sintetis dipakai untuk verifikasi solver. Dataset evaluasi ditetapkan terpisah.
 
 ## 4. Integration tests
 
@@ -3266,11 +3236,11 @@ Test service + TiDB Dev/Test database untuk:
 - save experiment;
 - route history reconstruction.
 - frozen matrix persistence, immutable setelah order edit;
-- same matrix hash/values/node order untuk kedua algorithms;
+- same matrix hash/values/node order untuk baseline NN dan hasil Hybrid, dengan actual provider provenance;
 - timer excludes OSRM/DB/HTTP/network/serialization/geometry/rendering;
 - raw run persistence sebelum summary; failed/poor runs tidak cherry-picked away;
-- 5 warm-ups dikecualikan, 30 seeded ACO runs dan 30 NN+2-Opt timing samples per dataset;
-- calibration/main identities terpisah, satu global config, dataset-level aggregation;
+- warm-up dan repetisi mengikuti protokol setelah validasi akademik;
+- pilot dan evaluasi dipisahkan, dengan dataset-level aggregation;
 - failed run tetap tersimpan dan incomplete dataset tidak dianggap complete.
 
 OSRM adapter tests memakai mocked responses untuk timeout/provider/null/shape/hash errors; live routability/provider verification terpisah sebelum freeze data formal. Unit algorithms tidak bergantung network.
@@ -3286,7 +3256,7 @@ Playwright critical flows:
 3. open map;
 4. run small optimization;
 5. view result;
-6. compare algorithms.
+6. compare NN initial distance dan Hybrid distance, lalu verifikasi improvement.
 
 ## 6. Manual QA
 
@@ -3651,176 +3621,121 @@ Bukti browser owner mencatat respons HTTP pada stable Testing alias. Pemetaan al
 
 Fault injection live `COMMIT_UNKNOWN` tetap **NOT TESTED**. Identitas SQL fisik Production **NOT VERIFIED**. Migrasi `0003` Production **NOT APPLIED**, writer Production **NOT ACTIVATED**, dan Phase 2B Production **NOT RELEASED**.
 
+## 26. Live Acceptance Benchmark Case Persistence di Testing (2026-11-25)
+
+**PASS.** Acceptance Phase 3A PR #2 memakai fixture sintetis terisolasi di TiDB Testing setelah migrasi `0004_benchmark_cases` terverifikasi. Pengujian awal mengonfirmasi preview deterministik, hash canonical yang cocok, commit satu Benchmark Case dengan tiga points, pembacaan ulang dari sesi independen, dan penolakan sumber yang berubah dengan `SOURCE_CHANGED`. Jalur duplicate UUID sebelumnya mengembalikan `UNAVAILABLE`.
+
+| Pemeriksaan lanjutan | Hasil |
+|---|---|
+| Duplicate UUID dengan hash preview terbaru | `FREEZE_REQUEST_CONFLICT` tanpa membuka transaksi tulis. Pembacaan independen mengonfirmasi satu Benchmark Case dan tiga points yang sama. |
+| Controlled rollback sebelum COMMIT | Pembacaan independen tidak menemukan header maupun points sementara. Benchmark Case awal tetap utuh. |
+| Cleanup operator | Kepemilikan fixture dan hasil transaksi dikonfirmasi dari receipt privat sebelum penghapusan. Pembacaan independen menemukan nol baris fixture tersisa. Fingerprint dua Scenario pembanding tetap sama. |
+
+Lookup UUID yang sudah committed memvalidasi hash sumber terkini. Unique constraint tetap menangani benturan saat request bersamaan. Jika INSERT header gagal, repository hanya melaporkan conflict setelah rollback terkonfirmasi dan pembacaan independen menemukan UUID committed yang valid. [Tes regresi offline](tests/unit/benchmark-case-persistence.test.ts) · [Harness Testing opt-in](tests/integration/benchmark-case-persistence.integration.test.ts)
+
+Validasi lokal mencatat 95/95 focused tests, 1.191/1.191 unit tests, ESLint, typecheck, dan `git diff --check` lulus. Build lokal berhenti pada kompilasi Turbopack dan belum terverifikasi pada sesi acceptance. Race antar-request tercakup offline. Fault injection kehilangan ACK untuk `COMMIT_UNKNOWN` dan `ROLLBACK_UNKNOWN` belum dilakukan live. Bukti ini mencakup persistence dan menjadi dasar untuk pekerjaan Scenario Freeze API dan UI berikutnya.
+
 ---
 
 # SOURCE: docs/15_RESEARCH_BENCHMARK_PROTOCOL.md
 
 # 15 — RESEARCH BENCHMARK PROTOCOL v1
 
-**Status:** Accepted working protocol, 2026-10-02.
-Authority: [research decisions](docs/32_RESEARCH_DECISIONS.md). Solver contract: [docs/33](docs/33_ALGORITHM_SPECIFICATION.md). Formal input: [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md). Pelaksanaan formal menunggu implementasi, verification, dan penyelesaian keputusan OPEN; dokumen ini bukan hasil eksperimen.
+**Status — 2026-11-28.** Proposal revisi evaluasi Hybrid NN + 2-Opt untuk validasi akademik. Scope MVP mengikuti [research decisions](docs/32_RESEARCH_DECISIONS.md). Kontrak solver dan input terdokumentasi pada [docs/33](docs/33_ALGORITHM_SPECIFICATION.md) dan [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md).
 
 ## 1. Research comparison and RQ
 
-Bandingkan Hybrid Nearest Neighbor → best-improvement 2-Opt dengan ACO / Classical Ant System. Tidak menambah 2-Opt setelah ACO pada main comparison.
+Ukur perbaikan dari rute awal Nearest Neighbor ke rute akhir best-improvement 2-Opt untuk setiap dataset. Keduanya memakai tur single-depot yang sama definisinya dan biaya berarah dari satu matriks immutable.
 
-- **RQ1:** Bagaimana perbandingan total jarak rute yang dihasilkan Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization pada jumlah customer yang berbeda?
-- **RQ2:** Bagaimana perbandingan waktu komputasi Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization ketika jumlah customer meningkat?
-- **RQ3:** Seberapa besar variasi hasil Ant Colony Optimization pada pengujian berulang, dengan hasil Hybrid Nearest Neighbor–2-Opt sebagai referensi deterministik?
+- **RQ1:** Seberapa besar pengurangan total jarak setelah penerapan 2-Opt pada rute awal Nearest Neighbor?
+- **RQ2:** Bagaimana waktu komputasi Hybrid NN + 2-Opt pada jumlah customer yang berbeda?
+- **RQ3:** Bagaimana pengaruh jumlah customer terhadap efektivitas perbaikan rute menggunakan 2-Opt?
 
-## 2. Four phases and exit evidence
+Ketiganya merupakan usulan, bersama rancangan sampling, pengukuran, dan analisis di bawah.
 
-### Phase A — Algorithm Verification
+## 2. Verification, pilot, and proposed main experiment
 
-Sebelum mengukur performa ilmiah, buktikan matrix/route invariants, NN directed minimum + lowest-index tie, best-improvement 2-Opt full directed recomputation, dan Classical Ant System seeded behavior. Jalankan 0/1/2 customer, known small instances, asymmetric fixtures dan tests dalam docs/14 serta docs/33. Tidak menafsirkan test fixtures sebagai evaluation datasets.
-
-Exit: semua correctness checks pass, versi implementasi/PRNG dicatat, independent route-distance recomputation tersedia.
-
-### Phase B — ACO Calibration
-
-Gunakan relevant literature atau small calibration experiment untuk nilai numerik ACO; jangan mengarang final defaults. Calibration cases **wajib terpisah** dari main evaluation: identitas, generation seeds, coordinates/input hashes, matrix hashes dan tujuan split dicatat.
-
-Dokumentasikan candidate configurations, selection criterion dan anggaran calibration sebelum membandingkan hasil. Setelah calibration, **freeze satu global configuration** (alpha, beta, rho, Q, tau0, antCount, maxIterations). Jangan memilih konfigurasi berbeda agar N10/N25/N50 menang. Calibration results dan alasan pemilihan disimpan.
-
-Exit: global configuration, sumber/hasil calibration, serta pemisahan calibration/evaluation dapat diaudit.
-
-### Phase C — Pilot
-
-Periksa kemampuan provider menghasilkan N+1 node matrix, routability, correctness, durasi keseluruhan runner, memory, timer resolution, dan raw export. Gunakan pilot cases yang diidentifikasi terpisah dari main evaluation; jika pilot memicu retuning, kembali ke Phase B sebelum main dibekukan.
-
-Pilot menentukan apakah **N=100 / 100 customers** feasible sebagai conditional/optional experiment. Ini tidak menjadikan N=100 mandatory main experiment. clustered/circular/directional dapat dipilih sebagai additional experiments dengan rencana terpisah; jangan menyebutnya core novelty.
-
-Exit: pipeline dapat menyimpan/replay exact matrix, hardware/runtime tercatat, seed lists dan run schedule ditetapkan, pilihan eksperimen tambahan dicatat sebelum dijalankan.
-
-### Phase D — Main Experiment
-
-| Jumlah customer (tanpa depot) | Independent random datasets |
-|---|---:|
-| 10 | 10 |
-| 25 | 10 |
-| 50 | 10 |
-| Total | 30 |
-
-Primary generation pattern **random**. clustered, circular, directional adalah optional engineering/additional support. Jangan menjadikan semua pattern atau N=100 sebagai mandatory primary design.
-
-Per dataset: ACO **30 independent seeded runs**; NN+2-Opt **satu deterministic quality output + 30 measured timing repetitions**; **5 warm-up executions per algoritma** sebelum measured runtime. Main mencakup 900 ACO measured runs dan 900 NN+2-Opt timing samples ketika semua run berhasil. Repetitions dalam satu dataset tidak menambah jumlah independent datasets.
+1. **Verification.** Periksa matrix/route invariants, nearest directed cost dan lowest-index tie, best-improvement 2-Opt dengan full recomputation, serta validator jarak independen. Gunakan fixture sintetis simetris/asimetris dan 0/1/2 customer. Catat versi implementasi.
+2. **Pilot.** Gunakan dataset pilot yang diidentifikasi terpisah. Periksa provider lock, kapasitas dan routability untuk 11/26/51 titik termasuk Depot, penyimpanan serta replay exact matrix, timer, dan raw export. Catat keterbatasan sebelum membekukan daftar dataset evaluasi.
+3. **Main evaluation.** Ukuran awal **10, 25, dan 50 customer**. Jumlah dataset independen per ukuran, pattern, kriteria sampling, pembagian pilot/evaluation, warm-up, repetisi timing, dan analisis masih menunggu validasi akademik.
 
 ## 3. Dataset generation and split
 
-Setiap dataset memiliki generation seed dan generator version. Catat depot/study area, pattern=random, radius/bounds/config, customer identities dan original coordinates. Main datasets dibuat independen sesuai generation procedure yang dibekukan; jangan menyeleksi dataset berdasarkan algoritma mana yang menang.
-
-Same generator/version + seed + depot/config harus mereproduksi points. Latitude/longitude mentah tidak dipakai sebagai Cartesian kilometer. Coordinate/routability checks dan penanganan rejected/zero-distance points ditetapkan sebelum generation; log setiap rejection/replacement. Perubahan titik pada snapshot frozen membuat case baru.
-
-Calibration, pilot, dan main case lists disimpan secara terpisah dan diperiksa agar evaluation input tidak dipakai untuk tuning. Generator pattern tambahan tidak otomatis masuk main list.
+Catat generator/version, seed dataset bila digunakan, depot/study area, pattern, konfigurasi generation, original coordinates, serta alasan penolakan atau penggantian titik. Gunakan daftar dataset yang dibekukan dan beri label pilot atau evaluasi. Jangan memilih dataset berdasarkan besarnya perbaikan yang terlihat. Perubahan input koordinat setelah freeze menghasilkan Benchmark Case baru.
 
 ## 4. Freeze and same-matrix fairness
 
 ```text
 Editable Scenario
 → Immutable Benchmark Case + ordered point snapshots + input_hash
-→ road validation + OSRM Table Service
-→ validated frozen directed road-network matrix + matrix_hash
-→ exact same matrix → NN+2-Opt / Classical Ant System
+→ OSRM Table dengan Research Provider Lock
+→ immutable directed matrix dalam meter + matrix_hash
+→ NN awal → best-improvement 2-Opt
 ```
 
-Canonical unit **meter**, depot index=0, stable customer indices, NxN termasuk depot, diagonal zero, finite valid values, no null/unreachable. Tidak ada asumsi symmetry. Common ACO preflight menolak zero off-diagonal tanpa mengganti metric.
+Kedua jarak direkomputasi dari exact matrix values, node order, input hash, dan matrix hash yang sama. Verifikasi NxN dengan Depot indeks 0, diagonal 0, finite nonnegative values, dan tanpa null/unreachable. Catat actual provider, endpoint/profile/options/version, bukti snapping, serta provenance yang tersedia. Pelaksanaan Research Mode memakai satu provider yang dipilih eksplisit per matriks. Saat provider terkunci gagal, generasi berhenti dengan error. [Kontrak OSRM dan rencana provider](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
-Simpan provider/profile/options/version, node order, original/snapped-coordinate evidence, matrix values dan generation timestamp/provenance yang tersedia. Matrix sudah frozen sebelum formal execution; matrix/input hashes harus cocok pada kedua algoritma. Jangan request ulang OSRM per algoritma/run. Geometry terpisah dari hasil distance matrix.
+## 5. Determinism and run state
 
-## 5. Seed and state policy
-
-Seed list predetermined dan disimpan sebelum measured runs. Contoh konseptual 10001..10030 bukan final seed list otomatis. Timestamp seeds dilarang. Generation seeds, warm-up seeds, calibration seeds dan measured ACO seeds diberi role jelas.
-
-Setiap measured ACO run menginisialisasi PRNG/pheromone baru dari seed yang tercatat, dengan configuration global yang sama. Tidak carry-over state dari run/warm-up lain. Simpan PRNG algorithm/version; ulangi seed list yang sama untuk reproduction. Jangan hanya memilih seed yang menghasilkan jarak pendek.
-
-NN+2-Opt deterministik dengan depot=0, directed nearest distance dan lowest-index tie-break; best-improvement 2-Opt memakai enumerasi deterministik dan full distance recomputation. Semua timing repetitions harus memberi quality result yang sama.
+Nearest Neighbor dan best-improvement 2-Opt memakai aturan deterministik di [docs/33](docs/33_ALGORITHM_SPECIFICATION.md). Untuk setiap pengukuran, mulai dari state solver baru. Snapshot tervalidasi dapat dimuat sekali ke memori. Reuse hasil solver sebagai sampel runtime berikutnya dilarang. Catat generator seed sebagai provenance dataset bila digunakan.
 
 ## 6. Environment and timer boundary
 
-Formal benchmark dijalankan pada machine/runtime terkontrol, tidak bergantung pada runtime Vercel. Catat OS, CPU, RAM, Node/runtime version, code commit SHA, PRNG version, power/performance mode, process/load condition, timer unit/resolution, dan execution schedule. Gunakan kondisi dan machine yang sama untuk comparison; jangan menjalankan workloads paralel yang mengganggu timing.
+Ukur Hybrid NN + 2-Opt sebagai satu pipeline pada hardware dan runtime terkontrol di luar Vercel. Catat OS, CPU, RAM, Node/runtime, commit, timer unit/resolution, serta kondisi mesin dan urutan eksekusi.
 
 ```text
-load + validate frozen matrix / verify hashes / prepare params
-start high-resolution monotonic timer
-algorithm(matrix, params, seed) → result
+load + validate frozen matrix / verify hashes
+start monotonic timer
+Hybrid NN + 2-Opt(matrix) → NN initial distance + final route and distance
 stop timer
-independent RouteValidator + persistence + summaries/export
+independent route validation + raw persistence + aggregation/export
 ```
 
-NN+2-Opt diukur sebagai satu pipeline. ACO timing mencakup initialisasi PRNG/pheromone, ant construction, iteration updates dan best tracking. Core internal checks tetap bagian solver execution.
-
-Formal timer **mengecualikan** OSRM request, DB, HTTP/network, serialization, external preflight/hash checks, independent post-run validation, route geometry generation, Leaflet/rendering, serta aggregation. Jangan mengambil timing HTTP endpoint sebagai algorithm time.
-
-Tetapkan dan simpan urutan eksekusi sebelum measured runs; catat gangguan machine. Jangan memilih sampel tercepat saja.
-
-### Predetermined balanced execution order
-
-Untuk **MAIN evaluation datasets**, bekukan urutan dataset dan pemetaan ordinal 1..30 ke benchmark_case_id sebelum measured runs. Simpan pemetaan ini beserta urutan algorithm blocks dalam experiment manifest / execution schedule agar dapat direproduksi.
-
-| Ordinal dataset | Urutan measured blocks |
-|---|---|
-| Ganjil | NN+2-Opt → ACO |
-| Genap | ACO → NN+2-Opt |
-
-Contoh: D01 menjalankan NN+2-Opt → ACO, D02 ACO → NN+2-Opt, D03 NN+2-Opt → ACO, dan seterusnya; D01/D02/D03 adalah label ordinal pada daftar yang dibekukan. Jalankan **5 warm-ups untuk algorithm block terkait tepat sebelum measured block-nya**, sesuai bagian 7. Selesaikan measured block (30 repetitions/runs) sebelum beralih ke algoritma berikutnya. Jangan interleave individual runs atau randomize execution order saat runtime.
-
-Balancing ini mengurangi systematic execution-order / thermal/runtime bias pada RQ2, tanpa menjamin seluruh environmental noise hilang. Aturan machine/environment, state reset dan pencatatan gangguan tetap berlaku.
+Timer mengecualikan OSRM, DB, HTTP/network, serialization, external preflight/hash checks, independent post-run validation, geometry, rendering, dan aggregation. Catat gangguan eksekusi dan simpan jadwal sebelum measured runs dimulai.
 
 ## 7. Warm-up and repetitions
 
-Lakukan **5 warm-up executions** untuk setiap algoritma pada setiap dataset sebelum measured block. Simpan warm-up policy dan role/seed bila stochastic. Hasil/timing warm-up tidak masuk statistical research results.
-
-- NN+2-Opt: satu quality output (dapat berasal dari measured run pertama yang valid) dan 30 measured timing samples; verifikasi route/cost konsisten.
-- ACO: 30 independent seeded runs, masing-masing menyumbang quality dan runtime.
-- Reset seluruh per-run algorithm state. Pembacaan snapshot sekali ke memory boleh; reuse hasil solver atau pheromone antar runs dilarang.
+Tetapkan jumlah warm-up, jumlah measured repetitions, dan aturan timing setelah pilot dan validasi akademik. Jika menggunakan warm-up, tandai terpisah dan keluarkan dari statistik measured runtime. Untuk input yang sama, verifikasi konsistensi rute dan jarak deterministik. Repetisi dalam satu dataset tetap merupakan pengukuran dari dataset yang sama.
 
 ## 8. Metrics and aggregation
 
-Hitung per dataset terlebih dahulu; dataset-level summaries adalah independent scenario-level observations. **Jangan memperlakukan 30 ACO runs sebagai 30 independent datasets.** Laporkan per ukuran masalah dari 10 dataset, tanpa menyembunyikan variasi antar dataset dengan pooling seluruh runs.
-
-| RQ | Primary descriptive output per dataset |
+| Metrik | Definisi atau usulan pelaporan |
 |---|---|
-| RQ1 quality | NN+2-Opt distance; ACO mean, median, best, worst, SD |
-| RQ2 time | NN+2-Opt 30 samples dan ACO 30 runtimes: mean, median, SD; min/max optional |
-| RQ3 stability | ACO mean, median, best, worst, range, SD, CV |
+| Jarak awal | Total directed distance tur NN dalam meter. |
+| Jarak akhir | Total directed distance tur Hybrid dalam meter. |
+| Perbaikan absolut | Jarak awal dikurangi jarak akhir, dalam meter. |
+| Perbaikan persentase | Perbaikan absolut ÷ jarak awal × 100%. Jika jarak awal nol, laporkan persentase tidak terdefinisi. |
+| Waktu komputasi | Elapsed time pemanggilan solver Hybrid dalam unit yang dicatat. |
+| Skalabilitas dan efektivitas | Ringkasan runtime dan perbaikan menurut ukuran customer. |
 
-**Primary comparison menggunakan ACO median dan/atau mean.** Best-of-30 tetap dilaporkan sebagai additional result, bukan satu-satunya pembanding dengan satu deterministic NN result.
-
-Untuk m successful samples, mean=sum(x)/m, median=nilai tengah (rata-rata dua tengah bila m genap), sample SD=sqrt(sum((x-mean)^2)/(m-1)), range=max-min, CV=SD/mean (tulis sebagai rasio atau ×100% secara eksplisit). SD undefined bila m<2; CV undefined bila mean=0. Nilai undefined dilaporkan demikian, bukan diubah menjadi nol. Tidak ada threshold CV baik/buruk tanpa scientific source.
-
-Inferential testing tidak dikunci di protocol ini. Jika ditambahkan, tetapkan metode/asumsi dan unit dataset dengan review metodologi; jangan menjadikan within-dataset runs sebagai observasi independen untuk memperbesar sample size.
+Usulkan ringkasan pada level dataset dan kemudian per ukuran customer. Pemilihan statistik deskriptif, visualisasi, serta analisis inferensial jika diperlukan masih menunggu review akademik. Pertahankan hasil dengan perbaikan nol atau kecil.
 
 ## 9. Formal failed-run and poor-run policy
 
-- Valid tetapi poor result wajib dipertahankan. Dilarang mengganti seed/run untuk memperbaiki hasil.
-- Simpan planned run identity, params, seed, matrix hash, status, failure reason dan timestamp untuk semua attempt.
-- Invalid route, non-finite output, interrupted run atau exception ditandai failed; tidak diberi distance/time nol palsu dan tidak dianggap success.
-- Investigasi kegagalan correctness/input sebelum meneruskan main. Jika perlu rerun, simpan attempt asli, alasan dan versi; jangan overwrite. Dataset dengan kurang dari 30 successful planned measured runs ditandai incomplete, tidak diam-diam diklaim memenuhi desain lengkap.
-- Summary sementara boleh atas successful samples jika sample count, planned count dan failure count ditampilkan jelas. Final formal comparison menunggu resolusi atau laporan keterbatasan yang eksplisit.
-- Failure infrastruktur sebelum freeze adalah data-generation failure; tidak dicampur sebagai measured algorithm result.
+- Simpan identitas attempt, matrix/input hash, status, alasan gagal, dan waktu. Invalid route, non-finite output, exception, serta interupsi dilaporkan sebagai failure.
+- Simpan attempt asli sebelum rerun yang beralasan. Tampilan ringkasan membedakan jumlah planned, sukses, dan gagal. Nyatakan keterbatasan jika pengukuran belum lengkap.
+- Kegagalan provider, routability, atau freeze masuk catatan persiapan data. Hasil itu berada di luar measured algorithm runs.
 
 ## 10. Raw persistence and export
 
-Raw results disimpan sebelum summaries. Simpan matrix snapshot terpisah dan referensikan secara immutable; lihat [database design](docs/08_DATABASE_DESIGN.md).
-
-Minimal export:
+Simpan raw results sebelum summaries. Run Optimization, Experiments, Results, dan Export memakai ID snapshot, hash, dan actual provider provenance. [Database design](docs/08_DATABASE_DESIGN.md)
 
 ```text
 benchmark_case_id, distance_matrix_id, input_hash, matrix_hash
-dataset_role, pattern, customer_count, generation_seed
-algorithm, algorithm_version, prng_version, parameters_json
-run_number, attempt, seed, run_role, status, error_code
-route, total_distance_m, execution_time_ms
-git_commit_sha, environment_reference
+dataset_role, customer_count, generation_seed, generator_version
+provider, profile, algorithm_version, git_commit_sha, environment_reference
+run_number, attempt, run_role, status, error_code
+route, nn_initial_distance_m, total_distance_m, improvement_m, improvement_pct
+execution_time_ms
 ```
 
-Format exact physical columns ditetapkan pada task implementation; semua informasi di atas harus dapat diambil tanpa live orders. Preserve raw run data, route indices/point mapping, failure records, configuration, seed lists, machine metadata, dan frozen matrices. Recompute route distance secara independen dan cocokkan hash sebelum analisis.
+Format fisik ditetapkan pada task implementasi. Simpan informasi pemetaan indeks ke point serta provenance matriks agar rute dan biaya bisa direkonstruksi dari snapshot tersimpan.
 
-## 11. Scientific reporting and open decisions
+## 11. Scientific reporting and historical protocol
 
-Laporkan hasil berdasarkan evidence, misalnya “median ACO lebih rendah pada dataset ...”. Jangan klaim optimum tanpa bukti, superiority universal, atau gap “belum pernah dibandingkan”. Working gap dan RQ tetap sesuai docs/32.
+Klaim empiris mengikuti evidence, seperti perbaikan yang benar-benar diamati pada satu ukuran dataset. Research gap, RQ, jumlah dataset, repetisi, warm-up, dan metode statistik memerlukan validasi akademik sebelum evaluasi formal.
 
-OPEN sebelum generation/main: numeric ACO config dan evidence, exact depot/study area/sampling-routability acceptance, public vs local/self-hosted OSRM final provenance, N=100 feasibility, dan pilihan additional scenarios. Main counts, 30 seeded runs, 30 timing repetitions, 5 warm-ups, directed frozen matrix, serta Classical Ant System sudah dikunci.
+Rancangan 2026-10-02 dengan ACO calibration, seeded runs, serta jadwal comparison dua metode **superseded untuk scope aktif**. Versi tersebut tersimpan sebagai [protokol historis](https://github.com/ArdhanKurniawan/courier-route-planner/blob/c5b8684b57141da0ccf196533e3a4bf25de4c5b8/docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). ACO tercatat sebagai Future Development pada [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 ---
 
@@ -4351,9 +4266,9 @@ Checklist ini memakai arti PASS/PENDING/FAIL dan batas pembuktian pada [Gate 1](
 
 # 18 — ROADMAP & BACKLOG
 
-> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
+**Current scope — 2026-11-28.** Phase 4 selesai di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). ACO diarsipkan sebagai Future Development melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Rencana berikutnya mencakup Multi-Provider OSRM, Run Optimization, Experiments, Results, dan Export untuk Hybrid NN + 2-Opt.
 
-**Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+**Historical status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 Perbaikan verifikasi hostname TLS pada runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan persetujuan terpisah masih diperlukan. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
 
@@ -4448,11 +4363,14 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 - road routability validation;
 - OSRM Table adapter / DistanceProvider infrastructure sesuai [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md);
 - directed/asymmetric road-network matrix, meter, stable node order;
-- no null/unreachable pair, ACO common eligibility;
+- tolak null/unreachable dan catat zero off-diagonal sesuai kontrak matriks;
 - matrix hash + immutable distance_matrices storage/freeze;
 - validation and freeze/replay tests.
+- Phase 3A Scenario Freeze selesai dan migration `0005` Phase 3B terverifikasi di Testing. Multi-Provider OSRM masih direncanakan. Rencana mencakup Operational Mode dengan failover/failback dan Research Mode dengan provider lock. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
-## Phase 4 — Algorithm A
+## Phase 4 — Hybrid NN + 2-Opt
+
+**DONE di Testing** melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74) dengan post-merge Quality Gate lulus.
 
 - deterministic Nearest Neighbor (depot=0, lowest-index tie);
 - route validator;
@@ -4460,21 +4378,15 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 - distance recomputation;
 - tests.
 
-## Phase 5 — Algorithm B
+## Phase 5 — ACO (deferred)
 
-- seeded RNG;
-- Classical Ant System explicit parameters (numerical final values tetap OPEN);
-- directed pheromone evaporation/deposit semua valid ants;
-- fixed iterations, tanpa post-ACO 2-Opt;
-- route validation;
-- reproducibility tests.
+Classical Ant System tersedia di [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55) sebagai Future Development. MVP dan fase berikutnya dapat berjalan tanpa integrasi ACO. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ## Phase 6 — Experiment engine
 
-- benchmark runner;
-- experiment runs;
-- summary stats;
-- result comparison UI;
+- Run Optimization untuk Hybrid NN + 2-Opt;
+- Experiments untuk menyimpan run dan frozen input provenance;
+- Results untuk jarak NN awal, jarak akhir, perbaikan absolut/persentase, runtime, dan skalabilitas;
 - route visualization;
 - CSV export.
 
@@ -4482,9 +4394,9 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 
 - CLI benchmark;
 - hardware/environment metadata;
-- Phase A verification → B separate calibration + global config freeze → C pilot → D main sesuai [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md);
-- main 10/25/50 customer × 10 independent random datasets = 30 datasets;
-- 5 warm-ups, 30 independent seeded ACO runs, satu NN quality + 30 timing repetitions;
+- verification → pilot → evaluasi sesuai [protokol revisi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md);
+- ukuran awal 10, 25, dan 50 customer;
+- RQ, research gap, jumlah dataset, warm-up, repetisi, dan metode statistik menunggu validasi akademik;
 - output dataset;
 - verification script.
 
@@ -4565,14 +4477,14 @@ Tambahkan:
 - [ ] depot start/end;
 - [ ] recomputed distance same;
 - [ ] edge cases;
-- [ ] deterministic seed test where applicable;
+- [ ] deterministic rerun memberi hasil yang sama pada matriks identik;
 - [ ] no framework dependency;
 - [ ] complexity/risk documented;
 - [ ] parameter contract documented.
 - [ ] NN directed minimum, depot=0, lowest-index tie;
 - [ ] 2-Opt best improvement, full directed recomputation, asymmetric fixtures pass, <= NN distance;
-- [ ] ACO Classical Ant System, directed pheromone, seeded reset, all-ant deposit, fixed iterations;
-- [ ] tidak ada post-ACO 2-Opt atau invented final numeric defaults.
+
+ACO adalah Future Development di luar DoD solver MVP. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ## 4. Database DoD
 
@@ -4605,23 +4517,20 @@ Initial database foundation evidence di atas tetap historis; full Database DoD u
 
 - [ ] case frozen;
 - [ ] input hash;
-- [ ] same matrix both algorithms;
+- [ ] baseline NN dan hasil Hybrid memakai matriks frozen yang sama;
 - [ ] OSRM road validation dan Table matrix frozen, meter, directed, no unreachable pair;
-- [ ] stable node order dan exact matrix hash cocok di kedua experiments;
-- [ ] seeds saved;
-- [ ] algorithm parameters saved;
+- [ ] stable node order, exact matrix hash, Research Provider Lock, dan actual provider provenance terverifikasi;
+- [ ] dataset seed dan generator version disimpan jika digunakan;
 - [ ] machine info saved;
-- [ ] dataset ordinal mapping dan balanced execution schedule disimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
+- [ ] dataset ordinal mapping dan jadwal eksekusi yang disetujui disimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] commit SHA saved;
 - [ ] invalid routes rejected;
 - [ ] raw results exported;
 - [ ] summary reproducible from raw results.
-- [ ] calibration terpisah dan satu global ACO config frozen;
-- [ ] main 10/25/50 × 10 random datasets; N=100 conditional, other patterns optional;
-- [ ] 30 independent seeded ACO runs dan 30 NN+2-Opt timing samples per dataset;
-- [ ] 5 warm-ups per algoritma/dataset dikeluarkan dari statistik;
+- [ ] ukuran awal 10, 25, dan 50 customer dikaji dalam pilot;
+- [ ] jumlah dataset, repetisi, warm-up, dan analisis disetujui secara akademik sebelum evaluasi formal;
 - [ ] timer hanya algoritma, tanpa OSRM/DB/network/serialization/geometry/rendering;
-- [ ] ACO median/mean comparison utama, best tambahan; RQ3 range/SD/CV;
+- [ ] jarak awal/akhir, perbaikan absolut/persentase, runtime, dan skalabilitas tercatat;
 - [ ] dataset adalah unit observasi, repetitions tidak dihitung sebagai independent datasets;
 - [ ] failure/poor valid runs disimpan, incomplete datasets dilabeli.
 
@@ -5227,8 +5136,7 @@ Implement seeded Dummy Order Generator.
 Primary pattern: random.
 Optional engineering patterns sesuai task: clustered, circular, directional.
 Optional patterns bukan mandatory primary experiment atau core novelty.
-Main evaluation adalah 10/25/50 customer, 10 independent datasets per ukuran.
-N=100 conditional/optional setelah pilot.
+Ukuran awal adalah 10, 25, dan 50 customer. Jumlah dataset per ukuran mengikuti validasi akademik.
 
 Requirements:
 - same seed+config => same generated coordinates/order identity;
@@ -5277,10 +5185,10 @@ Requirements:
 - depot=0 and stable saved customer/node order;
 - NxN including depot, unit meter, directed matrix, no symmetry assumption;
 - reject null/unreachable, invalid values/shape, no fallback metric;
-- reject zero off-diagonal at common ACO eligibility without epsilon substitution;
+- report zero off-diagonal without substituting values;
 - canonical input hash and matrix hash with versioned serialization;
 - immutable snapshot, provider/profile/options/version provenance;
-- same matrix/hash for NN+2-Opt and ACO;
+- use the same frozen matrix/hash for NN baseline and Hybrid;
 - tests for request/response order, failures, hashing, freeze, and replay;
 - no algorithm timing contamination by OSRM/DB/network/serialization.
 
@@ -5343,7 +5251,9 @@ Do not change NN behavior except integration adapter if necessary.
 
 ---
 
-# L. ACO PROMPT
+# L. ACO PROMPT — historical and deferred
+
+Template historis untuk Future Development. Gunakan hanya jika scope ACO dibuka kembali secara eksplisit. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ```text
 Implement Ant Colony Optimization domain module only, variant = Classical Ant System according to docs/33.
@@ -5368,7 +5278,7 @@ Mandatory tests:
 - no NaN/Infinity probabilities;
 - small matrix sanity.
 
-Do NOT add 2-Opt after ACO in main comparison or substitute another ACO variant.
+The archived contract keeps Classical Ant System without post-ACO 2-Opt.
 Require explicit parameters; do NOT hardcode final scientific numeric defaults.
 Fixture values are tests only. Final research values require literature/calibration evidence and one global configuration frozen separately from main evaluation datasets.
 ```
@@ -5402,21 +5312,19 @@ Implement benchmark orchestration according to docs/15_RESEARCH_BENCHMARK_PROTOC
 
 Requirements:
 - one frozen case -> frozen OSRM directed meter matrix with verified input/matrix hash;
-- run NN+2Opt and Classical Ant System against exact same matrix/order/hash;
-- main 10/25/50 x 10 independent random datasets; 100 optional after pilot;
-- separate calibration/evaluation, one frozen global ACO configuration;
-- 5 warmups per algorithm/dataset, excluded from measured statistics;
-- 30 independent seeded ACO runs with predetermined saved seeds;
-- NN+2Opt one deterministic quality output plus 30 timing repetitions;
+- run Hybrid NN + 2-Opt and record initial NN distance and final distance from the exact same matrix/order/hash;
+- use Research Provider Lock and save actual provider provenance;
+- initial sizes are 10, 25, and 50 customers;
+- evaluate only with an academically reviewed dataset, warm-up, repetition, and statistical plan;
 - timing only around algorithm execution;
 - OSRM/DB/HTTP/network/serialization/geometry/rendering excluded from execution timer;
-- seed/run metadata saved;
+- save dataset seed when used and preserve run metadata;
 - invalid route rejected;
 - raw run results saved before summary;
 - summary computed from raw runs.
 - keep all poor valid/failed run records, no silent replacements/cherry-picking;
-- primary quality comparison ACO mean/median, best additional; report SD/range/CV;
-- dataset-level summaries are independent observations, not 30 runs as 30 datasets;
+- report before/after distance, absolute/percentage improvement, computation runtime, and scalability;
+- aggregate at dataset level and keep timing repetitions within their source dataset;
 - mark incomplete planned run sets, preserve attempt identities and failure causes.
 
 Do NOT use Vercel timing as formal scientific benchmark result.
@@ -5435,7 +5343,7 @@ Check:
 - auth/authorization gaps;
 - SQL injection/raw SQL;
 - XSS/dangerouslySetInnerHTML;
-- unbounded ACO parameters/resource abuse;
+- unbounded optimization or benchmark requests/resource abuse;
 - destructive endpoints;
 - production DB reachable from preview;
 - error leakage;
@@ -5587,8 +5495,6 @@ Custody/ACL, system variables untuk ticket binding, dan collector checks khusus 
 
 **Historical Phase 1B Testing — 2026-11-01:** PR #31 merged pada `0beb0642b39bdb7194a25a9e72c340fbd07d4a40`; exact-commit [post-merge Quality Gate](https://github.com/ArdhanKurniawan/courier-route-planner/actions/runs/41269900374) PASS dan stable Testing Preview READY. Existing implementation/review, 548/548 offline, migration Development/Testing dan 1/1 Testing integration dipakai kembali, bukan dijalankan ulang. Owner melaporkan core Scenario Browser CRUD aman: **PASS — OWNER-OBSERVED agregat**. Milestone core CRUD Testing **READY FOR ADMINISTRATIVE CLOSURE** dalam scope tersebut; detail persistence/draft, validation, Depot/FK, auth/logout/session/cookie/Origin/limiter tetap **PENDING untuk Browser QA** pada [matrix evidence](docs/14_TESTING_QA.md#19-phase-1b-testing-post-merge-closure-assessment-2026-11-01). Readiness ini tidak mengeklaim Full Feature/Release DoD selesai atau menutup checklist exit Gate 2 di bawah. Historical receipt tetap tidak lengkap/`STOP_NOT_PASS`; physical runtime SQL identity NOT VERIFIED, FK concurrency race belum diuji, historical login 503 unresolved. Gate 1 CLOSED; Gate 2 OPEN; Order CRUD belum diimplementasikan.
 
-> Snapshot status 2026-11-08. Bukti QA dan migrasi Production terbaru tersedia di [catatan verifikasi rilis](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08).
-
 **Current Phase 1C — 2026-11-08:** Order CRUD sudah di `testing`. Migrasi `0002` Development/Testing, Testing Order CRUD live integration 1/1, dan cleanup integrasi PASS. Owner mengamati login, create/edit/delete Order sintetis lewat alur Map/CRUD, dan daftar kembali kosong. Browser/security QA masih PARTIAL dan Gate 2 masih OPEN. [Bukti UAT Testing](docs/14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 - [ ] depot CRUD accepted;
@@ -5620,48 +5526,43 @@ UAT Part E.5 di Testing mengonfirmasi edit dan hapus generated Order serta perpi
 - [ ] routability validation dan coordinate/snap evidence;
 - [ ] OSRM Table road-network matrix produced, unit meter;
 - [ ] directed/asymmetric NxN validation, depot index 0, stable node order;
-- [ ] no unreachable/null pair, common ACO zero-distance eligibility checked;
+- [ ] no unreachable/null pair, zero off-diagonal tercatat;
 - [ ] matrix hash stable and verified against actual values;
 - [ ] matrix frozen in immutable storage;
 - [ ] matrix validation/hash/freeze/replay tests.
 
 ## Gate 5 — NN + 2-Opt
 
-- [ ] known fixture pass;
-- [ ] route valid;
-- [ ] 2-Opt not worse;
-- [ ] no duplicate/missing point;
-- [ ] framework-independent.
-- [ ] NN deterministic directed minimum, lowest-node-index tie;
-- [ ] best-improvement 2-Opt full directed recomputation, asymmetric trap tests;
-- [ ] symmetric-only delta shortcut absent.
+Solver Phase 4 DONE di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). Checklist berikut mencakup scope solver. Acceptance benchmark formal mengikuti Gate 7.
 
-## Gate 6 — ACO
+- [x] known fixture pass;
+- [x] route valid dan tanpa customer duplikat atau hilang;
+- [x] jarak hasil 2-Opt tidak melebihi baseline NN;
+- [x] framework-independent;
+- [x] NN deterministic directed minimum, lowest-node-index tie;
+- [x] best-improvement 2-Opt full directed recomputation dan asymmetric trap tests;
+- [x] symmetric-only delta shortcut absent.
 
-- [ ] seeded reproducibility;
-- [ ] route valid;
-- [ ] parameter validation;
-- [ ] no NaN;
-- [ ] multi-run support;
-- [ ] no hidden default claimed scientific.
-- [ ] Classical Ant System, directed pheromone, all valid ants deposit, fixed iterations;
-- [ ] no 2-Opt after ACO in main comparison.
+## Gate 6 — ACO (deferred)
+
+Classical Ant System dipertahankan pada branch arsip sebagai Future Development melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Gate ini bukan prerequisite MVP atau Gate 7.
 
 ## Gate 7 — Benchmark engine
 
-- [ ] same frozen OSRM matrix values/order/input hash/matrix hash;
+- [ ] baseline NN dan hasil Hybrid memakai frozen OSRM matrix values, order, input hash, dan matrix hash yang sama;
+- [ ] Research Provider Lock dan actual provider provenance diverifikasi;
 - [ ] timing boundary correct;
 - [ ] raw runs stored;
 - [ ] summary reproducible;
 - [ ] CLI runner;
-- [ ] predetermined balanced execution order dan dataset ordinal mapping tersimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
+- [ ] urutan eksekusi dan daftar dataset yang disetujui tersimpan sesuai [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary);
 - [ ] metadata/commit SHA captured.
 - [ ] timer excludes OSRM/DB/network/serialization/geometry/rendering;
-- [ ] 5 warm-ups excluded, 30 ACO seeded runs, 30 NN+2-Opt timing samples;
-- [ ] calibration separated, global configuration frozen;
-- [ ] main 10/25/50 × 10 random datasets; N=100 conditional and other patterns optional;
-- [ ] mean/median ACO primary comparison, raw failures retained, dataset-level observations;
-- [ ] Phase A verification → B calibration → C pilot → D main evidence per docs/15.
+- [ ] ukuran awal 10, 25, dan 50 customer serta rancangan evaluasi telah divalidasi secara akademik;
+- [ ] jumlah dataset, warm-up, repetisi, dan metode statistik disetujui sebelum evaluasi formal;
+- [ ] jarak NN awal, jarak Hybrid, perbaikan absolut/persentase, runtime, dan skalabilitas tercatat;
+- [ ] raw failures dipertahankan dan level observasi tetap dataset;
+- [ ] evidence verification, pilot, dan evaluasi mengikuti [protokol](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
 
 ## Gate 8 — Public security
 
@@ -5762,7 +5663,9 @@ Symptoms:
 
 Check migration history dan DB environment. Jangan manually patch production dulu.
 
-## ACO NaN
+## ACO NaN — historis
+
+Bagian ini untuk implementasi arsip, yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Check:
 
@@ -5811,7 +5714,7 @@ Project tidak boleh menghasilkan biaya tak terduga.
 - jangan mengaktifkan paid feature tanpa persetujuan tim;
 - monitor usage dashboard;
 - hindari endpoint polling terus-menerus;
-- batasi compute-heavy web-triggered ACO.
+- batasi beban Hybrid dan benchmark yang dipicu dari web.
 
 ## 2. TiDB
 
@@ -5903,7 +5806,7 @@ Formal heavy benchmark dilakukan controlled local runner.
 
 **ACO** — Ant Colony Optimization, metaheuristic stochastic berbasis pheromone/heuristic information.
 
-**Classical Ant System** — varian ACO main comparison: directed pheromone, roulette-wheel selection, fixed iterations, evaporation dan deposit dari semua valid ants, tanpa post-ACO 2-Opt.
+**Classical Ant System** — varian ACO yang diarsipkan sebagai Future Development: directed pheromone, roulette-wheel selection, fixed iterations, evaporation dan deposit dari semua valid ants, tanpa post-ACO 2-Opt.
 
 **Seed** — nilai awal RNG agar data/run stochastic dapat direproduksi.
 
@@ -5913,7 +5816,7 @@ Formal heavy benchmark dilakukan controlled local runner.
 
 **Matrix Hash** — SHA-256 canonical content yang mengikat input hash, node order, provider/config/unit dan matrix values; dipakai untuk memverifikasi same-matrix fairness.
 
-**Calibration Dataset** — input tuning yang terpisah dari main evaluation; menghasilkan satu global ACO configuration frozen.
+**Calibration Dataset (historis)** — input tuning yang terpisah dari main evaluation dalam rancangan ACO terdahulu.
 
 **CV** — coefficient of variation, SD/mean (atau persen bila dilabeli); tidak ada threshold baik/buruk tanpa source.
 
@@ -5946,8 +5849,8 @@ Dokumen project harus diperbarui bila platform mengubah plan/feature/runtime.
 
 Current source-of-truth:
 
-- [Research Decisions](docs/32_RESEARCH_DECISIONS.md): accepted human decisions 2026-10-02, working RQ/gap dan OPEN decisions.
-- [Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md): NN, directed 2-Opt, Classical Ant System.
+- [Research Decisions](docs/32_RESEARCH_DECISIONS.md): keputusan scope 2026-11-28, usulan RQ, dan keputusan historis.
+- [Algorithm Specification](docs/33_ALGORITHM_SPECIFICATION.md): NN, directed 2-Opt, dan kontrak ACO historis.
 - [OSRM Distance Contract](docs/34_OSRM_DISTANCE_CONTRACT.md): frozen directed matrix dan infrastructure boundary.
 - [Benchmark Protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md): experiment procedure.
 - [ADR-012](docs/04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark): supersedes historical ADR-010.
@@ -5961,7 +5864,7 @@ Legacy external/workspace source names (tidak ditemukan sebagai file tracked pad
 
 ### Research literature TODO
 
-TODO-LIT-01: tambahkan bibliografi studi NN/NN+2-Opt vs ACO yang benar-benar diperiksa, dengan evidence untuk wording gap “masih terbatas”. TODO-LIT-02: simpan sumber nilai parameter Classical Ant System atau laporan calibration terpisah. Tidak ada numerical final ACO defaults atau referensi jurnal baru yang dibuat pada task ini. Official platform/API docs di bawah bukan pengganti literature evidence penelitian.
+TODO-LIT-01. Petakan literatur evaluasi kualitas NN sebelum dan sesudah 2-Opt, biaya berarah, dan skala dataset. Wording gap dan metode evaluasi memerlukan validasi akademik. TODO-LIT-02 untuk parameter atau kalibrasi Classical Ant System adalah catatan historis yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Dokumentasi platform melengkapi evidence engineering.
 
 ## OSRM technical sources
 
@@ -5969,7 +5872,7 @@ TODO-LIT-01: tambahkan bibliografi studi NN/NN+2-Opt vs ACO yang benar-benar dip
 - [Route Service API](https://project-osrm.org/docs/v5.24.0/api/#route-service): geometry sesuai supplied coordinate order.
 - [General request format](https://project-osrm.org/docs/v5.24.0/api/#general-options): longitude,latitude dan profile/options.
 
-Endpoint capabilities, usage policy, network extract/profile/version dan public vs local/self-hosted choice tetap perlu diverifikasi sebelum final generation. Referensi API ini membatasi engineering claims, tidak menetapkan scientific ACO parameters.
+Eligibility, compatibility, policy, dan provenance provider dalam rencana Multi-Provider perlu diverifikasi sebelum generasi formal. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## Official Next.js sources
 
@@ -6254,15 +6157,14 @@ Scenario
 → OSRM Table directed matrix (meter) + hash + freeze
 → deterministic NN (depot=0, lowest-index tie)
 → best-improvement 2-Opt (full directed recomputation)
-→ ACO Classical Ant System
-→ Verification → separate calibration → pilot → main experiment
+→ Verification → pilot → evaluasi setelah validasi akademik
 ```
 
 Sebelum algorithm checkpoint, baca [docs/32](docs/32_RESEARCH_DECISIONS.md), [docs/33](docs/33_ALGORITHM_SPECIFICATION.md), dan [docs/34](docs/34_OSRM_DISTANCE_CONTRACT.md). Evidence input sebelum integrasi algoritma: immutable case/matrix, stable node order, no unreachable pair, input/matrix hashes. Saat checkpoint 2-Opt selesai, tunjukkan symmetric-shortcut trap fixture PASS.
 
-Benchmark checkpoint mengikuti [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 customer × 10 independent random datasets, 30 seeded ACO runs, satu NN+2-Opt quality output + 30 timing repetitions, 5 warm-ups. Satu global ACO config frozen sesudah calibration terpisah. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
+Benchmark checkpoint mengikuti [protokol revisi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md). Ukuran awal 10, 25, dan 50 customer. Jumlah dataset, warm-up, repetisi, dan analisis menunggu validasi akademik.
 
-Verifikasi timer mengecualikan OSRM/DB/network/serialization/geometry/rendering. Review raw failure retention dan dataset-level summaries, bukan hanya best ACO result. Current UI Template Baseline belum berarti checkpoint riset ini sudah dikerjakan.
+Verifikasi timer mengecualikan OSRM/DB/network/serialization/geometry/rendering. Review raw failure retention, jarak sebelum/sesudah, improvement, dan ringkasan per dataset. Current UI Template Baseline belum berarti checkpoint riset ini sudah dikerjakan.
 
 ## Bagaimana bertanya saat bingung
 
@@ -6314,7 +6216,7 @@ Stop dan minta review sebelum:
 - menjalankan migration production;
 - merge testing → main;
 - mengubah distance methodology;
-- mengubah ACO parameter penelitian final;
+- menetapkan rancangan evaluasi atau metode statistik penelitian;
 - mengaktifkan paid/billing setting.
 
 ---
@@ -6436,13 +6338,15 @@ Dan set customer output = set customer input.
 
 Recompute route distance secara fungsi terpisah. Jangan mempercayai `totalDistance` yang dikembalikan algoritma sendiri.
 
-Gunakan frozen OSRM directed matrix dalam meter; cocokkan input hash, node order dan matrix hash di kedua metode. Jangan hanya mencocokkan coordinates atau nama scenario. Matrix/benchmark case tetap immutable setelah orders diedit.
+Gunakan frozen OSRM directed matrix dalam meter; cocokkan input hash, node order dan matrix hash pada baseline NN dan hasil Hybrid. Jangan hanya mencocokkan coordinates atau nama scenario. Matrix/benchmark case tetap immutable setelah orders diedit.
 
 ### NN and 2-Opt
 
 NN: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt: best improvement setelah semua candidates, reverse segment dan full directed recomputation. Jalankan asymmetric fixtures di [docs/33](docs/33_ALGORITHM_SPECIFICATION.md); jangan menerima symmetric-only two-boundary-edge delta. Hasil final harus <= NN distance.
 
-### ACO reproducibility
+### ACO reproducibility — historical review criteria
+
+Kriteria ini berlaku pada implementasi arsip yang ditunda melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 
 Run dua kali dengan same seed + same matrix + same params.
 
@@ -6456,11 +6360,11 @@ Pastikan varian Classical Ant System: directed pheromone, semua valid ants depos
 
 ### Benchmark evidence
 
-Periksa [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md): 10/25/50 × 10 random datasets; N=100 conditional, other patterns optional; calibration terpisah dan satu global configuration frozen. Per dataset ada 30 independent seeded ACO runs, 30 NN+2-Opt timing samples, dan 5 warm-ups yang dikeluarkan. ACO mean/median pembanding utama, best tambahan. Dataset-level observations tidak diganti dengan jumlah runs. Raw poor-valid/failed runs tetap ada.
+Periksa usulan ukuran 10, 25, dan 50 customer, exact frozen matrix, provenance, dan metrik jarak NN awal, jarak Hybrid, improvement, runtime, serta skalabilitas. RQ, jumlah dataset, repetisi, warm-up, dan statistik memerlukan validasi akademik. Simpan raw attempts dan gunakan dataset sebagai unit observasi. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 Timer harus mengecualikan OSRM/DB/network/serialization/geometry/rendering dan dijalankan terkontrol di luar runtime Vercel. Untuk task dokumentasi, periksa keselarasan sumber dengan MASTER_GUIDE/MANIFEST; application lint/build tidak membuktikan metodologi penelitian.
 
-Periksa dataset ordinal mapping dan balanced execution schedule yang disimpan terhadap [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary), termasuk warm-up tepat sebelum masing-masing measured block.
+Periksa pemetaan dataset dan jadwal eksekusi yang disetujui terhadap [protocol bagian 6](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md#6-environment-and-timer-boundary).
 
 ## 8. AI review trap
 
@@ -6793,10 +6697,9 @@ Latest Benchmark
 
 Chart/visual yang mungkin dipakai nanti:
 
-- distance NN+2Opt vs ACO;
-- execution time vs customer count;
-- mean ± standard deviation ACO;
-- distribution pattern comparison bila optional/additional experiment dipilih; primary pattern tetap random.
+- jarak baseline NN dan hasil Hybrid;
+- perbaikan absolut dan persentase;
+- runtime dan efektivitas perbaikan berdasarkan jumlah customer sesuai rancangan evaluasi yang disetujui.
 
 Jangan tampilkan statistik palsu hanya agar dashboard terlihat penuh.
 
@@ -7371,118 +7274,55 @@ Human error diasumsikan **akan terjadi**. Sistem harus membuat human error sulit
 
 # SOURCE: docs/32_RESEARCH_DECISIONS.md
 
-# 32 — RESEARCH DECISIONS
+# 32 — RESEARCH DECISIONS & OPEN QUESTIONS
 
-**Status:** Accepted working research contract, keputusan manusia 2026-10-02.
-Dokumen ini menetapkan arah penelitian; prosedur eksekusi ada di [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md), kontrak algoritma di [specification](docs/33_ALGORITHM_SPECIFICATION.md), dan input jalan di [OSRM contract](docs/34_OSRM_DISTANCE_CONTRACT.md). Ini target yang disetujui, bukan klaim fitur sudah diimplementasikan.
+**Status — 2026-11-28.** Keputusan owner menetapkan lingkup aktif proyek. RQ, research gap, dan rancangan evaluasi di bawah masih berupa proposal untuk validasi akademik. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md) · [Kontrak algoritma](docs/33_ALGORITHM_SPECIFICATION.md) · [Kontrak matriks](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
-## 1. Research context
+## 1. Keputusan scope MVP
 
-Web Admin Courier Route Planner membantu admin menyiapkan customer, menghasilkan urutan kunjungan, dan membandingkan Hybrid Nearest Neighbor → 2-Opt dengan Ant Colony Optimization (ACO), varian Classical Ant System.
+- Hybrid Nearest Neighbor + 2-Opt menjadi satu-satunya metode optimasi aktif. Rute awal NN menjadi baseline untuk mengukur perbaikan 2-Opt dalam pipeline yang sama.
+- Problem tetap single-depot closed-tour TSP. Rute berangkat dari Depot, mengunjungi setiap customer tepat sekali, lalu kembali ke Depot.
+- Input formal berasal dari frozen Benchmark Case dan satu frozen OSRM Table distance matrix yang immutable. Matriks berarah dalam meter, dengan Depot indeks 0, node order stabil, input hash, dan matrix hash.
+- Run Optimization, Experiments, Results, dan Export tetap menjadi target pengembangan.
+- ACO Classical Ant System ditunda sebagai Future Development. Implementasi offline tersimpan pada [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55). Integrasi berada di luar scope MVP dan kelanjutan pengembangan tidak bergantung padanya. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
-## 2. Problem statement
+## 2. Posisi penelitian dan research gap
 
-Satu depot menjadi awal dan akhir: Depot → Customer → ... → Customer → Depot. Setiap customer dikunjungi tepat sekali. Problem adalah multi-stop route sequencing / TSP-like closed tour. Jumlah customer tidak termasuk depot.
+Studi yang diusulkan mengukur perubahan kualitas rute dari baseline NN setelah best-improvement 2-Opt diterapkan pada biaya jaringan jalan berarah. Kontribusi yang ditargetkan adalah hasil empiris terkontrol, input serta hasil yang dapat diaudit, dan Web Admin untuk menyiapkan dan menampilkan eksperimen.
 
-## 3. Why the problem matters / urgency
+Research gap masih memerlukan validasi literatur dan akademik. Petakan studi yang relevan berdasarkan problem, data, metode jarak, ukuran, pendekatan 2-Opt, metrik, dan keterulangan hasil. Hindari klaim novelty, keunggulan, atau optimum global tanpa bukti yang sesuai. [Source references](docs/27_SOURCE_REFERENCES.md)
 
-Admin perlu menentukan urutan banyak tujuan dan menilai jarak serta waktu komputasi metode yang dipakai. Perbandingan terkontrol memberi dasar pemilihan metode pada konteks studi. Pengurangan biaya, jarak, atau waktu operasional belum boleh diklaim sebelum ada pengukuran.
+## 3. Usulan research questions
 
-## 4. Existing research position
+- **RQ1:** Seberapa besar pengurangan total jarak setelah penerapan 2-Opt pada rute awal Nearest Neighbor?
+- **RQ2:** Bagaimana waktu komputasi Hybrid NN + 2-Opt pada jumlah customer yang berbeda?
+- **RQ3:** Bagaimana pengaruh jumlah customer terhadap efektivitas perbaikan rute menggunakan 2-Opt?
 
-Studi terdahulu telah membandingkan NN/NN+2-Opt dan ACO pada TSP dan konteks optimasi lain. Posisi ini tidak mengklaim pasangan metode sebagai penemuan baru.
+## 4. Rancangan evaluasi awal
 
-**TODO-LIT-01:** petakan studi pembanding yang benar-benar dibaca: sitasi, problem, input jarak, ukuran, varian, parameter, repetitions, dan metrics. Daftar bibliografi yang memadai belum tersedia di repository; lihat [source references](docs/27_SOURCE_REFERENCES.md). Jangan membuat sitasi fiktif.
-
-## 5. Research gap
-
-Working gap: bukti perbandingan empiris terkontrol dalam konteks pengiriman multi-customer dengan input road-network identik, beberapa ukuran masalah, route quality, computation time, repeated stochastic stability, dan implementasi Web Admin masih terbatas. Frasa **masih terbatas** adalah posisi kerja yang harus dibuktikan melalui TODO-LIT-01, bukan hasil systematic review yang sudah selesai. Hindari klaim universal “belum pernah ada”.
-
-## 6. Research questions
-
-- **RQ1:** Bagaimana perbandingan total jarak rute yang dihasilkan Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization pada jumlah customer yang berbeda?
-- **RQ2:** Bagaimana perbandingan waktu komputasi Hybrid Nearest Neighbor–2-Opt dan Ant Colony Optimization ketika jumlah customer meningkat?
-- **RQ3:** Seberapa besar variasi hasil Ant Colony Optimization pada pengujian berulang, dengan hasil Hybrid Nearest Neighbor–2-Opt sebagai referensi deterministik?
-
-RQ ini tidak boleh diganti diam-diam oleh agent implementasi.
-
-## 7. Research objectives
-
-1. Membandingkan total jarak NN+2-Opt dengan mean/median ACO pada tiap ukuran customer.
-2. Membandingkan distribusi waktu eksekusi algoritma pada environment terkontrol.
-3. Mengukur variasi hasil ACO antar seed dengan NN+2-Opt sebagai referensi deterministik.
-
-## 8. Contribution
-
-Kontribusi yang ditargetkan adalah evidence empiris terkontrol, snapshot input/matrix dan raw results yang dapat diaudit, serta Web Admin untuk menyiapkan dan menampilkan eksperimen. Pattern generator tambahan dan penggunaan dua algoritma bukan klaim novelty dengan sendirinya.
-
-## 9. Independent, dependent, and control variables
-
-| Jenis | Variabel |
+| Unsur | Usulan |
 |---|---|
-| Independent | Metode (NN+2-Opt vs Classical Ant System), jumlah customer (10/25/50) |
-| Dependent | Total distance meter, algorithm execution time, variasi jarak ACO antar run |
-| Control | Depot/study area dan generation procedure yang dibekukan; node order, input dan matrix hash identik dalam tiap comparison; satu konfigurasi ACO global; daftar seed predetermined; versi algoritma/PRNG; hardware/runtime dan timing policy |
+| Ukuran awal | 10, 25, dan 50 customer, di luar Depot. |
+| Input berpasangan | Rute awal NN dan tur hasil 2-Opt memakai Benchmark Case, node order, dan matriks yang sama. |
+| Kualitas rute | Jarak NN awal, jarak Hybrid, perbaikan absolut dalam meter, dan persentase perbaikan. |
+| Skalabilitas | Waktu komputasi Hybrid dan perubahan efektivitas perbaikan menurut jumlah customer. |
+| Kontrol | Depot/study area, prosedur generator, provider lock, profil jaringan, versi solver, hardware/runtime, dan timer boundary. |
 
-Dataset adalah unit observasi scenario. Tiga puluh run ACO pada satu dataset adalah pengulangan stochastic, bukan tiga puluh dataset independen.
+Dataset adalah unit observasi. Pengulangan timing pada dataset identik dapat membantu mengukur variasi runtime dan tetap dihitung sebagai pengukuran dari dataset yang sama. Data valid dengan perbaikan kecil atau nol, serta percobaan gagal, dipertahankan.
 
-## 10. Primary experiment design
+Runner formal memakai environment terkontrol di luar runtime Vercel. OSRM, DB, HTTP/network, serialization, geometry, dan rendering berada di luar timer solver. OSRM Table membentuk input, sedangkan OSRM Route/geometry tetap terpisah untuk visualisasi.
 
-| Customer count | Independent evaluation datasets | Pattern |
-|---|---:|---|
-| 10 | 10 | random |
-| 25 | 10 | random |
-| 50 | 10 | random |
-| Total | 30 | Main evaluation |
+## 5. Keputusan yang masih memerlukan validasi
 
-- N=100 / **100 customers** conditional/optional setelah pilot feasibility; tidak wajib main experiment.
-- clustered, circular, directional boleh didukung engineering generator, tetapi optional/additional experiments dan bukan core novelty.
-- Calibration datasets wajib terpisah dari main evaluation. Freeze satu global ACO configuration setelah calibration; jangan memilih configuration berbeda untuk memenangkan N10/N25/N50.
-- ACO: **30 independent seeded runs per main dataset**, seed list ditentukan dan disimpan sebelum measured runs. Timestamp seed dilarang.
-- NN+2-Opt: satu deterministic quality result dan **30 measured timing repetitions** per dataset.
-- **5 warm-up executions** per algoritma per dataset sebelum measured runtime; hasil warm-up tidak masuk statistik penelitian.
-- Formal input adalah satu frozen OSRM road-network distance matrix per comparison, dalam meter dan berpotensi directed/asymmetric. Tidak ada asumsi global d(i,j)=d(j,i).
-- Formal benchmark dijalankan pada environment terkontrol yang dicatat, tidak bergantung pada runtime Vercel.
+- Research gap berbasis literatur dan wording final RQ.
+- Jumlah dataset independen per ukuran, prosedur sampling, lokasi studi, dan kriteria routability.
+- Jumlah warm-up dan repetisi, urutan eksekusi, ringkasan statistik, serta metode analisis.
+- Format pelaporan perubahan efektivitas berdasarkan jumlah customer dan kebutuhan eksperimen tambahan.
+- Provider yang memenuhi kontrak, profil, dan provenance yang cukup untuk pengumpulan data formal. Prioritas provider adalah rencana engineering. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
-## 11. Primary metrics
+## 6. Keputusan historis
 
-| RQ | Laporan per dataset |
-|---|---|
-| RQ1: quality | NN+2-Opt total distance; ACO mean, median, best, worst, SD |
-| RQ2: time | Mean, median, SD dari 30 NN+2-Opt timing samples dan runtime 30 ACO runs; min/max optional |
-| RQ3: stability | ACO mean, median, best, worst, range, SD, coefficient of variation (CV) |
-
-Primary descriptive comparison memakai ACO median dan/atau mean. Best-of-30 adalah hasil tambahan, tidak dijadikan satu-satunya pembanding terhadap NN+2-Opt. Jangan menetapkan threshold CV baik/buruk tanpa sumber ilmiah. Definisi statistik dan failed-run policy ada di protocol v1.
-
-## 12. Main scope
-
-Web Admin, satu depot, customer dengan latitude/longitude, editable dummy orders/scenarios, immutable benchmark snapshots, frozen OSRM Table matrix, deterministic NN, best-improvement 2-Opt dengan full directed route recomputation, dan seeded Classical Ant System tanpa 2-Opt sesudah ACO pada main comparison.
-
-OSRM adalah core input infrastructure, bukan research algorithm. OSRM Route/geometry untuk Leaflet adalah concern terpisah. Timer formal mengecualikan OSRM request, DB, HTTP/network, serialization, route geometry generation, dan rendering.
-
-## 13. Out of scope
-
-Shortest-path A→B sebagai problem utama, Dijkstra/A* sebagai metode penelitian, VRP multi-vehicle/multi-depot, realtime courier navigation, live traffic, dan klaim optimum global. Task sinkronisasi ini tidak mengimplementasikan produk atau menjalankan eksperimen.
-
-## 14. Claims that MUST NOT be made
-
-- “NN+2-Opt vs ACO belum pernah dibandingkan” tanpa literature evidence yang mendukung.
-- Heuristic menghasilkan “optimal route” tanpa bukti optimum.
-- Lebih cepat/pendek/stabil tanpa metric dan benchmark yang sah.
-- OSRM Table distance otomatis mathematical shortest-distance route.
-- Best-of-30 sebagai typical ACO performance, atau run dalam satu dataset sebagai dataset independen.
-- ACO numeric defaults sudah final ketika belum ada literature/calibration record.
-
-## 15. Decisions still OPEN
-
-- Numerical ACO parameters, dengan justifikasi relevant literature atau small calibration experiment.
-- Exact depot, study area, batas generator dan kriteria sampling/routability sebelum data final dibentuk.
-- Public OSRM vs local/self-hosted untuk final data generation, berikut profile/network provenance yang akan dibekukan.
-- Apakah N=100 masuk eksperimen akhir setelah pilot.
-- Apakah clustered/additional scenarios dijalankan dan dilaporkan terpisah.
-- TODO-LIT-01: evidence bibliografi untuk posisi/gap. Tidak boleh dianggap sudah dipenuhi oleh dokumentasi teknis platform.
-
-Keputusan yang sudah dikunci (main counts, jumlah dataset, repetitions, warm-up, varian algoritma, input formal, dan RQ) tidak termasuk OPEN.
+Rancangan 2026-10-02 membandingkan NN + 2-Opt dan Classical Ant System. Rancangan itu mencatat 10 dataset per ukuran, kalibrasi ACO terpisah, 30 seeded runs ACO, 30 timing repetitions NN + 2-Opt, dan 5 warm-up. Rancangan itu **superseded untuk evaluasi aktif**. Riwayat keputusan dan spesifikasi ACO tetap tersedia. [Keputusan 2026-10-02](https://github.com/ArdhanKurniawan/courier-route-planner/blob/c5b8684b57141da0ccf196533e3a4bf25de4c5b8/docs/32_RESEARCH_DECISIONS.md) · [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ---
 
@@ -7490,12 +7330,12 @@ Keputusan yang sudah dikunci (main counts, jumlah dataset, repetitions, warm-up,
 
 # 33 — ALGORITHM SPECIFICATION
 
-**Status:** Approved implementation contract, 2026-10-02; belum merupakan implementasi.
+**Status — 2026-11-28.** Phase 4 Hybrid NN + 2-Opt selesai di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). ACO merupakan kontrak historis yang ditunda sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
 Rujukan: [research decisions](docs/32_RESEARCH_DECISIONS.md), [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md), [matrix contract](docs/34_OSRM_DISTANCE_CONTRACT.md).
 
 ## 1. Common optimizer input contract
 
-Input geografi optimizer hanya **DistanceMatrix** yang sudah divalidasi, ditambah parameter algoritma/seed bila diperlukan. Tidak ada coordinates, provider, HTTP, DB, atau UI dalam core. Metadata ID/hash dipetakan application layer di luar solver.
+Input solver aktif adalah **DistanceMatrix** tervalidasi. Tidak ada coordinates, provider, HTTP, DB, atau UI dalam core. Metadata ID/hash dipetakan application layer di luar solver.
 
 ```ts
 type DistanceMatrix = ReadonlyArray<ReadonlyArray<number>>;
@@ -7505,28 +7345,15 @@ type NNTwoOptDiagnostics = Readonly<{
   twoOptPasses?: number;
   acceptedImprovements?: number;
 }>;
-type AntSystemDiagnostics = Readonly<{
-  iterationsCompleted?: number;
-  bestIteration?: number;
-}>;
-type AntSystemParameters = Readonly<{
-  alpha: number;
-  beta: number;
-  rho: number;
-  Q: number;
-  tau0: number;
-  antCount: number;
-  maxIterations: number;
-}>;
 type OptimizerResult = Readonly<{
   route: Route;
   totalDistanceM: number;
-  algorithm: 'NN_2OPT' | 'ACO';
-  diagnostics?: NNTwoOptDiagnostics | AntSystemDiagnostics;
+  algorithm: 'NN_2OPT';
+  diagnostics: NNTwoOptDiagnostics;
 }>;
 ```
 
-Ini conceptual types, bukan file source yang sudah tersedia. Seed dan PRNG version harus eksplisit pada pemanggilan ACO dan run metadata. Core tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, OSRM HTTP client, atau session/cookies. Tidak boleh memutasi matrix atau initial route milik caller.
+Implementasi ada di [solver Hybrid](src/domain/nn-two-opt.ts) dan [validator](src/domain/route-validator.ts). Core tidak boleh import `next/*`, React, Leaflet, Drizzle/TiDB, OSRM HTTP client, atau session/cookies. Tidak boleh memutasi matrix atau initial route milik caller.
 
 ## 2. Directed matrix and route distance
 
@@ -7540,7 +7367,7 @@ L(R) = sum(k=0..n) D[r_k][r_(k+1)]     [meter]
 
 Gunakan seluruh directed edges, termasuk return edge ke depot. Jangan round matrix sebelum optimasi; pembulatan hanya display. Penjumlahan yang overflow/non-finite adalah error.
 
-ACO dengan eta=1/d memerlukan off-diagonal distance positif pada kasus nontrivial. Matrix dengan zero off-diagonal dapat lolos validasi bentuk/jarak umum, tetapi harus ditolak pada ACO preflight dengan error eksplisit. Jangan diam-diam memasukkan epsilon, mengganti jarak, atau menggabungkan customer. Aturan penerimaan koordinat yang menyebabkan zero distance harus diselesaikan sebelum freeze data formal; semua algoritma memakai eligibility dataset yang sama.
+Laporkan zero off-diagonal sebagai bukti kualitas data dan tetapkan penanganannya sebelum pengumpulan formal. Biaya tetap sesuai matriks frozen, termasuk nilai nol. [Kontrak matriks](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## 3. Nearest Neighbor (NN)
 
@@ -7572,7 +7399,7 @@ Invariant: **distance(NN + 2-Opt) <= distance(NN)**. n=0/1 tidak punya reversal 
 
 ## 5. ACO variant: Classical Ant System
 
-Main comparison menggunakan **Classical Ant System**, tanpa 2-Opt setelah ACO, tanpa elitist/best-only deposit, ACS local update, atau Max-Min clipping tersembunyi.
+**Historis dan deferred.** Bagian ini menyimpan kontrak varian Classical Ant System sebagai referensi. ACO tidak menjadi prerequisite MVP, Run Optimization, Experiments, Results, atau Export. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75) · [Implementasi arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55)
 
 ### Explicit parameters and validation
 
@@ -7582,7 +7409,7 @@ Main comparison menggunakan **Classical Ant System**, tanpa 2-Opt setelah ACO, t
 - antCount, maxIterations: positive safe integers;
 - seed: eksplisit dalam format yang didukung seeded PRNG version yang dicatat.
 
-Tidak ada nilai numerik final/default ilmiah di specification ini. Runner formal mewajibkan parameter lengkap dari satu global configuration yang dibekukan setelah literature justification/calibration. Numeric unit-test values harus diberi label fixture, bukan rekomendasi penelitian.
+Tidak ada nilai numerik final/default ilmiah di specification ini. Rancangan ACO historis menetapkan parameter eksplisit dari satu konfigurasi global setelah justifikasi literatur dan kalibrasi. Numeric unit-test values harus diberi label fixture, bukan rekomendasi penelitian.
 
 ### Initialization and transition
 
@@ -7616,21 +7443,21 @@ Track best observed valid route pada seluruh ant/iterasi; pada equal cost pertah
 
 Same matrix + parameters + seed + PRNG/algorithm version + compatible runtime → route, cost, dan iteration count yang reproducible; execution time tidak diwajibkan identik. Jangan gunakan Math.random/timestamp seed untuk formal run. Seed list predetermined dicatat runner.
 
-n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung. Formal main datasets selalu n=10/25/50.
+n=0 adalah trivial result [0,0], distance 0 tanpa division/deposit; bila diagnostic ACO disertakan, iterationsCompleted=0 dan bestIteration tidak ada. n=1/2 dengan positive off-diagonal tetap menggunakan fixed iteration contract; return edge dihitung.
 
 ## 6. Output and RouteValidator
 
-Common result mengembalikan route indices, totalDistanceM dan algorithm. `diagnostics` opsional dan mengikuti algorithm; field berikut hanya dikembalikan bila diperlukan, bukan shared mandatory fields atau main research metrics baru.
+Hasil Hybrid mengembalikan route indices, `totalDistanceM`, `algorithm`, dan `diagnostics`. `nnInitialDistanceM` menyediakan baseline untuk menghitung perbaikan absolut dan persentase dengan matriks yang sama.
 
 | Algorithm | Optional diagnostic | Arti bila disertakan |
 |---|---|---|
 | NN_2OPT | nnInitialDistanceM | Full directed distance hasil NN sebelum 2-Opt, dalam meter |
 | NN_2OPT | twoOptPasses | Jumlah pass evaluasi candidate yang selesai, termasuk pass terakhir tanpa improvement; 0 bila tidak ada candidate (n=0/1) |
 | NN_2OPT | acceptedImprovements | Jumlah penggantian route dengan best strict improvement yang diterima; tidak menghitung pass terakhir tanpa improvement |
-| ACO | iterationsCompleted | Jumlah iterasi Ant System yang selesai; maxIterations pada successful nontrivial run, 0 pada n=0 |
-| ACO | bestIteration | Nomor iterasi mulai dari 1 saat final best route pertama ditemukan; tidak ada pada n=0 |
+| ACO (historis) | iterationsCompleted | Jumlah iterasi Ant System yang selesai pada implementasi arsip. |
+| ACO (historis) | bestIteration | Iterasi ketika best route pertama ditemukan pada implementasi arsip. |
 
-`iterationsCompleted` tidak dipakai untuk NN/2-Opt dan tidak disamakan dengan twoOptPasses atau acceptedImprovements. Diagnostic tidak mengubah stopping criterion atau failure policy; run parsial tetap failure. Application menambahkan matrix/input hash, node identity mapping, version, params, seed, run number, timer, status, dan environment metadata.
+`iterationsCompleted` berbeda dari `twoOptPasses` dan `acceptedImprovements`. Application layer menambahkan matrix/input hash, actual provider provenance, node mapping, versi, identitas pengukuran, timer, status, dan metadata environment.
 
 RouteValidator independen memeriksa:
 
@@ -7645,18 +7472,18 @@ Route invalid tidak boleh diperbaiki dengan dedupe/reordering setelah solver lal
 
 ## 7. Timer boundaries
 
-Runner controlled local environment melakukan matrix load/hash verification, external validation dan penyusunan parameter sebelum timer. Timer monotonic high-resolution membungkus pemanggilan algoritma saja. NN+2-Opt diukur sebagai satu pipeline; ACO mencakup PRNG initialization, pheromone initialization, konstruksi ant, update, dan best tracking. Tidak ada cached solver state antar repetition.
+Runner controlled local environment melakukan matrix load/hash verification, external validation dan penyusunan parameter sebelum timer. Timer monotonic high-resolution membungkus pemanggilan algoritma saja. NN + 2-Opt diukur sebagai satu pipeline. Tidak ada cached solver state antar repetition.
 
-Independent post-run RouteValidator, persistence, aggregation, serialization, OSRM/HTTP/network, DB, geometry generation, dan Leaflet/rendering berada di luar timer. Pemeriksaan internal yang memang dilakukan solver tetap termasuk computation. Ikuti 5 warm-ups dan 30 repetitions pada [protocol v1](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md).
+Independent post-run RouteValidator, persistence, aggregation, serialization, OSRM/HTTP/network, DB, geometry generation, dan Leaflet/rendering berada di luar timer. Pemeriksaan internal yang memang dilakukan solver tetap termasuk computation. Warm-up dan repetisi mengikuti keputusan setelah validasi akademik. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
 
 ## 8. Error taxonomy
 
 | Code | Boundary / meaning |
 |---|---|
 | DISTANCE_MATRIX_INVALID | Shape, diagonal, range, non-finite, null/unreachable invalid |
-| ALGORITHM_PARAMETER_ERROR | Parameter/seed tidak sesuai contract |
-| ALGORITHM_DISTANCE_DOMAIN_ERROR | Nontrivial ACO input mengandung zero off-diagonal |
-| ALGORITHM_NUMERICAL_ERROR | Non-finite route sum, invalid probability/pheromone |
+| ALGORITHM_PARAMETER_ERROR | Historis ACO. Parameter/seed di luar kontrak arsip. |
+| ALGORITHM_DISTANCE_DOMAIN_ERROR | Historis ACO. Input nontrivial mengandung zero off-diagonal. |
+| ALGORITHM_NUMERICAL_ERROR | Non-finite route sum. Dalam ACO arsip juga mencakup invalid probability/pheromone. |
 | ALGORITHM_INVALID_ROUTE | RouteValidator gagal atau initial 2-Opt route invalid |
 | BENCHMARK_INPUT_MISMATCH | Runner menemukan input/node order/matrix hash berbeda |
 | BENCHMARK_RUN_FAILED | Run interrupted/exception; simpan cause dan run identity |
@@ -7694,11 +7521,11 @@ Valid initial route [0,1,2,3,0] cost 16. Reversal [1..2] memberi [0,2,1,3,0] cos
 - All off-diagonal=1 untuk lowest-index NN tie: [0,1,2,...,n,0].
 - 0/1/2 customer, empty matrix rejected, invalid route, asymmetric/symmetric inputs.
 - Best-improvement fixture: enumerasi semua candidates secara independen, pastikan accepted move terbaik, bukan sekadar yang pertama membaik.
-- Seeded ACO repeatability, invalid params, zero off-diagonal rejection, finite probabilities/pheromone; directed deposit termasuk return edge dari **semua** ants.
+- Fixture ACO historis tersedia pada [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55).
 
 ## 10. Property/invariant tests
 
-Generated finite matrices (positive off-diagonal untuk ACO), termasuk asymmetric, harus selalu menghasilkan valid closed tours, preserve input, dan cost recomputation cocok. 2-Opt tidak lebih buruk dari NN. ACO fixed-seed result identik; jangan mewajibkan ACO mengalahkan NN atau mencapai optimum pada setiap fixture. Pada small instance boleh exhaustive enumeration sebagai test oracle tanpa mengubah metode penelitian.
+Generated finite matrices, termasuk matriks asimetris, harus menghasilkan valid closed tours dan mempertahankan input. Recompute directed cost secara independen dan verifikasi jarak Hybrid tidak melebihi baseline NN. Exhaustive enumeration pada fixture kecil dapat dipakai sebagai test oracle.
 
 ---
 
@@ -7706,12 +7533,12 @@ Generated finite matrices (positive off-diagonal untuk ACO), termasuk asymmetric
 
 # 34 — OSRM DISTANCE CONTRACT
 
-**Status:** Approved target input infrastructure, 2026-10-02. Belum ada OSRM client aktual.
+**Status — 2026-11-28.** Phase 3B menyediakan adapter dan penyimpanan frozen snapshot. Migration `0005` berstatus SUCCESS + VERIFIED di Testing. Generasi tetap nonaktif. Arsitektur Multi-Provider OSRM masih berupa rencana.
 Keputusan: [ADR-012](docs/04_TECH_STACK_ADRS.md#adr-012--osrm-road-network-distance-matrix-for-formal-research-benchmark), [research decisions](docs/32_RESEARCH_DECISIONS.md).
 
 ## 1. Purpose
 
-Membentuk satu frozen road-network distance matrix yang dapat dipakai ulang oleh kedua algoritma pada comparison yang sama.
+Membentuk satu frozen road-network distance matrix yang dipakai bersama oleh baseline Nearest Neighbor dan hasil Hybrid NN + 2-Opt.
 
 ## 2. OSRM role
 
@@ -7720,14 +7547,14 @@ Depot + Customer Coordinates
 → road-network validation
 → OSRM Table Service
 → validate + hash + freeze directed distance matrix
-→ NN → 2-Opt / ACO (Classical Ant System)
+→ baseline NN → best-improvement 2-Opt
 ```
 
-OSRM Table Service adalah approved core infrastructure untuk formal research input. Persetujuan ini tidak berarti adapter sudah diimplementasikan.
+OSRM Table Service adalah approved core infrastructure untuk input formal.
 
 ## 3. OSRM is NOT the research algorithm
 
-Penelitian membandingkan NN+2-Opt vs Classical Ant System untuk urutan customer. OSRM tidak menggantikan optimizer dengan shortest-path A→B atau OSRM Trip. Domain hanya menerima matrix, tidak memanggil OSRM.
+MVP memakai Hybrid NN + 2-Opt untuk urutan customer dengan rute awal NN sebagai baseline. OSRM tidak menggantikan optimizer dengan shortest-path A→B atau OSRM Trip. Domain hanya menerima matrix, tidak memanggil OSRM.
 
 ## 4. Table Service responsibility
 
@@ -7749,7 +7576,7 @@ Route Service menerima urutan hasil optimizer untuk visualisasi jalan. Geometri 
 - Validasi identitas customer dan tepat satu depot; duplicate identity ditolak.
 - Periksa road snapping/routability sebelum freeze matrix; coordinate range valid saja tidak menjamin jalur antar semua node.
 - Simpan original coordinates dan bukti returned/snapped coordinates bila tersedia. Toleransi snapping, study area, sampling/replacement rule harus ditetapkan dan dicatat sebelum data formal dibuat; jangan menebak threshold ilmiah pada implementasi.
-- ACO eta=1/d memerlukan positive off-diagonal. Zero-cost pair harus dilaporkan pada common preflight sesuai [algorithm contract](docs/33_ALGORITHM_SPECIFICATION.md); tidak boleh diubah menjadi epsilon/fallback diam-diam.
+- Laporkan zero-cost pair dan pertahankan nilainya pada matriks. Kriteria sampling dan routability formal masih menunggu validasi akademik. [Kontrak algoritma](docs/33_ALGORITHM_SPECIFICATION.md)
 
 OSRM request memakai urutan longitude,latitude; adapter wajib mencegah tertukarnya lat/lng. [Official request format](https://project-osrm.org/docs/v5.24.0/api/#general-options).
 
@@ -7776,7 +7603,7 @@ Null/missing/unreachable pair, incomplete response, non-finite/negative value, w
 - Tetapkan satu serializer berversi dengan key order dan representasi angka deterministik; larang NaN/Infinity, normalisasi -0 menjadi 0, pertahankan array order. generated_at adalah provenance, tidak mengubah content identity.
 - Hash dihitung dari actual content; jangan mengarang hash atau memakai ID DB sebagai pengganti. Perubahan value/order/unit/config harus mengubah hash yang bersangkutan.
 
-Exact serializer implementation dan test vectors dibuat dalam task infrastructure, bukan source code pada task documentation ini.
+Serializer `distance-matrix/v1` mengikat versi, provider, profile, URL endpoint, opsi, unit, directed semantics, input hash, node order, nilai matriks, dan bukti snapping dalam urutan key tetap. Timestamp generate dan metadata provenance observasional berada di luar preimage. [Golden vector dan integrity tests](tests/unit/distance-matrix-domain.test.ts)
 
 ## 12. Freeze / immutability
 
@@ -7786,7 +7613,7 @@ Simpan juga unit/contract version dan provider/network provenance jika tersedia.
 
 ## 13. Same-matrix fairness rule
 
-Kedua algoritma harus memakai exact matrix values, input hash, node order, dan matrix hash yang sama. Runner memverifikasi hash setelah load dan mencatat reference/hash pada setiap experiment/export. Hash mismatch menghentikan comparison. ACO dan NN tidak boleh melakukan provider request masing-masing.
+Baseline NN dan hasil Hybrid memakai exact matrix values, input hash, node order, matrix hash, dan actual provider provenance yang sama. Runner memverifikasi hash setelah load dan mencatat referensinya pada setiap experiment/export. Hash mismatch menghentikan evaluasi. Pengulangan timing memakai snapshot tersimpan.
 
 ## 14. Timing exclusion
 
@@ -7798,13 +7625,72 @@ Catat generation time, endpoint identity tanpa credential, profile/options, prov
 
 Network/profile/provider dapat berubah; coordinates yang sama belum tentu menghasilkan matrix yang sama saat diminta ulang. Reproduksi **algorithm results** memakai matrix tersimpan. Reproduksi **matrix generation** membutuhkan provider/network provenance lebih lengkap dan merupakan batas reproducibility terpisah.
 
-## 16. Public vs self-hosted / local consideration
+## 16. Phase 3B — kontrak provider yang tersedia
 
-Keputusan endpoint final masih OPEN. Evaluasi dukungan distance annotation, limits N+1 nodes, reproducibility/version pinning, availability, kebijakan penggunaan dan budget. Public service jangan diasumsikan unlimited atau stabil. Local/self-hosted memberi kontrol extract/profile tetapi membutuhkan setup/storage/compute. Pilihan dan keterbatasan wajib dicatat sebelum formal generation; tidak ada deployment OSRM pada task ini.
+Konfigurasi saat ini memakai satu endpoint. Prioritas provider tercatat sebagai rencana pada bagian 20. Setiap kandidat masih perlu menunjukkan distance annotation, kapasitas N+1, provenance yang tersedia, kestabilan, dan kepatuhan kebijakan sebelum dipakai untuk data formal.
+
+Untuk Phase 3B, ukuran utama 10, 25, dan 50 Order memerlukan masing-masing 11, 26, dan 51 titik termasuk Depot. Satu Table request menghasilkan 121, 676, dan 2.601 sel berarah. Ketiga ukuran lulus dengan respons sintetis. Batas `--max-table-size` OSRM dapat dikonfigurasi operator. Sebelum generasi formal, provider terpilih harus membuktikan dukungan `annotations=distance`, ukuran target, dan kebijakan pemakaian. FOSSGIS membatasi satu request per detik, melarang penggunaan berat, dan menyimpan permintaan di log. [Konfigurasi OSRM](https://project-osrm.org/docs/v26.4.0/tools) · [Kebijakan FOSSGIS](https://routing.openstreetmap.de/about.html#usage-policy)
+
+Generasi aplikasi default nonaktif. Untuk mengaktifkannya di lingkungan yang telah disetujui, operator mengatur `DISTANCE_MATRIX_GENERATION=1`, `DISTANCE_MATRIX_OSRM_URL` ke endpoint HTTPS khusus tanpa kredensial, `DISTANCE_MATRIX_OSRM_PROFILE`, `DISTANCE_MATRIX_OSRM_MAX_POINTS` hingga 51, dan `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` sesuai metode penelitian. Endpoint demo FOSSGIS dan Project OSRM ditolak. Server meminta distance saja dengan radius per titik, tanpa fallback atau retry otomatis. Bukti snap sumber dan tujuan harus tersedia, menunjuk koordinat yang sama untuk indeks tersebut, dan berada dalam radius. Pemeriksaan batas bawah geometris membantu menolak waypoint yang terkait ke indeks salah. Toleransi satu meter menampung kuantisasi koordinat, dan pemeriksaan ini tidak menentukan nilai matriks. Versi software atau network extract yang tidak diberikan provider ditampilkan sebagai tidak tersedia.
+
+Operator dapat mencatat versi dan hash extract yang sudah diverifikasi melalui `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION` dan `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256`. Versi data yang dikembalikan OSRM disimpan terpisah. Generasi tidak tersedia pada Production.
 
 ## 17. Failure handling
 
 Adapter membedakan coordinate/routability error, timeout/network error, provider error, unsupported distance response, invalid matrix, hash mismatch, dan storage/freeze failure. Retry terbatas hanya untuk transient infrastructure errors sebelum freeze dan dicatat. Jangan fallback ke metric lain atau overwrite snapshot sukses. Failed generation disimpan sebagai failure record, bukan successful benchmark case. Geometry error ditangani terpisah dari matrix/algorithm errors.
+
+Di Phase 3B, kode kegagalan generasi dicatat di log aplikasi tanpa koordinat atau payload provider. Kegagalan validasi tidak membuat snapshot. Jika hasil penyimpanan belum pasti, cari UUID request melalui recovery read-only. Hasil kosong tetap belum terkonfirmasi. Matriks dengan nol di luar diagonal dapat ditinjau dan memuat daftar pasangan berarah yang bermasalah. Perlakukan zero off-diagonal sebagai temuan kualitas data untuk direview sebelum evaluasi formal.
+
+Panel Distance Matrix berada di detail Benchmark Case. Route admin `/api/benchmark-cases/[id]/distance-matrices` memakai POST untuk generasi dan GET untuk riwayat. Query `requestId` melakukan recovery read-only. GET `/api/benchmark-cases/[id]/distance-matrices/[matrixId]` membaca snapshot tersimpan.
+
+## 18. Bukti acceptance dan riwayat rilis Testing
+
+- **Phase 3A UAT di Testing lulus menurut konfirmasi owner.** Baseline `8fecbb0` mencakup [PR #72](https://github.com/ArdhanKurniawan/courier-route-planner/pull/72). Benchmark Case Testing #90001 menyimpan satu Depot dan 10 Order untuk total 11 titik. [Bukti acceptance persistence](docs/14_TESTING_QA.md#26-live-acceptance-benchmark-case-persistence-di-testing-2026-11-25)
+- **Phase 3B offline lulus.** Kandidat mencatat 284/284 tes terfokus dan 1.297/1.297 tes penuh. ESLint, typecheck, `db:check`, dan `git diff --check` lulus. Mock OSRM mencakup 11, 26, dan 51 titik. Build Turbopack lokal dihentikan saat kompilasi. Percobaan webpack gagal pada loader `icon.svg` yang tetap sama. Build standar diperiksa lewat Quality Gate.
+- **Kompatibilitas sebelum `0005` berdasarkan review kode.** Detail Benchmark Case memakai pembacaan Phase 3A. Panel riwayat matriks memuat secara terpisah dan menampilkan status tidak tersedia saat tabel belum ada. Tombol generasi tetap nonaktif. Endpoint baru dapat mengembalikan `503 UNAVAILABLE` pada lookup storage sebelum sempat memanggil OSRM.
+
+Urutan rilis historis mencatat verifikasi Quality Gate, migrasi `0005` dengan persetujuan tersendiri, verifikasi ledger/schema, dan generasi default nonaktif. PR #73 sudah merged dan migration `0005` terverifikasi di Testing. Aktivasi provider menunggu bukti kesiapan.
+
+## 19. Evaluasi awal FOSSGIS — historis dan superseded
+
+Catatan berikut menyimpan evaluasi saat FOSSGIS masih menjadi kandidat utama. Prioritas tersebut diganti oleh rencana pada bagian 20. Bukti teknis, kebijakan, dan pertanyaan kepada operator tetap relevan jika FOSSGIS dipilih sebagai provider opsional.
+
+Kandidat gratis adalah layanan FOSSGIS dengan base URL `https://routing.openstreetmap.de/routed-car`. `router.project-osrm.org` memakai backend mobil FOSSGIS yang sama. API upstream mendokumentasikan `annotations=distance` dalam meter pada rute tercepat. Konfigurasi publik FOSSGIS memakai CH. Batas default upstream adalah 100 titik, tetapi kapasitas Table aktif untuk 11, 26, dan 51 titik, opsi `radiuses`, dan bukti waypoint yang dibutuhkan aplikasi masih perlu dikonfirmasi ke operator. [Wiki demo OSRM](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server) · [Konfigurasi FOSSGIS](https://github.com/fossgis-routing-server/ansible_openstreetmap.de/blob/master/group_vars/osrm.yml#L98-L116) · [API OSRM v5.27.1](https://github.com/Project-OSRM/osrm-backend/blob/v5.27.1/docs/http.md#table-service) · [Default Table OSRM](https://github.com/Project-OSRM/osrm-backend/blob/v5.27.1/src/tools/routed.cpp#L120-L132)
+
+Rancangan historis menghitung 30 Table request sukses dari 10 kasus per ukuran, dengan pilot, kalibrasi terpisah, dan percobaan gagal di luar hitungan. Volume sebenarnya mengikuti rancangan revisi setelah validasi akademik. Pengulangan algoritma membaca matriks yang sudah disimpan. Penggunaan demo harus ringan dan nonkomersial. Kebijakan umum menetapkan maksimum satu request per detik dan satu koneksi untuk skrip. Konfigurasi publik Nginx menetapkan 6 request per menit per IP untuk kelompok Table, Match, dan Trip. Batas teknis itu tidak menetapkan jatah penelitian. Konfirmasi jadwal, volume, dan ukuran matriks ke operator sebelum uji. Kirim hanya koordinat sintetis atau titik referensi publik yang disetujui karena server mencatat request. [Protokol penelitian](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md) · [Ketentuan FOSSGIS](https://github.com/fossgis/fossgis-webseite/blob/master/content/arbeitsgruppen/osm-server/nutzungsbedingungen.md#english-version) · [Rate limit Table](https://github.com/fossgis-routing-server/ansible_openstreetmap.de/blob/master/roles/osrm/templates/nginx-ratelimit.conf.jinja#L10-L38) · [Kontak dan privasi layanan](https://routing.openstreetmap.de/about.html)
+
+Usulan FOSSGIS saat itu membatasi pengecualian guard ke endpoint HTTPS dan profil mobil yang disetujui pada Vercel Preview branch `testing`. Pasang reservasi Redis yang juga dipakai Map Testing pada dispatch Table baru, setelah pemeriksaan input dan lookup request tersimpan. Pertahankan satu reservasi lintas instance per 60 detik, fail-closed saat Redis gagal, dan tanpa retry otomatis. Gunakan User-Agent proyek yang sudah ada dan `Referer` dari `AUTH_ORIGIN` Testing yang tepercaya. Tampilkan sumber OSRM/FOSSGIS, kredit OpenStreetMap dan lisensi ODbL, [Perbaiki peta](https://www.openstreetmap.org/fixthemap), serta kontak operator aplikasi. [Atribusi OpenStreetMap](https://www.openstreetmap.org/copyright)
+
+Tabel berikut adalah usulan konfigurasi historis untuk FOSSGIS. Konfirmasi operator dan perubahan kode menjadi prasyarat jika opsi ini diteruskan. Generasi tetap nonaktif selama evaluasi.
+
+| Environment variable | Nilai Testing yang direncanakan |
+|---|---|
+| `APP_ENV` | `testing` pada Preview branch `testing`. Metadata branch dan target berasal dari Vercel. |
+| `DISTANCE_MATRIX_GENERATION` | Kosong atau `0` saat ini. `1` setelah persetujuan dan pengujian. |
+| `DISTANCE_MATRIX_OSRM_URL` | `https://routing.openstreetmap.de/routed-car` |
+| `DISTANCE_MATRIX_OSRM_PROFILE` | `driving`, sesuai profil mobil yang diuji. |
+| `DISTANCE_MATRIX_OSRM_MAX_POINTS` | `11` untuk pilot awal. Naikkan ke `26` dan `51` setelah ukuran terkait dikonfirmasi dan lulus uji. |
+| `DISTANCE_MATRIX_OSRM_SNAP_RADIUS_M` | Radius meter positif yang ditetapkan pada protokol sebelum pengumpulan data. |
+| `AUTH_ORIGIN`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Pakai origin Testing dan Redis Testing yang sama dengan Map. |
+| `DISTANCE_MATRIX_OSRM_SOFTWARE_VERSION`, `DISTANCE_MATRIX_OSRM_EXTRACT_SHA256` | Opsional. Isi jika bukti untuk instance aktif tersedia. |
+
+## 20. Rencana Multi-Provider OSRM — belum diimplementasikan
+
+| Prioritas | Provider | Status |
+|---|---|---|
+| Primary | Just Routing Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
+| Secondary | OSRMPlus Free | Kandidat yang direncanakan. Eligibility dan kesiapan perlu diverifikasi. |
+| Optional | FOSSGIS | Menunggu respons operator. Pengembangan MVP dapat berjalan tanpa provider ini. |
+
+OpenRouteService berada di luar pilihan proyek. Prioritas ini belum membuktikan quota atau limit, credential readiness, kompatibilitas Table API, maupun persetujuan penggunaan. Verifikasi jarak berarah, kapasitas 11/26/51 titik, snapping, provenance, autentikasi jika diperlukan, serta kebijakan penggunaan sebelum aktivasi.
+
+### Operational Mode
+
+Evaluasi eligibility tiap provider berdasarkan capability, quota, status tersedia, dan cooldown. Automatic failover pindah ke kandidat eligible berikutnya saat kegagalan yang sesuai kebijakan. Automatic failback dapat mengembalikan prioritas ke provider utama setelah pulih dan cooldown terpenuhi. Catat provider yang benar-benar menghasilkan hasil. Pertahankan setiap matriks tersimpan sebagai hasil dari satu provider.
+
+### Research Mode
+
+Operator memilih **Research Provider Lock** secara eksplisit sebelum generasi matriks. Gunakan satu provider yang telah diverifikasi untuk seluruh sel matriks. Jika provider terkunci gagal atau melewati batas, hentikan generasi dan catat kegagalan. Setiap snapshot menyimpan actual provider provenance. Baseline NN dan Hybrid memakai satu frozen matrix, hash, dan node order yang sama. Regenerasi yang disengaja menghasilkan snapshot terpisah.
 
 ---
 

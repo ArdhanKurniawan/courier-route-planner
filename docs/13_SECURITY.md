@@ -91,7 +91,7 @@ Gunakan Drizzle/parameterized query. Raw SQL harus memakai parameter binding dan
 
 ## 9. Rate/resource abuse
 
-ACO dapat menjadi compute-heavy. Batasi input di server:
+Optimasi dan benchmark dapat membebani server. Batasi input dan kerja per permintaan:
 
 - max customer for web-triggered run;
 - max iterations;

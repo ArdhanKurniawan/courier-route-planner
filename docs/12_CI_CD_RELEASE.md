@@ -133,7 +133,7 @@ Minimal:
 4. safe write/read/delete on production demo data bila sesuai;
 5. map render;
 6. run small NN+2Opt scenario;
-7. run small ACO scenario;
+7. run small Hybrid NN + 2-Opt scenario dan verifikasi baseline NN serta biaya akhir;
 8. verify no console/server critical error.
 
 ## 9. Rollback principle

@@ -1,6 +1,8 @@
 # 18 — ROADMAP & BACKLOG
 
-**Current status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
+**Current scope — 2026-11-28.** Phase 4 selesai di Testing melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74). ACO diarsipkan sebagai Future Development melalui [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75). Rencana berikutnya mencakup Multi-Provider OSRM, Run Optimization, Experiments, Results, dan Export untuk Hybrid NN + 2-Opt.
+
+**Historical status — 2026-11-08:** Gate 1 CLOSED dan Gate 2 OPEN. Phase 1A–1C dan Map Phase 2A sudah di `testing`. Bukti yang diterima mencakup Quality Gate baseline UAT, migrasi Development/Testing `0002`, live integration Order CRUD, dan UAT owner untuk alur inti Order dan Map. Browser/security QA masih PARTIAL. [Bukti UAT Testing](14_TESTING_QA.md#22-uat-testing-phase-1c-dan-2a-2026-11-08)
 
 Perbaikan verifikasi hostname TLS pada runner migrasi Production sudah masuk ke `testing` pada `1f6cf43`. Migrasi `0001` dan `0002` belum dieksekusi di Production. Preflight dan persetujuan terpisah masih diperlukan. [PR #39](https://github.com/ArdhanKurniawan/courier-route-planner/pull/39)
 
@@ -95,11 +97,14 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 - road routability validation;
 - OSRM Table adapter / DistanceProvider infrastructure sesuai [docs/34](34_OSRM_DISTANCE_CONTRACT.md);
 - directed/asymmetric road-network matrix, meter, stable node order;
-- no null/unreachable pair, ACO common eligibility;
+- tolak null/unreachable dan catat zero off-diagonal sesuai kontrak matriks;
 - matrix hash + immutable distance_matrices storage/freeze;
 - validation and freeze/replay tests.
+- Phase 3A Scenario Freeze selesai dan migration `0005` Phase 3B terverifikasi di Testing. Multi-Provider OSRM masih direncanakan. Rencana mencakup Operational Mode dengan failover/failback dan Research Mode dengan provider lock. [Kontrak OSRM](34_OSRM_DISTANCE_CONTRACT.md)
 
-## Phase 4 — Algorithm A
+## Phase 4 — Hybrid NN + 2-Opt
+
+**DONE di Testing** melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74) dengan post-merge Quality Gate lulus.
 
 - deterministic Nearest Neighbor (depot=0, lowest-index tie);
 - route validator;
@@ -107,21 +112,15 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 - distance recomputation;
 - tests.
 
-## Phase 5 — Algorithm B
+## Phase 5 — ACO (deferred)
 
-- seeded RNG;
-- Classical Ant System explicit parameters (numerical final values tetap OPEN);
-- directed pheromone evaporation/deposit semua valid ants;
-- fixed iterations, tanpa post-ACO 2-Opt;
-- route validation;
-- reproducibility tests.
+Classical Ant System tersedia di [commit arsip](https://github.com/ArdhanKurniawan/courier-route-planner/commit/259533e20e926ddc65188c1bd71ae920652d2f55) sebagai Future Development. MVP dan fase berikutnya dapat berjalan tanpa integrasi ACO. [Issue #75](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75)
 
 ## Phase 6 — Experiment engine
 
-- benchmark runner;
-- experiment runs;
-- summary stats;
-- result comparison UI;
+- Run Optimization untuk Hybrid NN + 2-Opt;
+- Experiments untuk menyimpan run dan frozen input provenance;
+- Results untuk jarak NN awal, jarak akhir, perbaikan absolut/persentase, runtime, dan skalabilitas;
 - route visualization;
 - CSV export.
 
@@ -129,9 +128,9 @@ Follow-up setelah release ke `main` dan sebelum Phase 2B: arahkan admin dengan s
 
 - CLI benchmark;
 - hardware/environment metadata;
-- Phase A verification → B separate calibration + global config freeze → C pilot → D main sesuai [protocol v1](15_RESEARCH_BENCHMARK_PROTOCOL.md);
-- main 10/25/50 customer × 10 independent random datasets = 30 datasets;
-- 5 warm-ups, 30 independent seeded ACO runs, satu NN quality + 30 timing repetitions;
+- verification → pilot → evaluasi sesuai [protokol revisi](15_RESEARCH_BENCHMARK_PROTOCOL.md);
+- ukuran awal 10, 25, dan 50 customer;
+- RQ, research gap, jumlah dataset, warm-up, repetisi, dan metode statistik menunggu validasi akademik;
 - output dataset;
 - verification script.
 

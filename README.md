@@ -27,17 +27,19 @@ Daftar berikut adalah target yang disetujui. Status implementasi aktual dijelask
 - Branch: `main`, `testing`, `feature/*`, `fix/*`, `hotfix/*`, `chore/*`.
 - CI: **GitHub Actions** untuk lint/typecheck/test/build.
 - Deploy: **Vercel Git Integration**.
-- Algoritma penelitian:
-  - Hybrid **Nearest Neighbor + 2-Opt**.
-  - **Ant Colony Optimization (ACO) / Classical Ant System**, tanpa 2-Opt sesudah ACO pada main comparison.
-- Fokus pengujian: total distance, execution time, scalability, consistency/stability.
+- **Hybrid Nearest Neighbor + 2-Opt** adalah satu-satunya optimizer aktif dalam MVP. Rute awal NN menjadi baseline evaluasi pada matriks yang sama. ACO tersimpan sebagai [Future Development](https://github.com/ArdhanKurniawan/courier-route-planner/issues/75).
+- Evaluasi yang diusulkan mencatat jarak awal NN, jarak akhir, perbaikan absolut dan persentase, waktu komputasi, serta skalabilitas.
 - OSRM Table Service: **approved core infrastructure** untuk frozen road-network distance matrix formal, unit meter, directed/asymmetric. OSRM bukan algoritma penelitian; Route/geometry terpisah untuk visualisasi.
 - NN deterministic: depot=0, nearest directed cost, tie-break lowest node index. 2-Opt best improvement memakai full directed route recomputation.
-- Main experiment: **10/25/50 customer × 10 independent random datasets = 30 datasets**. N=100 conditional setelah pilot; clustered/circular/directional optional tambahan.
-- Calibration terpisah dari evaluation; satu global ACO configuration dibekukan. ACO 30 independent seeded runs per dataset; NN+2-Opt satu quality result dan 30 timing repetitions; 5 warm-ups per algoritma/dataset.
-- Kedua metode memakai input dan matrix hash identik. Timer hanya algoritma, tanpa OSRM/DB/network/serialization/geometry/rendering, pada environment terkontrol di luar runtime Vercel.
+- Ukuran dataset awal **10, 25, dan 50 customer**. RQ, research gap, jumlah dataset, repetisi, warm-up, dan metode statistik menunggu validasi akademik. [Protokol evaluasi](docs/15_RESEARCH_BENCHMARK_PROTOCOL.md)
+- Jarak NN awal dan Hybrid memakai frozen Benchmark Case dan matriks/hash identik. Timer solver berada di environment terkontrol di luar Vercel.
+- Rencana Multi-Provider OSRM memakai Just Routing Free sebagai primary, OSRMPlus Free sebagai secondary, serta FOSSGIS opsional. Operational Mode dirancang dengan failover/failback. Research Mode dirancang dengan explicit provider lock. [Kontrak OSRM](docs/34_OSRM_DISTANCE_CONTRACT.md)
 
 ## Current Implementation Status
+
+**Status Testing — 2026-11-28.** Phase 4 Hybrid NN + 2-Opt selesai melalui [PR #74](https://github.com/ArdhanKurniawan/courier-route-planner/pull/74) dengan post-merge Quality Gate lulus pada baseline `c5b8684`. Migration `0005` lulus verifikasi Testing. Multi-Provider OSRM, Run Optimization, Experiments, Results, dan Export masih target pengembangan dalam scope Hybrid. Bukti fondasi sebelumnya dicatat di bawah.
+
+### Historical Gate 1 — accepted foundation 2026-10-24
 
 Main Production `16700a73c37e4c7a3b08cf1ab69c96fd848e5038` dan accepted testing `ff95ee70d3a7bf6a68b3376c9622470204e86890` mempunyai file tree identik setelah PR #26. Quality Gate kedua SHA PASS; reproduksi Chacha pada laptop kedua Windows 10 PASS berdasarkan evidence owner/human attestation. Production deployment dan minimum smoke 24 Oktober diterima secara composite; pemisahan environment memakai accepted provisioning/configuration evidence dan konektivitas, bukan direct physical runtime SQL identity. Runtime audit 0; full audit 4 Moderate dev-only tetap residual risk. [Gate 1](docs/23_PHASE_GATES_CHECKLISTS.md#gate-1--foundation) CLOSED; [closure](docs/proses/phase-0/0d/PHASE_0D_GATE1_FINAL_CLOSURE_REPORT.md) mencatat provenance dan limitations.
 
@@ -203,7 +205,7 @@ Setelah itu baca dokumen spesifik sesuai pekerjaan.
 | `30_UI_TEMPLATE_GUIDE.md` | Keputusan TailAdmin, download, cleanup, license & UI adoption |
 | `31_BRANCH_PROTECTION_AND_PUSH_GUARDS.md` | Pencegahan commit/push tidak sengaja ke main/testing, GitHub protection, local hooks & recovery |
 | [32_RESEARCH_DECISIONS.md](docs/32_RESEARCH_DECISIONS.md) | RQ, scope, design eksperimen, metrics, dan keputusan OPEN |
-| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, Classical Ant System, validator dan fixtures |
+| [33_ALGORITHM_SPECIFICATION.md](docs/33_ALGORITHM_SPECIFICATION.md) | NN, directed best-improvement 2-Opt, validator, fixtures, dan referensi ACO historis |
 | [34_OSRM_DISTANCE_CONTRACT.md](docs/34_OSRM_DISTANCE_CONTRACT.md) | OSRM Table matrix, hashing/freeze, fairness dan reproducibility |
 | `THIRD_PARTY_NOTICES.md` | Provenance/license third-party penting |
 
